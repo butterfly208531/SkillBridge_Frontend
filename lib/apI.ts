@@ -1,6 +1,7 @@
 import axios from 'axios';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://skillbridge-backend2.onrender.com/api';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://skillbridge-backend2-h1u9.onrender.com/api';
+
 
 const api = axios.create({
   baseURL: API_BASE_URL,
