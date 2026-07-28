@@ -1,98 +1,107 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import {
   Facebook,
   Instagram,
   Linkedin,
   Mail,
   Phone,
+  MapPin,
   HelpCircle,
+  MessageCircle,
 } from "lucide-react";
-import {
-  SiX,SiTiktok, SiTelegram
-} from "react-icons/si";
+import { SiX, SiTiktok, SiTelegram, SiYoutube } from "react-icons/si";
 import { motion, Variants } from "framer-motion";
 import { useTranslations } from "next-intl";
 
 const container = {
   hidden: {},
-  show: {
-    transition: {
-      staggerChildren: 0.2,
-    },
-  },
+  show: { transition: { staggerChildren: 0.15 } },
 };
 
 const fadeInUp: Variants = {
   hidden: { opacity: 0, y: 30 },
-  show: {
-    opacity: 1,
-    y: 0,
-    transition: {
-      duration: 0.6,
-      ease: "easeOut",
-    },
-  },
+  show: { opacity: 1, y: 0, transition: { duration: 0.5, ease: "easeOut" } },
 };
 
+const socials = [
+  { Icon: Facebook,    url: "https://www.facebook.com/profile.php?id=61574189453702",            label: "Facebook" },
+  { Icon: Instagram,   url: "https://www.instagram.com/skillbridgeinstituteoftech",              label: "Instagram" },
+  { Icon: Linkedin,    url: "https://www.linkedin.com/company/skillbridge-institute-of-technology", label: "LinkedIn" },
+  { Icon: SiTelegram,  url: "https://t.me/skillbridgeinstituteoftech",                           label: "Telegram" },
+  { Icon: SiYoutube,   url: "https://www.youtube.com/@SkillBridgeInstituteOfTech",               label: "YouTube" },
+  { Icon: SiTiktok,    url: "https://www.tiktok.com/@skillbridge417",                            label: "TikTok" },
+  { Icon: SiX,         url: "https://x.com",                                                     label: "X" },
+];
 
 export default function Footer() {
   const t = useTranslations();
   const footer = t.raw("footer") as any;
 
   return (
-    <footer className="bg-blue-400 text-white dark:bg-[#2196f3]/40">
-      <div className="container mx-auto px-4 py-12">
+    <footer className="bg-[#1565C0] text-white dark:bg-gray-950">
+      <div className="container mx-auto px-4 py-14">
         <motion.div
           variants={container}
           initial="hidden"
           whileInView="show"
           viewport={{ once: true }}
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8"
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10"
         >
-          {/* About */}
-          <motion.div
-            variants={fadeInUp}
-            className="lg:mr-2 xl:mr-4 2xl:mr-10 min-[1710px]:mr-16"
-          >
-            <h3 className="text-lg font-bold mb-4">{footer.title}</h3>
-            <p className="text-xs md:text-[14px] text-white/90 mb-4">
+          {/* Column 1 — About */}
+          <motion.div variants={fadeInUp} className="flex flex-col gap-4">
+            {/* Logo */}
+            <Link href="/" className="flex items-center gap-2 mb-1">
+              <Image
+                src="/Logo.svg"
+                alt="SkillBridge Institute of Technology logo"
+                width={36}
+                height={36}
+              />
+              <span className="font-bold text-base leading-tight">
+                SkillBridge<br />
+                <span className="text-xs font-normal text-white/80">Institute of Technology</span>
+              </span>
+            </Link>
+
+            <p className="text-sm text-white/85 leading-relaxed">
               {footer.description}
             </p>
-            <div className="flex space-x-4">
-              {[
-                { Icon: Facebook, url: "https://www.facebook.com/profile.php?id=61577663002182" },
-                { Icon: Instagram, url: "https://www.instagram.com/skillbridgeinstituteoftech?igsh=a2FlcmhzNnF1aHBu" },
-                { Icon: Linkedin, url: "https://www.linkedin.com/company/skillbridge-institute-of-technology/" },
-                { Icon: SiTelegram, url: "https://t.me/skillbridgeinstituteoftech" },
-                { Icon: SiTiktok, url: "https://tiktok.com" },
-                { Icon: SiX, url: "https://x.com" },
-              ].map(({ Icon, url }, i) => (
-                <motion.div
-                  key={i}
-                  whileHover={{ scale: 1.2 }}
-                  whileTap={{ scale: 0.9 }}
-                >
-                  <Link href={url} target="_blank" rel="noopener noreferrer" className="hover:text-white/80 last:w-16">
-                    <Icon size={20} />
+
+            {/* Social icons */}
+            <div className="grid grid-cols-7 gap-2 mt-1 w-fit">
+              {socials.map(({ Icon, url, label }) => (
+                <motion.div key={label} whileHover={{ scale: 1.2 }} whileTap={{ scale: 0.9 }}>
+                  <Link
+                    href={url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={label}
+                    className="flex items-center justify-center w-8 h-8 rounded-full bg-white/10 hover:bg-[#F57C00] transition-colors"
+                  >
+                    <Icon size={15} />
                   </Link>
                 </motion.div>
               ))}
             </div>
           </motion.div>
 
-          {/* Quick Links */}
+          {/* Column 2 — Quick Links */}
           <motion.div variants={fadeInUp}>
-            <h3 className="text-lg font-bold mb-4">
+            <h3 className="text-base font-bold mb-4 border-b border-white/20 pb-2">
               {footer.quickLinks.title}
             </h3>
             <ul className="space-y-2">
               {footer.quickLinks.links.map(
                 (link: { href: string; label: string }, i: number) => (
                   <li key={i}>
-                    <Link href={link.href} className="hover:text-white/80">
-                      {link.label}
+                    <Link
+                      href={link.href}
+                      className="text-sm text-white/80 hover:text-[#F57C00] hover:translate-x-1 inline-block transition-all duration-200"
+                    >
+                      › {link.label}
                     </Link>
                   </li>
                 )
@@ -100,15 +109,20 @@ export default function Footer() {
             </ul>
           </motion.div>
 
-          {/* Popular Categories */}
+          {/* Column 3 — Popular Bootcamps */}
           <motion.div variants={fadeInUp}>
-            <h3 className="text-lg font-bold mb-4">{footer.popular.title}</h3>
+            <h3 className="text-base font-bold mb-4 border-b border-white/20 pb-2">
+              {footer.popular.title}
+            </h3>
             <ul className="space-y-2">
               {footer.popular.links.map(
                 (link: { href: string; label: string }, i: number) => (
                   <li key={i}>
-                    <Link href={link.href} className="hover:text-white/80">
-                      {link.label}
+                    <Link
+                      href={link.href}
+                      className="text-sm text-white/80 hover:text-[#F57C00] hover:translate-x-1 inline-block transition-all duration-200"
+                    >
+                      › {link.label}
                     </Link>
                   </li>
                 )
@@ -116,45 +130,77 @@ export default function Footer() {
             </ul>
           </motion.div>
 
-          {/* Contact & FAQ */}
+          {/* Column 4 — Contact */}
           <motion.div variants={fadeInUp}>
-            <div>
-              <h3 className="text-lg font-bold mb-4">{footer.contact.title}</h3>
-              <ul className="space-y-2">
-                <li className="flex items-center gap-2 whitespace-pre-wrap">
-                  <Mail size={16} className="text-white" />
-                  <a href="mailto:skillbridgeinstitituteoftech@gmail.com" className="hover:text-white/80 whitespace-pre-wrap" >
-                    Click to email us
-                  </a>
-                </li>
-                <li className="flex items-center gap-2">
-                  <Phone size={16} className="text-white" />
-                  <a href="tel:+251955935455" className="hover:text-white/80">
-                    +251 955 9354 55
-                  </a>
-                </li>
-              </ul>
-            </div>
-            <div>
-              <Link
-                href="/faq"
-                className="relative text-white/80 hover:text-white top-6 lg:top-12"
-              >
-                <HelpCircle className="w-8 h-8 md:h-10 md:w-10 lg:w-12 lg:h-12 2xl:h-14 2xl:w-14 text-[#E57C00] hover:text-[#F48000] hover:scale-105" />
-              </Link>
-            </div>
+            <h3 className="text-base font-bold mb-4 border-b border-white/20 pb-2">
+              {footer.contact.title}
+            </h3>
+            <ul className="space-y-3 text-sm">
+              <li className="flex items-start gap-2">
+                <Mail size={15} className="mt-0.5 shrink-0 text-white/70" />
+                <a
+                  href="mailto:skillbridgeinstitituteoftech@gmail.com"
+                  className="text-white/85 hover:text-[#F57C00] break-all"
+                >
+                  skillbridgeinstitituteoftech@gmail.com
+                </a>
+              </li>
+              <li className="flex items-center gap-2">
+                <Phone size={15} className="shrink-0 text-white/70" />
+                <a href="tel:+251955935455" className="text-white/85 hover:text-[#F57C00]">
+                  +251 955 935 455
+                </a>
+              </li>
+              <li className="flex items-center gap-2">
+                <Phone size={15} className="shrink-0 text-white/70" />
+                <a href="tel:+251932058398" className="text-white/85 hover:text-[#F57C00]">
+                  +251 932 058 398
+                </a>
+              </li>
+              <li className="flex items-center gap-2">
+                <MessageCircle size={15} className="shrink-0 text-white/70" />
+                <a
+                  href="https://t.me/skillbridgesupport2"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-white/85 hover:text-[#F57C00]"
+                >
+                  @skillbridgesupport2
+                </a>
+              </li>
+              <li className="flex items-start gap-2">
+                <MapPin size={15} className="mt-0.5 shrink-0 text-white/70" />
+                <span className="text-white/85">Addis Ababa, Ethiopia</span>
+              </li>
+            </ul>
+
+            {/* FAQ link */}
+            <Link
+              href="/faq"
+              className="inline-flex items-center gap-2 mt-5 text-sm text-white/70 hover:text-[#F57C00] transition-colors"
+            >
+              <HelpCircle className="w-5 h-5 text-[#F57C00]" />
+              Frequently Asked Questions
+            </Link>
           </motion.div>
         </motion.div>
 
-        {/* Copyright */}
+        {/* Bottom bar */}
         <motion.div
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
           viewport={{ once: true }}
-          transition={{ delay: 0.5, duration: 1 }}
-          className="border-t border-white/30 mt-8 pt-8 text-center text-white/80 text-sm md:text-base"
+          transition={{ delay: 0.4, duration: 0.8 }}
+          className="border-t border-white/20 mt-10 pt-6 flex flex-col md:flex-row items-center justify-between gap-3 text-sm text-white/70"
         >
           <p>&copy; {new Date().getFullYear()} {footer.copyright.text}</p>
+          <div className="flex gap-4">
+            <Link href="/faq" className="hover:text-[#F57C00] transition-colors">FAQ</Link>
+            <Link href="/contact" className="hover:text-[#F57C00] transition-colors">Contact</Link>
+            <Link href="/about" className="hover:text-[#F57C00] transition-colors">About</Link>
+            <Link href="/privacy" className="hover:text-[#F57C00] transition-colors">Privacy Policy</Link>
+            <Link href="/terms" className="hover:text-[#F57C00] transition-colors">Terms of Service</Link>
+          </div>
         </motion.div>
       </div>
     </footer>

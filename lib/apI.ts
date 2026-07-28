@@ -25,7 +25,8 @@ export interface Course {
   imageUrl: string;
   reviews: number;
   rating: number;
-  startDate: string;
+  startDate?: string;
+  mode?: "Online" | "Physical" | "Hybrid";
   studentsEnrolled: number;
   categoryId: string;
   instructorId: string;

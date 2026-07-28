@@ -81,22 +81,19 @@
       "span2": "Future",
       "span3": "Begins With",
       "span4": "One Click",
+      "headline": "Launch Your Career in Technology with Practical, Industry-Focused Training",
+      "subtitle": "Master software development, ERP, artificial intelligence, automation, and language proficiency through project-based learning, expert mentorship, and career-focused bootcamps.",
       "heroSubtitle": "Bridging Gaps, Building Skills, Transforming Futures",
       "getStarted": "Get Started",
       "contact": "Get In Touch",
+      "registerNow": "Register Now",
+      "exploreBootcamps": "Explore Bootcamps",
       "statCards": [
-         {
-            "title": "Online Courses",
-            "value": "15+"
-         },
-         {
-            "title": "Video Courses",
-            "value": "10+"
-         },
-         {
-            "title": "Instructors",
-            "value": "20+"
-         }
+         { "label": "Students Trained", "value": "500+", "title": "Online Courses" },
+         { "label": "Active Bootcamps", "value": "5+", "title": "Video Courses" },
+         { "label": "Real Projects Completed", "value": "50+", "title": "Instructors" },
+         { "label": "Community Members", "value": "1000+" },
+         { "label": "Scholarships Awarded", "value": "20+" }
       ]
    },
    "services": {
@@ -4608,58 +4605,37 @@
    },
    "footer": {
       "title": "About SkillBridge",
-      "description": "Bridging Gaps, Building Skills, Transforming Futures. We provide high-quality online courses to help you advance your career.",
+      "description": "Bridging Gaps, Building Skills, Transforming Futures. We provide practical, industry-focused bootcamps to help you launch your tech career.",
       "quickLinks": {
          "title": "Quick Links",
          "links": [
-            {
-               "href": "/courses",
-               "label": "All Courses"
-            },
-            {
-               "href": "/about",
-               "label": "About Us"
-            },
-            {
-               "href": "/instructors",
-               "label": "Instructors"
-            },
-            {
-               "href": "/contact",
-               "label": "Contact Us"
-            },
-            {
-               "href": "/faq",
-               "label": "FAQ"
-            }
+            { "href": "/courses", "label": "Bootcamps" },
+            { "href": "/projects", "label": "Student Projects" },
+            { "href": "/about", "label": "About Us" },
+            { "href": "/contact", "label": "Contact Us" },
+            { "href": "/faq", "label": "FAQ" }
          ]
       },
       "popular": {
-         "title": "Popular Categories",
+         "title": "Popular Bootcamps",
          "links": [
-            {
-               "href": "/courses/development",
-               "label": "Development"
-            },
-            {
-               "href": "/courses/business",
-               "label": "Business"
-            },
-            {
-               "href": "/courses/ai",
-               "label": "Artificial Intelligence"
-            },
-            {
-               "href": "/courses/blockchain",
-               "label": "Blockchain"
-            }
+            { "href": "/courses", "label": "Odoo Functional ERP" },
+            { "href": "/courses", "label": "Odoo Technical Development" },
+            { "href": "/courses", "label": "Full-Stack Development" },
+            { "href": "/courses", "label": "Python Programming" },
+            { "href": "/courses", "label": "AI & Machine Learning" },
+            { "href": "/courses", "label": "Data Science" },
+            { "href": "/courses", "label": "n8n Automation" },
+            { "href": "/courses", "label": "IELTS Preparation" },
+            { "href": "/courses", "label": "TOEFL Preparation" },
+            { "href": "/courses", "label": "Duolingo Preparation" }
          ]
       },
       "contact": {
          "title": "Contact Us"
       },
       "copyright": {
-         "text": "SkillBridge. All rights reserved."
+         "text": "SkillBridge Institute of Technology. All rights reserved."
       }
    },
    "contactPage": {
@@ -4938,5 +4914,163 @@
       "myCourses": "Go to My Courses",
       "backToHome": "Back to Home",
       "goBack": "Go Back"
+   },
+   "bootcampsSection": {
+      "heading": "Upcoming Bootcamps",
+      "subheading": "Join our next cohort and start building real skills today.",
+      "viewAll": "View All Bootcamps",
+      "register": "Register",
+      "duration": "Duration",
+      "startDate": "Start Date",
+      "mode": "Mode",
+      "level": "Level"
+   },
+   "learningPaths": {
+      "heading": "Learning Paths",
+      "subheading": "Follow a structured roadmap from beginner to career-ready professional.",
+      "outcome": "Career Outcome",
+      "softwareEngineering": {
+         "title": "Software Engineering Path",
+         "outcome": "Software Engineer",
+         "steps": ["Programming Fundamentals", "Python", "Full-Stack Development", "Advanced Backend & APIs", "AI & Machine Learning", "Internship", "Software Engineer"]
+      },
+      "erpConsultant": {
+         "title": "ERP Consultant Path",
+         "outcome": "ERP Consultant",
+         "steps": ["Odoo Functional", "Odoo Technical", "ERP Implementation", "Business Process Analysis", "ERP Consultant"]
+      },
+      "aiEngineer": {
+         "title": "AI Engineer Path",
+         "outcome": "AI Engineer",
+         "steps": ["Python", "Mathematics", "Data Science", "Machine Learning", "Deep Learning", "AI Projects", "AI Engineer"]
+      },
+      "studyAbroad": {
+         "title": "Study Abroad Path",
+         "outcome": "University Admission",
+         "steps": ["Academic English", "IELTS / TOEFL / Duolingo", "Application Support", "Scholarships", "University Admission"]
+      }
+   },
+   "whySection": {
+      "heading": "Why SkillBridge?",
+      "subheading": "We go beyond training — we build careers.",
+      "features": {
+         "projectBased": { "title": "Project-Based Learning", "description": "Build real projects that go straight into your portfolio." },
+         "mentors": { "title": "Experienced Industry Mentors", "description": "Learn from professionals working in top tech companies." },
+         "onlinePhysical": { "title": "Online & Physical Classes", "description": "Flexible learning options to fit your lifestyle." },
+         "vipCoaching": { "title": "VIP (1-to-1) Coaching", "description": "Personalized sessions tailored to your learning pace." },
+         "groupBootcamps": { "title": "Group Bootcamps", "description": "Learn together in a collaborative cohort environment." },
+         "realProjects": { "title": "Real-World Projects", "description": "Work on industry-grade projects with real business impact." },
+         "internships": { "title": "Internship Opportunities", "description": "Get placed with partner companies to gain work experience." },
+         "scholarships": { "title": "Scholarships", "description": "Merit and need-based funding to make education accessible." },
+         "careerSupport": { "title": "Career Support", "description": "Resume reviews, LinkedIn optimization, and job placement help." },
+         "community": { "title": "Community Learning", "description": "Join a thriving community of learners and professionals." },
+         "certificates": { "title": "Certificates of Completion", "description": "Earn recognized certificates to showcase your achievements." },
+         "flexible": { "title": "Flexible Learning Schedule", "description": "Study at your own pace with evening and weekend options." }
+      }
+   },
+   "projectsSection": {
+      "heading": "Student Projects",
+      "subheading": "See what our students have built — real projects, real impact.",
+      "viewMore": "View More Projects",
+      "all": "All",
+      "noProjects": "No projects found."
+   },
+   "hubSection": {
+      "heading": "SkillBridge Hub",
+      "subheading": "Your all-in-one community platform for continuous learning and growth.",
+      "joinHub": "Join SkillBridge Hub",
+      "openBot": "Open Telegram Bot",
+      "description": "Connect, compete, and grow with thousands of learners on the SkillBridge Hub platform.",
+      "features": ["Daily Challenges", "Weekly Quizzes", "SkillPoints", "Leaderboards", "Scholarships", "Learning Resources", "Community Discussions", "Referral Rewards", "Announcements", "Learning Streaks"]
+   },
+   "scholarshipsSection": {
+      "heading": "Scholarships",
+      "subheading": "Invest in your future — we help you get there.",
+      "currentApplications": "Current Applications",
+      "deadline": "Registration Deadline",
+      "winners": "Winners",
+      "eligibility": "Eligibility",
+      "apply": "Apply Now",
+      "previousWinners": "Previous Scholarship Winners",
+      "scholarships": {
+         "fullStack": { "name": "Full-Stack Scholarship", "eligibility": "Top performer in Python and Web Development courses" },
+         "odooFunctional": { "name": "Odoo Functional Scholarship", "eligibility": "Strong interest in ERP and business processes" },
+         "python": { "name": "Python Scholarship", "eligibility": "Demonstrated programming aptitude and financial need" },
+         "ai": { "name": "AI Scholarship", "eligibility": "Excellence in mathematics and data science fundamentals" }
+      }
+   },
+   "successSection": {
+      "heading": "Success Stories",
+      "subheading": "Real students. Real outcomes. Real inspiration.",
+      "testimonials": {
+         "student1": { "name": "Abebe Kebede", "course": "Full-Stack Development", "position": "Junior Full-Stack Developer at TechEthiopia", "testimonial": "SkillBridge transformed my career. Within 3 months of graduating I landed my first tech job!" },
+         "student2": { "name": "Tigist Haile", "course": "Odoo Functional ERP", "position": "ERP Consultant at LogiSoft", "testimonial": "The mentorship and hands-on projects gave me the confidence to walk into any ERP implementation." },
+         "student3": { "name": "Yohannes Tadesse", "course": "AI & Machine Learning", "position": "Data Analyst at Kifiya Financial", "testimonial": "I went from zero Python knowledge to building ML models that are now in production." }
+      }
+   },
+   "careerSection": {
+      "heading": "Career Services",
+      "subheading": "We don't just train you — we launch your career.",
+      "bookButton": "Book Career Guidance",
+      "services": {
+         "cvReview": { "title": "CV & Resume Review", "description": "Get expert feedback on your resume to stand out to employers." },
+         "linkedin": { "title": "LinkedIn Profile Optimization", "description": "Build a professional LinkedIn presence that attracts recruiters." },
+         "portfolio": { "title": "Portfolio Development", "description": "Create a compelling portfolio showcasing your best projects." },
+         "github": { "title": "GitHub Profile Review", "description": "Optimize your GitHub to demonstrate your coding skills." },
+         "interviewPrep": { "title": "Interview Preparation", "description": "Practice common interview questions with expert guidance." },
+         "mockInterviews": { "title": "Technical Mock Interviews", "description": "Simulate real technical interviews to build confidence." },
+         "freelancing": { "title": "Freelancing Guidance", "description": "Learn how to find clients and succeed as a freelancer." },
+         "mentorship": { "title": "Career Mentorship", "description": "One-on-one sessions with industry professionals." },
+         "internshipSupport": { "title": "Internship Support", "description": "Connect with partner companies for internship placements." },
+         "jobSearch": { "title": "Job Search Assistance", "description": "Access our job board and employer network." }
+      }
+   },
+   "communitySection": {
+      "heading": "Student Community",
+      "subheading": "Learning continues outside the classroom — join a thriving community that grows with you.",
+      "joinTelegram": "Join Telegram",
+      "subscribeYoutube": "Subscribe on YouTube",
+      "followLinkedin": "Follow on LinkedIn",
+      "featuresHeading": "What's Happening in Our Community",
+      "platforms": {
+         "telegram":    { "label": "Telegram Community",  "stat": "members" },
+         "youtube":     { "label": "YouTube Channel",     "stat": "subscribers" },
+         "linkedin":    { "label": "LinkedIn Page",       "stat": "followers" },
+         "hub":         { "label": "SkillBridge Hub",     "stat": "active learners" },
+         "discussions": { "label": "Discussion Groups",   "stat": "discussions" },
+         "instagram":   { "label": "Instagram",           "stat": "followers" },
+         "facebook":    { "label": "Facebook Page",       "stat": "followers" },
+         "tiktok":      { "label": "TikTok",              "stat": "followers" }
+      },
+      "features": {
+         "events":     { "title": "Events",           "description": "Live workshops, webinars, and networking sessions open to all students." },
+         "challenges": { "title": "Challenges",       "description": "Weekly coding and ERP challenges to sharpen your skills and win SkillPoints." },
+         "referral":   { "title": "Referral Program", "description": "Earn rewards for every friend you refer who enrolls in a SkillBridge bootcamp." }
+      }
+   },
+   "videosSection": {
+      "heading": "Latest Videos",
+      "subheading": "Watch and learn from our latest educational content.",
+      "watch": "Watch",
+      "viewAll": "View All Videos",
+      "videos": {
+         "video1": { "title": "Odoo Terminal and Debug Tutorial", "description": "Learn how to use Odoo Terminal and Debug Chrome Extensions to speed up your Odoo development workflow." },
+         "video2": { "title": "Odoo Models and Views in Odoo 17", "description": "A comprehensive guide to working with Odoo 17 models and views — from basic fields to advanced UI customization." },
+         "video3": { "title": "Python for Beginners — Complete Tutorial", "description": "Learn Python from scratch with hands-on exercises." },
+         "video4": { "title": "AI & Machine Learning with Python", "description": "Build your first machine learning model step by step." },
+         "video5": { "title": "n8n Automation for Business", "description": "Automate your business workflows with n8n — no code required." }
+      }
+   },
+   "finalCTA": {
+      "headline": "Ready to Build Your Tech Career?",
+      "description": "Join SkillBridge Institute of Technology and gain practical skills through expert-led bootcamps, real-world projects, and a supportive learning community.",
+      "registerBootcamp": "Register for a Bootcamp",
+      "contactAdmissions": "Contact Admissions",
+      "explorePrograms": "Explore All Programs"
+   },
+   "projectsPage": {
+      "heading": "Student Projects",
+      "subtitle": "Explore real-world projects built by SkillBridge students across all tracks.",
+      "noProjects": "No projects found for this category."
    }
 }

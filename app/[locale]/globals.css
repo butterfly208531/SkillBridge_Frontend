@@ -3,6 +3,21 @@
 
 @custom-variant dark (&:is(.dark *));
 
+@theme {
+  --font-merriweather: var(--font-merriweather), serif;
+  --font-jakarta: var(--font-jakarta), system-ui, sans-serif;
+  --color-brand-orange: #F57C00;
+}
+
+/* Global orange hover — applies to all interactive text/icon elements */
+@layer base {
+  a:hover,
+  button:hover {
+    color: #F57C00;
+    transition: color 0.2s ease;
+  }
+}
+
 :root {
   --foreground-rgb: 0, 0, 0;
   --background-start-rgb: 255, 255, 255;

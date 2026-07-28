@@ -1,10 +1,16 @@
 import { Navbar } from "@/app/[locale]/components/navbar";
 import { HeroSection } from "@/app/[locale]/components/hero-section";
-import { ServicesSection } from "@/app/[locale]/components/services-section";
-import { CoursesSection } from "@/app/[locale]/components/courses-section";
-import { InstructorsSection } from "@/app/[locale]/components/instructors-section";
+import { BootcampsSection } from "@/app/[locale]/components/bootcamps-section";
+import { LearningPathsSection } from "@/app/[locale]/components/learning-paths-section";
+import { WhySection } from "@/app/[locale]/components/why-section";
+import { ProjectsSection } from "@/app/[locale]/components/projects-section";
+import { HubSection } from "@/app/[locale]/components/hub-section";
+import { ScholarshipsSection } from "@/app/[locale]/components/scholarships-section";
 import { TestimonialsSection } from "@/app/[locale]/components/testimonials-section";
-import { SuccessSection } from "@/app/[locale]/components/success-section";
+import { CareerSection } from "@/app/[locale]/components/career-section";
+import { CommunitySection } from "@/app/[locale]/components/community-section";
+import { VideosSection } from "@/app/[locale]/components/videos-section";
+import { FinalCTASection } from "@/app/[locale]/components/final-cta-section";
 import Footer from "@/app/[locale]/components/footer";
 
 export const metadata = {
@@ -53,17 +59,21 @@ export const metadata = {
 
 export default function Home() {
   return (
-    <>
-    <div className='min-h-screen bg-white dark:bg-gray-950 transition-colors duration-300 font-montserrat'>
+    <div className="min-h-screen bg-white dark:bg-gray-950 transition-colors duration-300 font-montserrat">
       <Navbar />
       <HeroSection />
-      <ServicesSection />
-      <CoursesSection />
-      <InstructorsSection />
+      <BootcampsSection />
+      <LearningPathsSection />
+      <WhySection />
+      <ProjectsSection />
+      <HubSection />
+      <ScholarshipsSection />
       <TestimonialsSection />
-      <SuccessSection />
+      <CareerSection />
+      <CommunitySection />
+      <VideosSection />
+      <FinalCTASection />
       <Footer />
     </div>
-    </>
   );
 }

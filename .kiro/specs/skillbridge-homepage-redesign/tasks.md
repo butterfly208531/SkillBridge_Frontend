@@ -1,0 +1,296 @@
+# Implementation Plan: SkillBridge Homepage Redesign
+
+## Overview
+
+Incremental implementation of the homepage redesign: update the Hero section, add ten new homepage sections, create two new pages (Projects, updated Bootcamps), wire everything into `app/[locale]/page.tsx`, and add full i18n support for both `en` and `am` locales. Each task builds on the previous so no code is left unintegrated.
+
+## Tasks
+
+- [x] 1. Extend types, static configs, and i18n foundations
+  - [x] 1.1 Extend `Course` interface in `lib/apI.ts` with `mode?: string` field
+    - Add the `mode` field (string union `"Online" | "Physical" | "Hybrid"`) to the existing `Course` interface
+    - _Requirements: 2.2, 13.5_
+  - [x] 1.2 Create static config files for all new sections
+    - Create `lib/projects-config.ts` exporting `ProjectConfig[]` with sample project entries and interface
+    - Create `lib/scholarships-config.ts` exporting `ScholarshipConfig[]` with sample entries and interface
+    - Create `lib/videos-config.ts` exporting `VideoConfig[]` with sample video entries and interface
+    - Create `lib/community-config.ts` exporting `CommunityConfig[]` with platform keys and URLs
+    - Create `lib/learning-paths-config.ts` exporting `LearningPathConfig[]` with icon and step count
+    - Create `lib/why-config.ts` exporting `WhyFeature[]` (12 items) with icon and i18n key
+    - Create `lib/career-config.ts` exporting 10 career service items with icon and i18n key
+    - _Requirements: 3.1, 4.1, 5.1, 6.2, 7.1, 9.1, 10.1, 11.4_
+  - [x] 1.3 Add all new i18n keys to `messages/en.json`
+    - Add `hero` updates (new headline, subtitle, 5 stat cards, `registerNow`, `exploreBootcamps`)
+    - Add `bootcampsSection`, `learningPaths`, `whySection`, `projectsSection`, `hubSection`
+    - Add `scholarshipsSection`, `successSection` (updated with `course` and `position` fields)
+    - Add `careerSection`, `communitySection`, `videosSection`, `finalCTA`, `projectsPage`
+    - _Requirements: 16.1, 16.4_
+  - [x] 1.4 Mirror all new i18n keys to `messages/am.json` (Amharic translations)
+    - Mirror every key added in 1.3 with Amharic text
+    - _Requirements: 16.1, 16.2, 16.4_
+
+- [x] 2. Create new shared UI primitives
+  - [x] 2.1 Create `app/[locale]/components/ui/skeleton-card.tsx`
+    - Renders a pulsing placeholder matching the visual dimensions of `BootcampCard`
+    - Accepts optional `variant` prop for card vs list shape
+    - _Requirements: 2.6, 13.8_
+  - [ ]* 2.2 Write unit tests for `SkeletonCard`
+    - Verify skeleton renders with correct pulse animation class
+    - Verify variant prop changes rendered shape
+    - _Requirements: 2.6, 13.8_
+  - [x] 2.3 Create `app/[locale]/components/ui/bootcamp-card.tsx`
+    - Accepts `BootcampCardProps` (id, image, title, description, duration, startDate, mode, level, category, rating, reviews)
+    - Renders image, title, description, duration, startDate, mode badge, level badge, rating, and a "Register" button
+    - "Register" button `href` = `/courses/{id}/ApplicationForm`
+    - Keyboard-navigable with visible focus indicators; descriptive `alt` on image
+    - Supports dark mode via Tailwind dark: classes
+    - _Requirements: 2.2, 2.3, 15.4, 15.5, 15.6_
+  - [ ]* 2.4 Write property test for `BootcampCard` (Property 2)
+    - **Property 2: Bootcamp card renders all required fields**
+    - **Validates: Requirements 2.2, 2.3, 13.5, 13.6**
+    - Use `fast-check` to generate arbitrary valid `BootcampCardProps` and assert all fields appear in rendered HTML and `href` is correct
+    - _Tag: `// Feature: skillbridge-homepage-redesign, Property 2`_
+  - [x] 2.5 Create `app/[locale]/components/ui/project-card.tsx`
+    - Accepts `ProjectCardProps` (id, image, title, technologies, description, category, studentName?, demoUrl?, githubUrl?)
+    - Renders image, technology badges, description, category badge, optional student name, optional demo/GitHub links
+    - All images have descriptive `alt` text
+    - _Requirements: 5.2, 14.3, 15.4_
+  - [ ]* 2.6 Write property test for `ProjectCard` (Property 3)
+    - **Property 3: Project card renders all required fields**
+    - **Validates: Requirements 5.2, 14.3**
+    - Use `fast-check` to generate arbitrary valid project objects and assert rendered HTML contains all required fields
+    - _Tag: `// Feature: skillbridge-homepage-redesign, Property 3`_
+  - [x] 2.7 Create `app/[locale]/components/ui/scholarship-card.tsx`
+    - Accepts scholarship props (id, name, applicationsCount, deadline, winnersCount, eligibility, courseId)
+    - Renders all fields with an "Apply" button linking to `/courses/{courseId}/ApplicationForm`
+    - _Requirements: 7.2, 7.3_
+
+- [ ] 3. Checkpoint — Ensure all tests pass, ask the user if questions arise.
+
+- [x] 4. Update `HeroSection`
+  - [x] 4.1 Rewrite `app/[locale]/components/hero-section.tsx`
+    - Replace headline and subtitle with new i18n keys (`hero.headline`, `hero.subtitle`)
+    - Render "Register Now" primary CTA navigating to `/courses` and "Explore Bootcamps" secondary CTA navigating to `/courses`
+    - Render five stat cards from updated `hero.statCards` i18n array
+    - Retain existing Framer Motion entrance animations; extend to cover new stat cards
+    - Maintain responsive single-column stacking below 768px
+    - Support dark mode; all images have descriptive `alt`
+    - _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 15.4, 15.5, 15.6_
+  - [ ]* 4.2 Write unit tests for updated `HeroSection`
+    - Test "Register Now" and "Explore Bootcamps" button hrefs
+    - Test that 5 stat cards are rendered
+    - Test headline text matches i18n key
+    - _Requirements: 1.3, 1.4, 1.5_
+
+- [ ] 5. Implement `BootcampsSection` (homepage)
+  - [x] 5.1 Create `app/[locale]/components/bootcamps-section.tsx`
+    - Fetch bootcamps from `fetchCourses()` in `useEffect`; use `useState` for `bootcamps`, `loading`, `error`
+    - On load: show `SkeletonCard` placeholders
+    - On error: fall back silently to `coursesConfig` static data
+    - On success: render top 6 as `BootcampCard` in responsive grid (1 col < 768px, 2 col 768–1024px, 3 col ≥ 1024px)
+    - Render "View All Bootcamps" CTA navigating to `/courses`
+    - _Requirements: 2.1, 2.4, 2.5, 2.6, 2.7, 2.8, 2.9_
+  - [ ]* 5.2 Write property test for API fallback in `BootcampsSection` (Property 11)
+    - **Property 11: API failure triggers static config fallback**
+    - **Validates: Requirements 2.5, 11.4**
+    - Mock `fetchCourses` to reject; assert rendered output contains static config items
+    - _Tag: `// Feature: skillbridge-homepage-redesign, Property 11`_
+  - [ ]* 5.3 Write unit tests for `BootcampsSection`
+    - Test skeleton renders while loading
+    - Test "View All Bootcamps" href
+    - Test 3-column grid class on desktop viewport
+    - _Requirements: 2.4, 2.6, 2.7, 2.8, 2.9_
+
+- [x] 6. Implement `LearningPathsSection`
+  - [x] 6.1 Create `app/[locale]/components/learning-paths-section.tsx`
+    - Render exactly 4 `LearningPathCard` elements driven by `lib/learning-paths-config.ts` + i18n
+    - Each card shows title, outcome, icon, and ordered steps from i18n
+    - Hover effect: border color change or elevation shadow via Tailwind/Framer Motion
+    - Single-column layout below 768px; 2-column or 4-column above
+    - All content from i18n (`learningPaths.*`)
+    - _Requirements: 3.1, 3.2, 3.3, 3.4, 3.5_
+  - [ ]* 6.2 Write unit tests for `LearningPathsSection`
+    - Assert exactly 4 cards are rendered
+    - Assert hover styles are applied
+    - _Requirements: 3.1, 3.3_
+
+- [x] 7. Implement `WhySection`
+  - [x] 7.1 Create `app/[locale]/components/why-section.tsx`
+    - Render 12 feature cards from `lib/why-config.ts`; each shows icon, i18n title, i18n description
+    - 2-column grid below 768px; 3–4 column grid above
+    - All text from i18n (`whySection.*`)
+    - _Requirements: 4.1, 4.2, 4.3, 4.4_
+  - [ ]* 7.2 Write property test for feature card rendering (Property 10)
+    - **Property 10: Feature/service card renders required fields**
+    - **Validates: Requirements 4.2, 9.2**
+    - Use `fast-check` to generate arbitrary `WhyFeature` entries with i18n mocks; assert icon + title + description in rendered HTML
+    - _Tag: `// Feature: skillbridge-homepage-redesign, Property 10`_
+  - [ ]* 7.3 Write unit tests for `WhySection`
+    - Assert exactly 12 feature cards are rendered
+    - _Requirements: 4.1_
+
+- [ ] 8. Checkpoint — Ensure all tests pass, ask the user if questions arise.
+
+- [x] 9. Implement `ProjectsSection` (homepage) and filter utilities
+  - [x] 9.1 Create `lib/filter-utils.ts` with pure `filterByCategory` and `filterBySearch` functions
+    - `filterByCategory(items, category)`: returns items where `item.category === category`; returns all items when category is "All"
+    - `filterBySearch(bootcamps, query)`: returns items where `title` or `description` contains query (case-insensitive)
+    - _Requirements: 5.3, 5.4, 13.3_
+  - [ ]* 9.2 Write property tests for filter utilities (Properties 6 and 7)
+    - **Property 6: Category filter shows only matching items** — Validates: Requirements 5.3, 5.4, 13.2, 14.2, 14.5
+    - **Property 7: Search filter shows only matching bootcamps** — Validates: Requirements 13.3
+    - Use `fast-check` with `fc.array` + `fc.constantFrom` for category; `fc.string` for query
+    - _Tag: `// Feature: skillbridge-homepage-redesign, Property 6/7`_
+  - [x] 9.3 Create `app/[locale]/components/projects-section.tsx`
+    - Render `ProjectCard` grid from `lib/projects-config.ts`
+    - Category filter buttons (ERP, Web Development, AI, Automation, Python, Mobile, All)
+    - `useState<string>("All")` for `activeCategory`; filter list synchronously (use `filterByCategory`)
+    - "View More Projects" CTA navigating to `/projects`
+    - Single-column below 768px
+    - _Requirements: 5.1, 5.2, 5.3, 5.4, 5.5, 5.6_
+  - [ ]* 9.4 Write unit tests for `ProjectsSection`
+    - Test "View More Projects" href
+    - Test that selecting a category hides non-matching cards
+    - _Requirements: 5.4, 5.5_
+
+- [x] 10. Implement `HubSection`, `ScholarshipsSection`, and `CareerSection`
+  - [x] 10.1 Create `app/[locale]/components/hub-section.tsx`
+    - Fully static; render section heading, 10 feature list items, "Join SkillBridge Hub" and "Open Telegram Bot" CTA buttons with external URLs from `lib/community-config.ts`
+    - All text from i18n (`hubSection.*`)
+    - _Requirements: 6.1, 6.2, 6.3, 6.4, 6.5_
+  - [ ]* 10.2 Write unit tests for `HubSection`
+    - Assert exactly 10 hub feature items rendered
+    - Assert both CTA buttons render with correct hrefs
+    - _Requirements: 6.2, 6.3, 6.4_
+  - [x] 10.3 Create `app/[locale]/components/scholarships-section.tsx`
+    - Render `ScholarshipCard` for each entry in `lib/scholarships-config.ts`
+    - Render winners gallery (static avatar list)
+    - All display labels from i18n (`scholarshipsSection.*`)
+    - _Requirements: 7.1, 7.2, 7.3, 7.4, 7.5, 7.6_
+  - [ ]* 10.4 Write unit tests for `ScholarshipsSection`
+    - Assert winners gallery renders
+    - Assert "Apply" button href is correct
+    - _Requirements: 7.3, 7.4_
+  - [x] 10.5 Create `app/[locale]/components/career-section.tsx`
+    - Render 10 service items from `lib/career-config.ts`; each shows icon, i18n title, i18n description
+    - "Book Career Guidance" CTA → `/contact`
+    - _Requirements: 9.1, 9.2, 9.3_
+  - [ ]* 10.6 Write unit tests for `CareerSection`
+    - Assert "Book Career Guidance" href is `/contact`
+    - _Requirements: 9.3_
+
+- [x] 11. Implement `SuccessSection` updates
+  - [x] 11.1 Update `app/[locale]/components/success-section.tsx` (Testimonials)
+    - Extend `TestimonialConfig` in `lib/testimonial-config.tsx` to include `course` and `position` fields
+    - Update corresponding i18n keys in `messages/en.json` and `messages/am.json` under `successSection`
+    - Each `TestimonialCard` renders: student photo, name, course, current position, written feedback
+    - Scrollable carousel or single-column on mobile
+    - _Requirements: 8.1, 8.2, 8.3, 8.4, 8.5_
+  - [ ]* 11.2 Write property test for `TestimonialCard` (Property 4)
+    - **Property 4: Testimonial card renders all required fields**
+    - **Validates: Requirements 8.2**
+    - Use `fast-check` to generate arbitrary testimonial objects; assert photo, name, course, position, feedback present
+    - _Tag: `// Feature: skillbridge-homepage-redesign, Property 4`_
+  - [ ]* 11.3 Write unit tests for `SuccessSection`
+    - Assert testimonials render with course and position fields visible
+    - _Requirements: 8.2_
+
+- [ ] 12. Checkpoint — Ensure all tests pass, ask the user if questions arise.
+
+- [x] 13. Implement `CommunitySection`, `VideosSection`, and `FinalCTASection`
+  - [x] 13.1 Create `app/[locale]/components/community-section.tsx`
+    - Render platform links for Telegram, YouTube, LinkedIn, SkillBridge Hub, Discussion Groups from `lib/community-config.ts`
+    - Render "Join Telegram", "Subscribe on YouTube", "Follow on LinkedIn" CTA buttons with correct external hrefs
+    - Optional: display static community stats (member/subscriber count) where available
+    - All text from i18n (`communitySection.*`)
+    - _Requirements: 10.1, 10.2, 10.3, 10.4_
+  - [ ]* 13.2 Write unit tests for `CommunitySection`
+    - Assert 5 platform entries render
+    - Assert all three CTA buttons render with correct external hrefs
+    - _Requirements: 10.1, 10.2_
+  - [x] 13.3 Create `app/[locale]/components/videos-section.tsx`
+    - Render 4–6 video cards from `lib/videos-config.ts` inside existing `Carousel` component
+    - Each card: thumbnail (with `alt`), title, duration, publishDate, description, "Watch" button linking to YouTube URL
+    - Carousel: 1 card/slide on mobile, 2+ on tablet/desktop
+    - "View All Videos" CTA linking to YouTube channel URL (from config)
+    - _Requirements: 11.1, 11.2, 11.3, 11.4, 11.5, 11.6_
+  - [ ]* 13.4 Write property test for `VideoCard` (Property 5)
+    - **Property 5: Video card renders all required fields**
+    - **Validates: Requirements 11.1, 11.2**
+    - Use `fast-check` to generate arbitrary video objects; assert all six fields and correct Watch button href in rendered HTML
+    - _Tag: `// Feature: skillbridge-homepage-redesign, Property 5`_
+  - [ ]* 13.5 Write unit tests for `VideosSection`
+    - Assert "View All Videos" CTA renders
+    - Assert carousel renders 1 card on mobile viewport (jsdom width mock)
+    - _Requirements: 11.3, 11.5_
+  - [x] 13.6 Create `app/[locale]/components/final-cta-section.tsx`
+    - Fully static; render headline (`finalCTA.headline`), description (`finalCTA.description`)
+    - "Register for a Bootcamp" → `/courses`, "Contact Admissions" → `/contact`, "Explore All Programs" → `/courses`
+    - All text from i18n (`finalCTA.*`)
+    - _Requirements: 12.1, 12.2, 12.3, 12.4, 12.5, 12.6_
+  - [ ]* 13.7 Write unit tests for `FinalCTASection`
+    - Assert all three CTA button hrefs are correct
+    - _Requirements: 12.3, 12.4, 12.5, 12.6_
+
+- [x] 14. Wire homepage together
+  - [x] 14.1 Update `app/[locale]/page.tsx` to compose the full redesigned homepage
+    - Import and render sections in order: `Navbar`, `HeroSection`, `BootcampsSection`, `LearningPathsSection`, `WhySection`, `ProjectsSection`, `HubSection`, `ScholarshipsSection`, `SuccessSection`, `CareerSection`, `CommunitySection`, `VideosSection`, `FinalCTASection`, `Footer`
+    - Remove `ServicesSection`, `InstructorsSection`, `TestimonialsSection` from the homepage import list if they are replaced by the new sections
+    - _Requirements: 1.1–12.6, 15.1, 15.2, 15.3, 15.6_
+  - [ ]* 14.2 Write i18n rendering property test (Property 1)
+    - **Property 1: i18n text rendering**
+    - **Validates: Requirements 1.1, 1.2, 1.5, 3.4, 6.5, 10.4, 12.1, 12.2, 16.1, 16.2, 16.3, 16.4**
+    - Use `fast-check` with `fc.constantFrom("en", "am")`; for each locale assert that `useTranslations` returns the value stored in the corresponding `messages/{locale}.json` key
+    - _Tag: `// Feature: skillbridge-homepage-redesign, Property 1`_
+
+- [x] 15. Create sort utilities and `BootcampsPage` updates
+  - [x] 15.1 Add `sortByPopularity` and `sortByNewest` functions to `lib/filter-utils.ts`
+    - `sortByPopularity(bootcamps)`: returns list sorted by `reviews` descending (non-increasing)
+    - `sortByNewest(bootcamps)`: returns list sorted by `createdAt` descending (non-increasing)
+    - _Requirements: 13.4_
+  - [ ]* 15.2 Write property tests for sort utilities (Properties 8 and 9)
+    - **Property 8: Sort by popularity produces non-increasing reviews order** — Validates: Requirements 13.4
+    - **Property 9: Sort by newest produces non-increasing date order** — Validates: Requirements 13.4
+    - Use `fast-check` with `fc.array` of arbitrary bootcamp objects; assert ordering invariant after sort
+    - _Tag: `// Feature: skillbridge-homepage-redesign, Property 8/9`_
+  - [x] 15.3 Update `app/[locale]/courses/page.tsx` to be the new `BootcampsPage`
+    - Fetch from `fetchCourses()`; manage `bootcamps`, `loading`, `error` state
+    - Render category tab filters, text search input (using `filterBySearch`), sort dropdown (Most Popular / Newest)
+    - Render `BootcampCard` grid; show `SkeletonCard` while loading
+    - On API error: show error message + "Retry" button
+    - Each card shows all required fields per Requirement 13.5 with "View Details" and "Register" buttons
+    - All UI labels from i18n; page heading from i18n
+    - _Requirements: 13.1–13.9_
+  - [ ]* 15.4 Write unit tests for `BootcampsPage`
+    - Test search filters correctly
+    - Test sort dropdown changes card order
+    - Test error state renders retry button
+    - Test skeleton shows on load
+    - _Requirements: 13.2, 13.3, 13.4, 13.7, 13.8_
+
+- [x] 16. Create `ProjectsPage`
+  - [x] 16.1 Create `app/[locale]/projects/page.tsx`
+    - Render page heading and subtitle from i18n (`projectsPage.*`)
+    - Render filterable grid of `ProjectCard` items from `lib/projects-config.ts`
+    - Category filter buttons (All + 6 categories); filter synchronously with `filterByCategory`
+    - When no results: render "No projects found" message
+    - _Requirements: 14.1, 14.2, 14.4, 14.5, 14.6, 14.7_
+  - [x] 16.2 Create `app/[locale]/projects/loading.tsx` loading skeleton
+    - Render a grid of `SkeletonCard` components as the Suspense fallback
+    - _Requirements: 14.1_
+  - [ ]* 16.3 Write unit tests for `ProjectsPage`
+    - Assert page heading renders from i18n
+    - Assert filter category selection hides non-matching cards
+    - Assert "No projects found" renders when all items filtered out
+    - _Requirements: 14.4, 14.5, 14.6_
+
+- [ ] 17. Final checkpoint — Ensure all tests pass, ask the user if questions arise.
+
+## Notes
+
+- Tasks marked with `*` are optional and can be skipped for faster MVP
+- All new sections use the existing `SectionHeading` and `AnimatedCard` UI primitives
+- Static config files mirror the API shape so the fallback is a transparent swap
+- Property tests use `fast-check` with `numRuns: 100`; unit tests use Vitest + nReact Testing Library
+- Each property test includes the tag: `// Feature: skillbridge-homepage-redesign, Property {N}: {text}`
+- Checkpoints validate incremental progress before moving to the next phase

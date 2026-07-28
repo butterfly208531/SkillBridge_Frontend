@@ -1,12 +1,11 @@
 import type { Metadata } from "next";
-import { Inter, Montserrat, Poppins } from "next/font/google";
+import { Inter, Montserrat, Poppins, Plus_Jakarta_Sans, Merriweather } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/app/[locale]/components/theme-provider";
 import { hasLocale, NextIntlClientProvider } from "next-intl";
 import { notFound } from "next/navigation";
 import { routing } from "@/i18n/routing";
 
-// Font configurations
 const inter = Inter({
   variable: "--font-inter",
   subsets: ["latin"],
@@ -23,6 +22,19 @@ const poppins = Poppins({
   variable: "--font-poppins",
   subsets: ["latin"],
   weight: ["300", "400", "500", "600", "700"],
+});
+
+const plusJakarta = Plus_Jakarta_Sans({
+  variable: "--font-jakarta",
+  subsets: ["latin"],
+  weight: ["300", "400", "500", "600", "700", "800"],
+  display: "swap",
+});
+
+const merriweather = Merriweather({
+  variable: "--font-merriweather",
+  subsets: ["latin"],
+  weight: ["300", "400", "700", "900"],
 });
 
 export const metadata: Metadata = {
@@ -46,10 +58,10 @@ export default async function RootLayout({
   return (
     <html
       lang={locale}
-      className={`${montserrat.variable} ${inter.variable} ${poppins.variable}`}
+      className={`${montserrat.variable} ${inter.variable} ${poppins.variable} ${plusJakarta.variable} ${merriweather.variable}`}
       suppressHydrationWarning
     >
-      <body className='antialiased'>
+      <body className='antialiased font-jakarta'>
         <ThemeProvider attribute='class' defaultTheme='light' enableSystem>
           <NextIntlClientProvider>{children}</NextIntlClientProvider>
         </ThemeProvider>

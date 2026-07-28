@@ -82,22 +82,19 @@
       "span2": "ወደፊት",
       "span3": "በአንድ ክሊክ",
       "span4": "ይጀምሩ!",
+      "headline": "ቴክኖሎጂ ውስጥ ሙያዎን ያስጀምሩ — ተግባራዊ፣ ኢንዱስትሪ-ተኮር ስልጠና",
+      "subtitle": "የሶፍትዌር ልማት፣ ERP፣ አርቲፊሻል ኢንተሊጀንስ፣ አውቶሜሽን እና ቋንቋ ብቃትን ይማሩ።",
       "heroSubtitle": "እንከኖችን ማጥፋት ፣ ክህሎቶችን መገንባት ፣ ወደፊቶን መቀየር",
       "getStarted": "ጀምር",
       "contact": "እኛን ያግኙ",
+      "registerNow": "አሁን ይመዝገቡ",
+      "exploreBootcamps": "ቡትካምፖችን ያስሱ",
       "statCards": [
-         {
-            "title": "ኦንላይን ኮርሶች",
-            "value": "15+"
-         },
-         {
-            "title": "ቪዲዮ ኮርሶች",
-            "value": "10+"
-         },
-         {
-            "title": "ቲቶሮች",
-            "value": "20+"
-         }
+         { "label": "የሰለጠኑ ተማሪዎች", "value": "500+", "title": "ኦንላይን ኮርሶች" },
+         { "label": "ንቁ ቡትካምፖች", "value": "5+", "title": "ቪዲዮ ኮርሶች" },
+         { "label": "የተጠናቀቁ ፕሮጀክቶች", "value": "50+", "title": "ቲቶሮች" },
+         { "label": "የማህበረሰብ አባላት", "value": "1000+" },
+         { "label": "የተሰጡ ስኮላርሺፖች", "value": "20+" }
       ]
    },
    "services": {
@@ -508,31 +505,25 @@
          ]
       },
       "popular": {
-         "title": "የተወደዱ ዝርዝሮች",
+         "title": "ታዋቂ ቡትካምፖች",
          "links": [
-            {
-               "href": "/courses/development",
-               "label": "ልማት"
-            },
-            {
-               "href": "/courses/business",
-               "label": "ቢዝነስ"
-            },
-            {
-               "href": "/courses/ai",
-               "label": "የአርቲፊሻል ኢንተሊጀንስ"
-            },
-            {
-               "href": "/courses/blockchain",
-               "label": "ብሎክቼይን"
-            }
+            { "href": "/courses", "label": "Odoo ፋንክሽናል ERP" },
+            { "href": "/courses", "label": "Odoo ቴክኒካል ልማት" },
+            { "href": "/courses", "label": "ፉል-ስታክ ልማት" },
+            { "href": "/courses", "label": "Python ፕሮግራሚንግ" },
+            { "href": "/courses", "label": "AI እና ማሽን ለርኒንግ" },
+            { "href": "/courses", "label": "ዳታ ሳይንስ" },
+            { "href": "/courses", "label": "n8n አውቶሜሽን" },
+            { "href": "/courses", "label": "IELTS ዝግጅት" },
+            { "href": "/courses", "label": "TOEFL ዝግጅት" },
+            { "href": "/courses", "label": "Duolingo ዝግጅት" }
          ]
       },
       "contact": {
          "title": "አግኙን"
       },
       "copyright": {
-         "text": "SkillBridge፣ የሁሉም መብቶች የተይዙበት ነው።"
+         "text": "SkillBridge Institute of Technology። ሁሉም መብቶች የተጠበቁ ናቸው።"
       }
    },
    "contactPage": {
@@ -811,5 +802,154 @@
       "myCourses": "ወደ ኮርሶቼ ይሂዱ",
       "backToHome": "ወደ መነሻ ተመለስ",
       "goBack": "ተመለስ"
+   },
+   "bootcampsSection": {
+      "heading": "መጪ ቡትካምፖች",
+      "subheading": "ወደ ቀጣዩ ቡድናችን ይቀላቀሉ እና ዛሬ ትክክለኛ ክህሎቶችን መገንባት ይጀምሩ።",
+      "viewAll": "ሁሉም ቡትካምፖችን ይመልከቱ",
+      "register": "ይመዝገቡ",
+      "duration": "ጊዜ",
+      "startDate": "የጀምር ቀን",
+      "mode": "ዓይነት",
+      "level": "ደረጃ"
+   },
+   "learningPaths": {
+      "heading": "የትምህርት መንገዶች",
+      "subheading": "ከጀማሪ እስከ ሙያ ዝግጁ ባለሙያ የሚደርስ ቅደም ተከተላዊ ካርታ ይከተሉ።",
+      "outcome": "የሙያ ውጤት",
+      "softwareEngineering": {
+         "title": "የሶፍትዌር ምህንድስና መንገድ",
+         "outcome": "ሶፍትዌር ምህንዲስ",
+         "steps": ["የፕሮግራሚንግ መሠረቶች", "Python", "ፉል-ስታክ ልማት", "የላቀ ባክኤንድ እና APIs", "AI እና ማሽን ለርኒንግ", "ኢንተርንሺፕ", "ሶፍትዌር ምህንዲስ"]
+      },
+      "erpConsultant": {
+         "title": "የ ERP አማካሪ መንገድ",
+         "outcome": "ERP አማካሪ",
+         "steps": ["Odoo ፋንክሽናል", "Odoo ቴክኒካል", "ERP ትግበራ", "የንግድ ሂደት ትንተና", "ERP አማካሪ"]
+      },
+      "aiEngineer": {
+         "title": "የ AI ምህንዲስ መንገድ",
+         "outcome": "AI ምህንዲስ",
+         "steps": ["Python", "ሒሳብ", "የዳታ ሳይንስ", "ማሽን ለርኒንግ", "ዲፕ ለርኒንግ", "AI ፕሮጀክቶች", "AI ምህንዲስ"]
+      },
+      "studyAbroad": {
+         "title": "ውጭ ሀገር ትምህርት መንገድ",
+         "outcome": "ዩኒቨርሲቲ ምዝገባ",
+         "steps": ["አካዳሚክ እንግሊዝኛ", "IELTS / TOEFL / Duolingo", "የማመልከቻ ድጋፍ", "ስኮላርሺፖች", "ዩኒቨርሲቲ ምዝገባ"]
+      }
+   },
+   "whySection": {
+      "heading": "ስኪልብሪጅን ለምን?",
+      "subheading": "ስልጠና ብቻ ሳይሆን — ሙያ ይገነባሉ።",
+      "features": {
+         "projectBased": { "title": "ፕሮጀክት-ተኮር ትምህርት", "description": "ቀጥታ ወደ ፖርትፎሊዮዎ የሚሄዱ ትክክለኛ ፕሮጀክቶች ይገንቡ።" },
+         "mentors": { "title": "ልምድ ያላቸው የኢንዱስትሪ አማካሪዎች", "description": "ከምርጥ ቴክ ኩባንያዎች ሙያተኞች ይማሩ።" },
+         "onlinePhysical": { "title": "ኦንላይን እና አካላዊ ክፍሎች", "description": "ለአኗኗርዎ የሚስማሙ ተለዋዋጭ የመማሪያ አማራጮች።" },
+         "vipCoaching": { "title": "VIP (1-ለ-1) ኮቺንግ", "description": "ለእርስዎ የትምህርት ፍጥነት የተዘጋጁ ግላዊ ክፍለ-ጊዜዎች።" },
+         "groupBootcamps": { "title": "የቡድን ቡትካምፖች", "description": "በጋራ ቡድናዊ ሁኔታ ውስጥ አብሮ ይማሩ።" },
+         "realProjects": { "title": "ትክክለኛ-ዓለም ፕሮጀክቶች", "description": "ትክክለኛ የንግድ ተጽዕኖ ባላቸው የኢንዱስትሪ-ደረጃ ፕሮጀክቶች ላይ ይስሩ።" },
+         "internships": { "title": "የኢንተርንሺፕ እድሎች", "description": "ሥራ ልምድ ለማግኘት ከአጋር ኩባንያዎች ጋር ይቀላቀሉ።" },
+         "scholarships": { "title": "ስኮላርሺፖች", "description": "ትምህርትን ተደራሽ ለማድረግ ብቃት እና ፍላጎት-ተኩስ ገንዘብ።" },
+         "careerSupport": { "title": "የሙያ ድጋፍ", "description": "ሬዙሜ ግምገማ፣ LinkedIn ማሻሻያ እና የሥራ ቦታ ድጋፍ።" },
+         "community": { "title": "የማህበረሰብ ትምህርት", "description": "ተማሪዎች እና ሙያተኞች ያሉበት ማህበረሰብ ይቀላቀሉ።" },
+         "certificates": { "title": "የጠናቀቁ ምስክሮች", "description": "ስኬቶቻችሁን ለማሳየት የታወቁ ምስክሮች ያግኙ።" },
+         "flexible": { "title": "ተለዋዋጭ የትምህርት መርሃ-ግብር", "description": "የምሽት እና የሳምንት መጨረሻ አማራጮች ባሉበት በራሰዎ ፍጥነት ይማሩ።" }
+      }
+   },
+   "projectsSection": {
+      "heading": "የተማሪዎች ፕሮጀክቶች",
+      "subheading": "ተማሪዎቻችን ምን እንደ ሠሩ ይመልከቱ — ትክክለኛ ፕሮጀክቶች፣ ትክክለኛ ተጽዕኖ።",
+      "viewMore": "ተጨማሪ ፕሮጀክቶችን ይመልከቱ",
+      "all": "ሁሉም",
+      "noProjects": "ምንም ፕሮጀክቶች አልተገኙም።"
+   },
+   "hubSection": {
+      "heading": "ስኪልብሪጅ ሃብ",
+      "subheading": "ለቀጣይ ትምህርት እና እድገት ሁሉ-ወ-አንድ የማህበረሰብ መድረክዎ።",
+      "joinHub": "ስኪልብሪጅ ሃብን ይቀላቀሉ",
+      "openBot": "ቴሌግራም ቦቱን ይክፈቱ",
+      "description": "በስኪልብሪጅ ሃብ መድረክ ላይ ከሺዎች ተማሪዎች ጋር ይገናኙ፣ ይወዳደሩ እና ያድጉ።",
+      "features": ["ዕለታዊ ፈተናዎች", "ሳምንታዊ ጥያቄዎች", "ስኪልፖይንቶች", "ሊደርቦርዶች", "ስኮላርሺፖች", "የትምህርት ሀብቶች", "የማህበረሰብ ውይይቶች", "የሪፈራል ሽልማቶች", "ማሳወቂያዎች", "የትምህርት ረዥም ጊዜዎች"]
+   },
+   "scholarshipsSection": {
+      "heading": "ስኮላርሺፖች",
+      "subheading": "ለወደፊትዎ ኢንቨስት ያድርጉ — እዚያ ለመድረስ እናግዝዎታለን።",
+      "currentApplications": "አሁናዊ ማመልከቻዎች",
+      "deadline": "የምዝገባ የመጨረሻ ቀን",
+      "winners": "አሸናፊዎች",
+      "eligibility": "ብቁነት",
+      "apply": "አሁን ያመልክቱ",
+      "previousWinners": "ቀደምት የስኮላርሺፕ አሸናፊዎች",
+      "scholarships": {
+         "fullStack": { "name": "ፉል-ስታክ ስኮላርሺፕ", "eligibility": "በ Python እና ዌብ ልማት ኮርሶች ምርጥ አፈጻጸም" },
+         "odooFunctional": { "name": "Odoo ፋንክሽናል ስኮላርሺፕ", "eligibility": "ጠንካራ ፍላጎት በ ERP እና የንግድ ሂደቶች" },
+         "python": { "name": "Python ስኮላርሺፕ", "eligibility": "የፕሮግራሚንግ ብቃት እና የፋይናንስ ፍላጎት" },
+         "ai": { "name": "AI ስኮላርሺፕ", "eligibility": "ምርጥነት በሒሳብ እና የዳታ ሳይንስ መሠረቶች" }
+      }
+   },
+   "successSection": {
+      "heading": "የስኬት ታሪኮች",
+      "subheading": "ትክክለኛ ተማሪዎች። ትክክለኛ ውጤቶች። ትክክለኛ ተፅዕኖ።",
+      "testimonials": {
+         "student1": { "name": "አበበ ከበደ", "course": "ፉል-ስታክ ልማት", "position": "ጁኒየር ፉል-ስታክ ዴቨሎፐር ቴክኢትዮጵያ", "testimonial": "ስኪልብሪጅ ሙያዬን ቀይሮታል። ከተመረቅሁ 3 ወራት ውስጥ የመጀመሪያ ቴክ ሥራዬን አገኘሁ!" },
+         "student2": { "name": "ትግስት ኃይሌ", "course": "Odoo ፋንክሽናል ERP", "position": "ERP አማካሪ ሎጂሶፍት", "testimonial": "አማካሪነቱ እና ተግባራዊ ፕሮጀክቶቹ ወደ ማንኛውም ERP ትግበራ ለመሄድ ያስፈልጋሉ ልበሜን ሰጡኝ።" },
+         "student3": { "name": "ዮሃንስ ታደሰ", "course": "AI እና ማሽን ለርኒንግ", "position": "ዳታ አናሊስት ኪፊያ ፋይናንሻል", "testimonial": "ዜሮ Python ዕውቀት ካለኝ ወደ አሁን ምርት ላይ ያሉ ML ሞዴሎች መገንባት ደረስኩ።" }
+      }
+   },
+   "careerSection": {
+      "heading": "የሙያ አገልግሎቶች",
+      "subheading": "ስልጠና ብቻ ሳይሆን — ሙያዎን እናስጀምራለን።",
+      "bookButton": "የሙያ መምሪያ ይያዙ",
+      "services": {
+         "cvReview": { "title": "CV እና ሬዙሜ ግምገማ", "description": "ለቀጣሪዎች ጎልቶ ለመታየት ሬዙሜዎ ላይ የባለሙያ ምጽፋ ያግኙ።" },
+         "linkedin": { "title": "የ LinkedIn መገለጫ ማሻሻል", "description": "ቀጣሪዎችን የሚስብ ሙያዊ LinkedIn ምስል ይፍጠሩ።" },
+         "portfolio": { "title": "ፖርትፎሊዮ ልማት", "description": "ምርጥ ፕሮጀክቶቻችሁን የሚያሳይ ማራኪ ፖርትፎሊዮ ይፍጠሩ።" },
+         "github": { "title": "GitHub መገለጫ ግምገማ", "description": "የኮድ ክህሎቶቻቸውን ለማሳየት GitHub ያሻሽሉ።" },
+         "interviewPrep": { "title": "የቃለ-መጠይቅ ዝግጅት", "description": "የተለመዱ የቃለ-መጠይቅ ጥያቄዎችን ከባለሙያ መምሪያ ጋር ይለማመዱ።" },
+         "mockInterviews": { "title": "ቴክኒካዊ ሞክ ቃለ-መጠይቅ", "description": "ልበ-ሙሉነት ለመፍጠር ትክክለኛ ቴክኒካዊ ቃለ-መጠይቆችን ይምስሉ።" },
+         "freelancing": { "title": "ፍሪላንሲንግ መምሪያ", "description": "ደንበኞችን እንዴት ማግኘት እና እንደ ፍሪላንሰር ስኬት ማምጣት እንደሚቻል ይማሩ።" },
+         "mentorship": { "title": "የሙያ አሳዳሪነት", "description": "ከኢንዱስትሪ ሙያተኞች ጋር 1-ለ-1 ክፍለ-ጊዜዎች።" },
+         "internshipSupport": { "title": "የኢንተርንሺፕ ድጋፍ", "description": "ለኢንተርንሺፕ ቦታዎች ከአጋር ኩባንያዎች ጋር ይገናኙ።" },
+         "jobSearch": { "title": "የሥራ ፍለጋ ድጋፍ", "description": "የሥራ ሰሌዳችንን እና የቀጣሪ አውታርን ያግኙ።" }
+      }
+   },
+   "communitySection": {
+      "heading": "የተማሪዎች ማህበረሰብ",
+      "subheading": "ትምህርት ፈጽሞ አይቆምም — ከእርስዎ ጋር የሚያድግ ማህበረሰብ ይቀላቀሉ።",
+      "joinTelegram": "ቴሌግራምን ይቀላቀሉ",
+      "subscribeYoutube": "ዩቲዩብ ላይ ደንበኛ ይሁኑ",
+      "followLinkedin": "ሊንክዲን ይከተሉ",
+      "platforms": {
+         "telegram": { "label": "የቴሌግራም ማህበረሰብ", "stat": "አባላት" },
+         "youtube": { "label": "የዩቲዩብ ቻናል", "stat": "ደንበኞች" },
+         "linkedin": { "label": "LinkedIn ገጽ", "stat": "ተከታዮች" },
+         "hub": { "label": "ስኪልብሪጅ ሃብ", "stat": "አባላት" },
+         "discussions": { "label": "የውይይት ቡድኖች", "stat": "ንቁ ቡድኖች" }
+      }
+   },
+   "videosSection": {
+      "heading": "የቅርብ ጊዜ ቪዲዮዎች",
+      "subheading": "ከቅርብ ጊዜ ትምህርታዊ ይዘቶቻችን ይመልከቱ እና ይማሩ።",
+      "watch": "ይመልከቱ",
+      "viewAll": "ሁሉም ቪዲዮዎችን ይመልከቱ",
+      "videos": {
+         "video1": { "title": "Odoo 17 ጅምር", "description": "ለ Odoo ERP ፋንክሽናል ሞጁሎች ሙሉ የጀማሪ መምሪያ።" },
+         "video2": { "title": "ፉል-ስታክ ዌብ ልማት ካርታ 2025", "description": "ፉል-ስታክ ዴቨሎፐር ለመሆን ሁሉም ማወቅ ያለብዎት።" },
+         "video3": { "title": "Python ለጀማሪዎች — ሙሉ ትምህርት", "description": "ተግባራዊ ልምምዶች ያሉት Python ከዜሮ ይማሩ።" },
+         "video4": { "title": "AI እና ማሽን ለርኒንግ በ Python", "description": "የመጀመሪያ ማሽን ለርኒንግ ሞዴልዎን ደረጃ-በ-ደረጃ ይገንቡ።" },
+         "video5": { "title": "n8n ለንግድ አውቶሜሽን", "description": "ኮድ ሳያስፈልግ የንግድ ሂደቶቻቸውን በ n8n ያዘጋጁ።" }
+      }
+   },
+   "finalCTA": {
+      "headline": "የቴክ ሙያዎን ለመጀመር ዝግጁ ነዎት?",
+      "description": "ወደ ስኪልብሪጅ ቴክኖሎጂ ኢንስቲትዩት ይቀላቀሉ እና በባለሙያ-መምሪያ ቡትካምፖች፣ ትክክለኛ-ዓለም ፕሮጀክቶች እና ደጋፊ የትምህርት ማህበረሰብ ተግባራዊ ክህሎቶችን ያግኙ።",
+      "registerBootcamp": "ለቡትካምፕ ይመዝገቡ",
+      "contactAdmissions": "ምዝገባ ያነጋግሩ",
+      "explorePrograms": "ሁሉም ፕሮግራሞችን ያስሱ"
+   },
+   "projectsPage": {
+      "heading": "የተማሪዎች ፕሮጀክቶች",
+      "subtitle": "ሁሉም ትራኮች ላይ ባሉ ስኪልብሪጅ ተማሪዎች የተሠሩ ትክክለኛ-ዓለም ፕሮጀክቶችን ያስሱ።",
+      "noProjects": "ለዚህ ምድብ ምንም ፕሮጀክቶች አልተገኙም።"
    }
 }
