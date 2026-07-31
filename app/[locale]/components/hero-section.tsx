@@ -77,11 +77,11 @@ export function HeroSection() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.4, delay: 0.3 + index * 0.1 }}
-                className="bg-white dark:bg-gray-800 rounded-xl py-4 px-3 flex flex-col items-center shadow-md hover:shadow-xl transition-all duration-300 border border-[#2196F3]/40"
+                className="bg-white dark:bg-gray-800 rounded-xl py-4 px-3 flex flex-col items-center shadow-md hover:shadow-xl transition-all duration-300 border-t-2 border-[#F57C00] border-x border-b border-x-[#2196F3]/20 border-b-[#2196F3]/20"
               >
                 <CountUp
                   end={stat.value}
-                  className="text-xl lg:text-2xl font-bold text-gray-900 dark:text-white"
+                  className="text-xl lg:text-2xl font-bold text-[#2196F3] dark:text-white"
                   suffix=""
                 />
                 <p className="text-gray-500 dark:text-gray-400 text-[11px] lg:text-sm text-center mt-1">

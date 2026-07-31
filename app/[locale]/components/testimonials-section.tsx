@@ -8,9 +8,9 @@ import { SectionHeading } from "@/app/[locale]/components/ui/section-heading";
 import { TestimonialsConfig } from "@/lib/testimonial-config";
 
 const testimonialImages = [
-  "/images/testimonials/pp1.png",
-  "/images/testimonials/pp2.png",
-  "/images/testimonials/pp3.png",
+  "/images/testimonials/pp1.png", // Abebe Kebede — male
+  "/images/testimonials/pp2.png", // Tigist Haile — female
+  "/images/testimonials/pp1.png", // Yohannes Tadesse — male (reuse pp1)
 ];
 
 export function TestimonialsSection() {

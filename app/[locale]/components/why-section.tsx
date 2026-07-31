@@ -37,11 +37,19 @@ export function WhySection() {
                 className={cn(
                   "flex flex-col items-start gap-3 p-4 rounded-xl border border-gray-200 dark:border-gray-700",
                   "bg-white dark:bg-gray-900",
-                  "hover:shadow-md hover:scale-105 transition-all duration-300"
+                  "hover:shadow-md hover:scale-105 hover:border-[#2196F3] transition-all duration-300"
                 )}
               >
-                <div className="p-2 rounded-lg bg-blue-50 dark:bg-blue-900/30">
-                  <Icon className="h-5 w-5 text-[#2196F3]" aria-hidden="true" />
+                <div className={cn(
+                  "p-2 rounded-lg",
+                  i % 2 === 0
+                    ? "bg-blue-50 dark:bg-blue-900/30"
+                    : "bg-orange-50 dark:bg-orange-900/20"
+                )}>
+                  <Icon
+                    className={cn("h-5 w-5", i % 2 === 0 ? "text-[#2196F3]" : "text-[#F57C00]")}
+                    aria-hidden="true"
+                  />
                 </div>
                 <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-50 leading-snug">
                   {t(`features.${feature.key}.title`)}

@@ -8,7 +8,6 @@ import Footer from "@/app/[locale]/components/footer";
 import BootcampCard from "@/app/[locale]/components/ui/bootcamp-card";
 import { Button } from "@/app/[locale]/components/ui/button";
 import { Input } from "@/app/[locale]/components/ui/input";
-import { SectionHeading } from "@/app/[locale]/components/ui/section-heading";
 import { imagePaths } from "@/app/[locale]/data/image-paths";
 import { cn } from "@/lib/utils";
 
@@ -46,67 +45,87 @@ export default function CoursesPage() {
   );
 
   return (
-    <div className="min-h-screen bg-white dark:bg-gray-950 font-montserrat">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
       <Navbar />
-      <main className="container mx-auto px-4 py-12">
-        <SectionHeading
-          title={t("coursePage.explore")}
-          subtitle={t("coursePage.description")}
-        />
 
-        {/* Search + Sort */}
-        <div className="flex flex-col md:flex-row gap-4 mb-6">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 h-4 w-4" />
+      {/* Hero banner */}
+      <div className="bg-gradient-to-br from-[#1565C0] via-[#2196F3] to-[#42A5F5] dark:from-gray-900 dark:via-blue-950 dark:to-gray-900 py-16 px-4">
+        <div className="container mx-auto text-center max-w-3xl">
+          <span className="inline-block bg-white/20 text-white text-xs font-semibold px-3 py-1 rounded-full mb-4 tracking-wide uppercase">
+            All Bootcamps
+          </span>
+          <h1 className="text-4xl md:text-5xl font-extrabold text-white mb-4 leading-tight">
+            {t("coursePage.explore")}
+          </h1>
+          <p className="text-blue-100 text-base md:text-lg mb-8 leading-relaxed">
+            {t("coursePage.description")}
+          </p>
+          {/* Integrated search */}
+          <div className="relative max-w-xl mx-auto">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 h-5 w-5" />
             <Input
               type="search"
               placeholder={t("coursePage.searchPlaceholder")}
-              className="pl-10"
+              className="pl-12 h-13 rounded-2xl border-0 shadow-xl text-base bg-white dark:bg-gray-900 dark:text-gray-100 focus-visible:ring-2 focus-visible:ring-[#F57C00]"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
-          <div className="flex gap-2">
+        </div>
+      </div>
+
+      <main className="container mx-auto px-4 py-10">
+        {/* Category tabs + sort */}
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-8">
+          <div className="flex flex-wrap gap-2">
+            {CATEGORIES.map((cat) => (
+              <button
+                key={cat}
+                onClick={() => setActiveCategory(cat)}
+                className={cn(
+                  "px-4 py-1.5 rounded-full text-sm font-semibold border transition-all duration-200",
+                  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500",
+                  activeCategory === cat
+                    ? "bg-[#2196F3] text-white border-[#2196F3] shadow-sm"
+                    : "bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-400 border-gray-200 dark:border-gray-700 hover:border-[#2196F3] hover:text-[#2196F3]"
+                )}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
+          <div className="flex gap-2 shrink-0">
             <Button
+              size="sm"
               variant={sortBy === "popular" ? "default" : "outline"}
               onClick={() => setSortBy("popular")}
-              className={sortBy === "popular" ? "bg-[#2196F3] text-white" : ""}
+              className={cn("rounded-xl text-sm", sortBy === "popular" ? "bg-[#2196F3] text-white hover:bg-blue-600" : "")}
             >
               {t("coursePage.sort")}
             </Button>
             <Button
+              size="sm"
               variant={sortBy === "newest" ? "default" : "outline"}
               onClick={() => setSortBy("newest")}
-              className={sortBy === "newest" ? "bg-[#2196F3] text-white" : ""}
+              className={cn("rounded-xl text-sm", sortBy === "newest" ? "bg-[#2196F3] text-white hover:bg-blue-600" : "")}
             >
               {t("coursePage.newest")}
             </Button>
           </div>
         </div>
 
-        {/* Category tabs */}
-        <div className="flex flex-wrap gap-2 mb-8">
-          {CATEGORIES.map((cat) => (
-            <button
-              key={cat}
-              onClick={() => setActiveCategory(cat)}
-              className={cn(
-                "px-4 py-1.5 rounded-full text-sm font-medium border transition-all duration-200",
-                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500",
-                activeCategory === cat
-                  ? "bg-[#2196F3] text-white border-[#2196F3]"
-                  : "bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-400 border-gray-200 dark:border-gray-700 hover:border-[#2196F3] hover:text-[#2196F3]"
-              )}
-            >
-              {cat}
-            </button>
-          ))}
-        </div>
+        {/* Result count */}
+        {searchQuery || activeCategory !== "All" ? (
+          <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+            {sorted.length} bootcamp{sorted.length !== 1 ? "s" : ""} found
+          </p>
+        ) : null}
 
         {/* Cards grid */}
         {sorted.length === 0 ? (
-          <div className="text-center py-16 text-gray-500 dark:text-gray-400">
-            {t("coursePage.noCourse")}
+          <div className="text-center py-20 text-gray-400 dark:text-gray-500">
+            <div className="text-5xl mb-4">🔍</div>
+            <p className="text-base font-medium">{t("coursePage.noCourse")}</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

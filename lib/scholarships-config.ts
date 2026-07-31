@@ -72,14 +72,14 @@ export const scholarshipWinnersConfig: ScholarshipWinner[] = [
   },
   {
     id: "winner-3",
-    name: "Yohannes Tadesse",
+    name: "Sara Mohammed",
     image: "/images/testimonials/pp3.png",
     scholarshipKey: "ai",
     year: 2024,
   },
   {
     id: "winner-4",
-    name: "Sara Mohammed",
+    name: "Yohannes Tadesse",
     image: "/images/testimonials/pp1.png",
     scholarshipKey: "python",
     year: 2025,
