@@ -7,7 +7,6 @@ import { ProjectsSection } from "@/app/[locale]/components/projects-section";
 import { HubSection } from "@/app/[locale]/components/hub-section";
 import { ScholarshipsSection } from "@/app/[locale]/components/scholarships-section";
 import { TestimonialsSection } from "@/app/[locale]/components/testimonials-section";
-import { CareerSection } from "@/app/[locale]/components/career-section";
 import { CommunitySection } from "@/app/[locale]/components/community-section";
 import { VideosSection } from "@/app/[locale]/components/videos-section";
 import { FinalCTASection } from "@/app/[locale]/components/final-cta-section";
@@ -69,7 +68,6 @@ export default function Home() {
       <HubSection />
       <ScholarshipsSection />
       <TestimonialsSection />
-      <CareerSection />
       <CommunitySection />
       <VideosSection />
       <FinalCTASection />

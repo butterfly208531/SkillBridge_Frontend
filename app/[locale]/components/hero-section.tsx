@@ -64,32 +64,7 @@ export function HeroSection() {
             </Button>
           </motion.div>
 
-          {/* Stat cards row — visible on mobile and desktop */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.3 }}
-            className="grid grid-cols-2 sm:grid-cols-3 gap-4 mt-10 md:mt-12"
-          >
-            {stats.slice(0, 5).map((stat, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4, delay: 0.3 + index * 0.1 }}
-                className="bg-white dark:bg-gray-800 rounded-xl py-4 px-3 flex flex-col items-center shadow-md hover:shadow-xl transition-all duration-300 border-t-2 border-[#F57C00] border-x border-b border-x-[#2196F3]/20 border-b-[#2196F3]/20"
-              >
-                <CountUp
-                  end={stat.value}
-                  className="text-xl lg:text-2xl font-bold text-[#2196F3] dark:text-white"
-                  suffix=""
-                />
-                <p className="text-gray-500 dark:text-gray-400 text-[11px] lg:text-sm text-center mt-1">
-                  {stat.label}
-                </p>
-              </motion.div>
-            ))}
-          </motion.div>
+
         </div>
 
         {/* Right column: hero image — hidden on mobile */}

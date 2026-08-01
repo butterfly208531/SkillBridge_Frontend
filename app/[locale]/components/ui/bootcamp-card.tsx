@@ -167,22 +167,20 @@ export default function BootcampCard({
 
         {/* Action buttons */}
         <div className="flex gap-2 mt-1">
-          {showViewDetails && (
-            <Button
-              variant="outline"
-              size="sm"
-              className="flex-1 focus-visible:ring-2 focus-visible:ring-blue-500"
-              asChild
-            >
-              <Link href={`/courses/${id}`}>View Details</Link>
-            </Button>
-          )}
           <Button
+            variant="outline"
             size="sm"
-            className="flex-1 bg-blue-600 hover:bg-blue-700 text-white focus-visible:ring-2 focus-visible:ring-blue-500"
+            className="flex-1 border-[#2196F3] text-[#2196F3] hover:bg-blue-50 dark:hover:bg-blue-950/30 focus-visible:ring-2 focus-visible:ring-blue-500"
             asChild
           >
-            <Link href={`/courses/${id}/ApplicationForm`}>Register</Link>
+            <Link href={`/courses/${id}`}>View Details</Link>
+          </Button>
+          <Button
+            size="sm"
+            className="flex-1 bg-[#F57C00] hover:bg-orange-500 text-white focus-visible:ring-2 focus-visible:ring-orange-400"
+            asChild
+          >
+            <Link href={`/courses/${id}/ApplicationForm`}>Enroll Now</Link>
           </Button>
         </div>
       </div>

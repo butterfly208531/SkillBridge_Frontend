@@ -203,6 +203,10 @@ export default function Footer() {
           </div>
         </motion.div>
       </div>
+      {/* Dark bottom strip */}
+      <div className="bg-[#0D47A1] py-3 px-4 text-center text-xs text-white/60">
+        SkillBridge Institute of Technology &mdash; Bridging Gaps, Building Skills, Transforming Futures.
+      </div>
     </footer>
   );
 }

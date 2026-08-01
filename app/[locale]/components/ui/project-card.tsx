@@ -117,45 +117,45 @@ export default function ProjectCard({
         {/* Spacer */}
         <div className="flex-1" />
 
-        {/* Action links */}
-        {(demoUrl || githubUrl) && (
-          <div className="flex gap-2 mt-1">
-            {demoUrl && (
-              <Button
-                variant="outline"
-                size="sm"
-                className="flex-1 focus-visible:ring-2 focus-visible:ring-blue-500"
-                asChild
-              >
-                <Link
-                  href={demoUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
-                  Demo
-                </Link>
-              </Button>
+        {/* Action links — always show both buttons */}
+        <div className="flex gap-2 mt-1">
+          <Button
+            variant="outline"
+            size="sm"
+            className="flex-1 focus-visible:ring-2 focus-visible:ring-blue-500"
+            asChild
+          >
+            {demoUrl ? (
+              <Link href={demoUrl} target="_blank" rel="noopener noreferrer">
+                <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
+                Demo
+              </Link>
+            ) : (
+              <span className="opacity-40 cursor-not-allowed">
+                <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
+                Demo
+              </span>
             )}
-            {githubUrl && (
-              <Button
-                variant="outline"
-                size="sm"
-                className="flex-1 focus-visible:ring-2 focus-visible:ring-blue-500"
-                asChild
-              >
-                <Link
-                  href={githubUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <Github className="h-3.5 w-3.5" aria-hidden="true" />
-                  GitHub
-                </Link>
-              </Button>
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="flex-1 focus-visible:ring-2 focus-visible:ring-blue-500"
+            asChild
+          >
+            {githubUrl ? (
+              <Link href={githubUrl} target="_blank" rel="noopener noreferrer">
+                <Github className="h-3.5 w-3.5" aria-hidden="true" />
+                GitHub
+              </Link>
+            ) : (
+              <span className="opacity-40 cursor-not-allowed">
+                <Github className="h-3.5 w-3.5" aria-hidden="true" />
+                GitHub
+              </span>
             )}
-          </div>
-        )}
+          </Button>
+        </div>
       </div>
     </div>
   )
