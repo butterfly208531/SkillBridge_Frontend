@@ -366,7 +366,7 @@ const ApplicationForm = () => {
     setCurrentStep(1);
   };
 
-  const paymentOptions = {
+  const paymentOptions: Record<string, string> = {
     telebirr: "to: Ibrahim Ghazali\n0960171717",
     cbe: "to: Ibrahim Ghazali\n100041753914",
     boa: "to: Ibrahim Ghazali\nXXXXXXXXXXX",
@@ -382,7 +382,7 @@ const ApplicationForm = () => {
         {/* Split layout */}
         <div className='flex flex-col lg:flex-row min-h-[calc(100vh-80px)]'>
 
-          {/* ── Left panel: fan-of-cards visual ── */}
+          {/* Left panel: fan-of-cards visual */}
           <div
             className='hidden lg:flex lg:w-5/12 flex-col justify-between relative overflow-hidden'
             style={{ background: 'linear-gradient(160deg, #2196F3 0%, #1565C0 50%, #0D47A1 100%)' }}
@@ -413,7 +413,7 @@ const ApplicationForm = () => {
             {/* Fan of cards */}
             <div className='relative z-10 flex items-center justify-center flex-1 py-8'>
               <div className='relative w-72 h-48'>
-                {/* Card 1 — far left */}
+                {/* Card 1 - far left */}
                 <div className='absolute left-0 top-4 w-28 h-36 rounded-2xl overflow-hidden shadow-xl rotate-[-18deg] origin-bottom'
                   style={{ background: 'linear-gradient(135deg,#F57C00,#FF8F00)' }}>
                   <div className='p-3 text-white'>
@@ -428,7 +428,7 @@ const ApplicationForm = () => {
                     <div className='text-sm font-black mt-1 text-gray-800'>Full-Stack</div>
                   </div>
                 </div>
-                {/* Card 3 — center (front) */}
+                {/* Card 3 - center (front) */}
                 <div className='absolute left-16 -top-2 w-32 h-40 rounded-2xl overflow-hidden shadow-2xl z-10'
                   style={{ background: 'linear-gradient(135deg,#1565C0,#2196F3)' }}>
                   <div className='p-4 text-white'>
@@ -444,7 +444,7 @@ const ApplicationForm = () => {
                     <div className='text-sm font-black mt-1'>Machine Learning</div>
                   </div>
                 </div>
-                {/* Card 5 — far right */}
+                {/* Card 5 - far right */}
                 <div className='absolute right-0 top-4 w-28 h-36 rounded-2xl overflow-hidden shadow-xl rotate-[18deg] origin-bottom'
                   style={{ background: 'linear-gradient(135deg,#7B1FA2,#E91E63)' }}>
                   <div className='p-3 text-white'>
@@ -476,7 +476,7 @@ const ApplicationForm = () => {
             </div>
           </div>
 
-          {/* ── Right panel: the form ── */}
+          {/* Right panel: the form */}
           <div className='flex-1 py-10 px-4 lg:px-10 overflow-y-auto bg-white dark:bg-gray-900'>
         <Toaster position='top-right' reverseOrder={false} />
 
