@@ -3,12 +3,15 @@
 import { useTranslations } from "next-intl";
 import { motion } from "framer-motion";
 import Image from "next/image";
+import { Link } from "@/i18n/navigation";
+import { Button } from "@/app/[locale]/components/ui/button";
 import { SectionHeading } from "@/app/[locale]/components/ui/section-heading";
 import ScholarshipCard from "@/app/[locale]/components/ui/scholarship-card";
 import { scholarshipsConfig, scholarshipWinnersConfig } from "@/lib/scholarships-config";
 
-export function ScholarshipsSection() {
+export function ScholarshipsSection({ showAll = false }: { showAll?: boolean }) {
   const t = useTranslations("scholarshipsSection");
+  const visible = showAll ? scholarshipsConfig : scholarshipsConfig.slice(0, 3);
 
   return (
     <section className="py-16">
@@ -16,8 +19,8 @@ export function ScholarshipsSection() {
         <SectionHeading title={t("heading")} subtitle={t("subheading")} center />
 
         {/* Scholarship cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-14">
-          {scholarshipsConfig.map((scholarship, i) => (
+        <div className={`grid grid-cols-1 md:grid-cols-2 ${showAll ? "lg:grid-cols-4" : "lg:grid-cols-3"} gap-6 mb-8`}>
+          {visible.map((scholarship, i) => (
             <motion.div
               key={scholarship.id}
               initial={{ opacity: 0, y: 20 }}
@@ -37,6 +40,18 @@ export function ScholarshipsSection() {
             </motion.div>
           ))}
         </div>
+
+        {/* View All button — only on homepage */}
+        {!showAll && (
+          <div className="flex justify-center mb-14">
+            <Button
+              className="bg-[#2196F3] hover:bg-blue-500 text-white px-8 h-11"
+              asChild
+            >
+              <Link href="/scholarships">View All Scholarships</Link>
+            </Button>
+          </div>
+        )}
 
         {/* Previous winners */}
         <div>

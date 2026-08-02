@@ -65,6 +65,11 @@
             "type": "link"
          },
          {
+            "name": "የሙያ አገልግሎቶች",
+            "path": "/career",
+            "type": "link"
+         },
+         {
             "name": "ያግኙን",
             "path": "/contact",
             "type": "link"

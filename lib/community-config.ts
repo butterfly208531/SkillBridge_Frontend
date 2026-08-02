@@ -15,7 +15,6 @@ export const communityConfig: CommunityPlatform[] = [
   { key: "youtube",   url: "https://www.youtube.com/@SkillBridgeInstituteOfTech",                        statsValue: "20",   statsSuffix: "+" },
   { key: "linkedin",  url: "https://www.linkedin.com/company/skillbridge-institute-of-technology",       statsValue: "50",   statsSuffix: "+" },
   { key: "hub",       url: "https://t.me/skillbridgeinstituteoftech",                                    statsValue: "500",  statsSuffix: "+" },
-  { key: "discussions", url: "https://t.me/skillbridgeinstituteoftech",                                  statsValue: "200",  statsSuffix: "+" },
   { key: "instagram", url: "https://www.instagram.com/skillbridgeinstituteoftech",                       statsValue: "100",  statsSuffix: "+" },
   { key: "facebook",  url: "https://www.facebook.com/profile.php?id=61574189453702",                     statsValue: "50",   statsSuffix: "+" },
   { key: "tiktok",    url: "https://www.tiktok.com/@skillbridge417",                                     statsValue: "30",   statsSuffix: "+" },

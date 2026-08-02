@@ -21,8 +21,7 @@ export function SectionHeading({ title, subtitle, center = false, titleColor = "
       >
         {title}
       </motion.h2>
-      {/* Orange accent underline */}
-      <div className={`h-1 w-14 rounded-full bg-[#F57C00] mb-4 ${center ? "mx-auto" : ""}`} />
+      
       {subtitle && (
         <motion.p
           initial={{ opacity: 0, y: 20 }}

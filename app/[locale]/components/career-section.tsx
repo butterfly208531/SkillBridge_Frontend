@@ -58,10 +58,10 @@ export function CareerSection() {
 
         <div className="flex justify-center">
           <Button
-            className="bg-[#F57C00] hover:bg-orange-500 text-white px-8 h-11"
+            className="bg-[#2196F3] hover:bg-[#1976D2] text-white px-8 h-11"
             asChild
           >
-            <Link href="/contact">{t("bookButton")}</Link>
+            <Link href="/booking">{t("bookButton")}</Link>
           </Button>
         </div>
       </div>

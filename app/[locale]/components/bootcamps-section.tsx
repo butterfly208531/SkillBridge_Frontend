@@ -44,7 +44,7 @@ export function BootcampsSection() {
 
         <div className="flex justify-center mt-10">
           <Button
-            className="bg-[#2196F3] hover:bg-[#F57C00] text-white px-8 h-11 transition-colors duration-200"
+            className="bg-[#2196F3] hover:bg-[#1976D2] text-white px-8 h-11 transition-colors duration-200"
             asChild
           >
             <Link href="/courses">{t("viewAll")}</Link>

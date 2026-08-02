@@ -41,7 +41,7 @@ export default function Footer() {
   const footer = t.raw("footer") as any;
 
   return (
-    <footer className="bg-[#1565C0] text-white dark:bg-gray-950">
+    <footer className="bg-[#1565C0] text-white dark:bg-gray-950 -mt-1">
       <div className="container mx-auto px-4 py-14">
         <motion.div
           variants={container}
@@ -79,7 +79,7 @@ export default function Footer() {
                     target="_blank"
                     rel="noopener noreferrer"
                     aria-label={label}
-                    className="flex items-center justify-center w-8 h-8 rounded-full bg-white/10 hover:bg-[#F57C00] transition-colors"
+                    className="flex items-center justify-center w-8 h-8 rounded-full bg-white/10 hover:bg-white/30 transition-colors"
                   >
                     <Icon size={15} />
                   </Link>
