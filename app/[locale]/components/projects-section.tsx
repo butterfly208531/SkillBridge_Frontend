@@ -92,7 +92,7 @@ export function ProjectsSection() {
           <p className="text-center text-gray-500 dark:text-gray-400 py-12">{t("noProjects")}</p>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filtered.slice(0, 6).map((project, i) => (
+            {filtered.slice(0, 3).map((project, i) => (
               <motion.div
                 key={project.id}
                 initial={{ opacity: 0, y: 20 }}

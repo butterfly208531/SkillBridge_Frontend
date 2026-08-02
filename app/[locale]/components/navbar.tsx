@@ -94,17 +94,18 @@ export function Navbar() {
 
                 <div className='flex gap-2 items-center justify-center'>
                   <label htmlFor='lang' className="cursor-pointer">
-                    <Globe className='h-5 w-5 text-gray-700 dark:text-gray-300 hover:text-[#2196F3]' />
+                    <Globe className='h-5 w-5 text-[#2196F3]' />
                   </label>
                   <select
                     name='lang'
                     id='lang'
-                    className='appearance-none bg-gray-100 dark:bg-gray-800 text-xs sm:text-sm font-medium text-gray-800 dark:text-gray-200 focus:outline-none rounded-md px-2 py-1 border border-gray-300 dark:border-gray-600 cursor-pointer hover:border-[#2196F3] transition-colors'
+                    className='appearance-none bg-orange-500/10 backdrop-blur-sm text-xs sm:text-sm font-medium text-[#F57C00] focus:outline-none rounded-md px-2 py-1 border border-orange-400/40 cursor-pointer hover:bg-orange-500/20 hover:border-orange-500 transition-colors'
                     onChange={changeLanguage}
-                    defaultValue={pathname?.split("/")[1] || "en"}
+                    value="select"
                   >
-                    <option value='en'>EN</option>
-                    <option value='am'>አማ</option>
+                    <option value='select' disabled>Select Language</option>
+                    <option value='en'>English</option>
+                    <option value='am'>አማርኛ</option>
                   </select>
                 </div>
                 <div className='hidden md:block'>

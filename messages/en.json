@@ -5061,7 +5061,7 @@
       "videos": {
          "video1": { "title": "Odoo Terminal and Debug Tutorial", "description": "Learn how to use Odoo Terminal and Debug Chrome Extensions to speed up your Odoo development workflow." },
          "video2": { "title": "Odoo Models and Views in Odoo 17", "description": "A comprehensive guide to working with Odoo 17 models and views — from basic fields to advanced UI customization." },
-         "video3": { "title": "Python for Beginners — Complete Tutorial", "description": "Learn Python from scratch with hands-on exercises." },
+         "video3": { "title": "HTML Foundation for Full-Stack", "description": "Learn HTML foundations for full-stack development — start coding today with this in Amharic tutorial." },
          "video4": { "title": "AI & Machine Learning with Python", "description": "Build your first machine learning model step by step." },
          "video5": { "title": "n8n Automation for Business", "description": "Automate your business workflows with n8n — no code required." }
       }

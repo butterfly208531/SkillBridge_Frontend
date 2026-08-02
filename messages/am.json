@@ -940,7 +940,7 @@
       "videos": {
          "video1": { "title": "Odoo 17 ጅምር", "description": "ለ Odoo ERP ፋንክሽናል ሞጁሎች ሙሉ የጀማሪ መምሪያ።" },
          "video2": { "title": "ፉል-ስታክ ዌብ ልማት ካርታ 2025", "description": "ፉል-ስታክ ዴቨሎፐር ለመሆን ሁሉም ማወቅ ያለብዎት።" },
-         "video3": { "title": "Python ለጀማሪዎች — ሙሉ ትምህርት", "description": "ተግባራዊ ልምምዶች ያሉት Python ከዜሮ ይማሩ።" },
+         "video3": { "title": "HTML መሰረት ለፉል-ስታክ", "description": "ለፉል-ስታክ ልማት HTML መሰረቶችን ይማሩ — ዛሬ ኮድ መጻፍ ይጀምሩ።" },
          "video4": { "title": "AI እና ማሽን ለርኒንግ በ Python", "description": "የመጀመሪያ ማሽን ለርኒንግ ሞዴልዎን ደረጃ-በ-ደረጃ ይገንቡ።" },
          "video5": { "title": "n8n ለንግድ አውቶሜሽን", "description": "ኮድ ሳያስፈልግ የንግድ ሂደቶቻቸውን በ n8n ያዘጋጁ።" }
       }

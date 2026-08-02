@@ -10,6 +10,15 @@ export interface VideoConfig {
 
 export const videosConfig: VideoConfig[] = [
   {
+    id: "video3",
+    thumbnail: "https://img.youtube.com/vi/4ZPsD0oGQNs/maxresdefault.jpg",
+    titleKey: "video3",
+    duration: "59:08",
+    publishDate: "2026-08-02",
+    descriptionKey: "video3",
+    url: "https://youtu.be/4ZPsD0oGQNs",
+  },
+  {
     id: "video1",
     thumbnail: "https://img.youtube.com/vi/zcBAGXo_v78/maxresdefault.jpg",
     titleKey: "video1",
