@@ -32,12 +32,7 @@ export default function AboutPage() {
           priority
         />
         <div className="relative z-20 text-center px-4">
-          <h1 className="text-4xl md:text-5xl font-extrabold tracking-wide uppercase mb-3">About Us</h1>
-          <div className="flex items-center justify-center gap-2 text-sm text-gray-300">
-            <Link href="/" className="hover:text-[#2196F3] transition-colors">Home</Link>
-            <span className="text-orange-400">/</span>
-            <span className="text-orange-400">About Us</span>
-          </div>
+          <h1 className="text-4xl md:text-5xl font-extrabold tracking-wide uppercase">About Us</h1>
         </div>
       </section>
 
