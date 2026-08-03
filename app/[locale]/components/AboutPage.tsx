@@ -113,20 +113,26 @@ export default function AboutPage() {
             <p className="text-gray-500 dark:text-gray-400 mt-3 max-w-xl mx-auto">{aboutPage.whyUs.subtitle}</p>
           </div>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {aboutPage.whyUs.cards.map((card: any) => {
+            {aboutPage.whyUs.cards.map((card: any, index: number) => {
               const IconComponent = iconMap[card.id as keyof typeof iconMap]
+              const palette = [
+                { bg: "rgba(33,150,243,0.08)", border: "rgba(33,150,243,0.25)", iconBg: "rgba(33,150,243,0.15)", iconColor: "#2196F3", linkColor: "#2196F3" },
+                { bg: "rgba(245,124,0,0.08)", border: "rgba(245,124,0,0.25)", iconBg: "rgba(245,124,0,0.15)", iconColor: "#F57C00", linkColor: "#F57C00" },
+                { bg: "rgba(255,255,255,0.6)", border: "rgba(200,200,200,0.4)", iconBg: "rgba(33,150,243,0.1)", iconColor: "#2196F3", linkColor: "#F57C00" },
+              ]
+              const p = palette[index % 3]
               return (
                 <div
                   key={card.id}
-                  className="rounded-2xl p-7 flex flex-col gap-4 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl border border-blue-200/40 dark:border-blue-800/30"
-                  style={{ background: "rgba(33, 150, 243, 0.07)", backdropFilter: "blur(8px)" }}
+                  className="rounded-2xl p-7 flex flex-col gap-4 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl border dark:border-gray-700"
+                  style={{ background: p.bg, borderColor: p.border, backdropFilter: "blur(8px)" }}
                 >
-                  <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{ background: "rgba(33, 150, 243, 0.15)" }}>
-                    <IconComponent className="w-6 h-6 text-[#2196F3]" />
+                  <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{ background: p.iconBg }}>
+                    <IconComponent className="w-6 h-6" style={{ color: p.iconColor }} />
                   </div>
                   <h3 className="font-bold text-lg text-gray-900 dark:text-white">{card.title}</h3>
                   <p className="text-sm leading-relaxed flex-1 text-gray-600 dark:text-gray-400">{card.description}</p>
-                  <Link href="/courses" className="text-sm font-semibold flex items-center gap-1 mt-auto text-[#2196F3] hover:text-blue-700">
+                  <Link href="/courses" className="text-sm font-semibold flex items-center gap-1 mt-auto hover:opacity-80" style={{ color: p.linkColor }}>
                     Learn More <ArrowRight className="w-3.5 h-3.5" />
                   </Link>
                 </div>
