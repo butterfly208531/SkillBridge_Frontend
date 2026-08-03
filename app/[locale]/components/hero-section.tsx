@@ -55,7 +55,7 @@ export function HeroSection() {
               className="bg-[#2196F3] hover:bg-blue-500 text-white h-11 px-8 rounded-md font-semibold transition-transform hover:scale-105"
               asChild
             >
-              <Link href="/courses">{t("getStarted")}</Link>
+              <Link href="/signup">{t("getStarted")}</Link>
             </Button>
 
             <Button
