@@ -83,10 +83,18 @@ const Contact = () => {
               <div className="mt-10">
                 <p className="text-xs text-gray-400 mb-3 uppercase tracking-widest">Follow our social media</p>
                 <div className="flex gap-3">
-                  {["f", "in", "t", "yt"].map((s) => (
-                    <div key={s} className="w-9 h-9 rounded-full bg-[#2196F3] flex items-center justify-center cursor-pointer hover:bg-blue-700 transition-colors">
-                      <span className="text-white text-xs font-bold">{s}</span>
-                    </div>
+                  {[
+                    { label: "Facebook", url: "https://www.facebook.com/profile.php?id=61574189453702", icon: "f" },
+                    { label: "Instagram", url: "https://www.instagram.com/skillbridgeinstituteoftech", icon: "ig" },
+                    { label: "LinkedIn", url: "https://www.linkedin.com/company/skillbridge-institute-of-technology", icon: "in" },
+                    { label: "Telegram", url: "https://t.me/skillbridgeinstituteoftech", icon: "tg" },
+                    { label: "YouTube", url: "https://www.youtube.com/@SkillBridgeInstituteOfTech", icon: "yt" },
+                    { label: "TikTok", url: "https://www.tiktok.com/@skillbridge417", icon: "tk" },
+                  ].map((s) => (
+                    <a key={s.label} href={s.url} target="_blank" rel="noopener noreferrer" aria-label={s.label}
+                      className="w-9 h-9 rounded-full bg-[#2196F3] flex items-center justify-center hover:bg-blue-700 transition-colors">
+                      <span className="text-white text-xs font-bold">{s.icon}</span>
+                    </a>
                   ))}
                 </div>
               </div>
