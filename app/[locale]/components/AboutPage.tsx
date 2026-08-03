@@ -33,28 +33,28 @@ export default function AboutPage() {
 
       {/* ── HERO ── */}
       <section className="relative py-24 px-4">
-        <div className="absolute inset-0 bg-gradient-to-b from-white via-[#e3f2fd] to-[#1565C0] dark:from-gray-900 dark:via-blue-950 dark:to-gray-950 -z-10" />
+        <div className="absolute inset-0 bg-gradient-to-br from-blue-50 via-white to-orange-50 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950 -z-10" />
         <div className="max-w-6xl mx-auto grid lg:grid-cols-2 gap-16 items-center">
           <div>
-            <span className="inline-block bg-blue-100/20 text-white text-xs font-semibold px-4 py-1.5 rounded-full mb-6 tracking-wide uppercase border border-white/30">
+            <span className="inline-block bg-blue-100 dark:bg-blue-900/40 text-[#2196F3] text-xs font-semibold px-4 py-1.5 rounded-full mb-6 tracking-wide uppercase">
               {a.title}
             </span>
             <h1 className="text-5xl lg:text-6xl font-extrabold leading-tight mb-6">
-              <span className="text-white">Learn.</span>{" "}
-              <span className="text-white">Build.</span>{" "}
+              <span className="text-[#2196F3]">Learn.</span>{" "}
+              <span className="text-[#2196F3]">Build.</span>{" "}
               <span className="text-orange-400">Launch.</span>
             </h1>
-            <p className="text-lg text-blue-100 leading-relaxed mb-10 max-w-lg">
+            <p className="text-lg text-gray-600 dark:text-gray-300 leading-relaxed mb-10 max-w-lg">
               {a.description}
             </p>
             <div className="flex flex-wrap gap-6">
-              <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm px-4 py-2.5 rounded-xl border border-white/20">
+              <div className="flex items-center gap-2 bg-white dark:bg-gray-800 px-4 py-2.5 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
                 <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
-                <span className="text-sm font-semibold text-white">4.8/5 {a.ratingText}</span>
+                <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">4.8/5 {a.ratingText}</span>
               </div>
-              <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm px-4 py-2.5 rounded-xl border border-white/20">
-                <Trophy className="w-4 h-4 text-white" />
-                <span className="text-sm font-semibold text-white">{a.jobText}</span>
+              <div className="flex items-center gap-2 bg-white dark:bg-gray-800 px-4 py-2.5 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
+                <Trophy className="w-4 h-4 text-[#2196F3]" />
+                <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">{a.jobText}</span>
               </div>
             </div>
           </div>
@@ -66,7 +66,7 @@ export default function AboutPage() {
                   alt="SkillBridge Logo"
                   width={120}
                   height={120}
-                  className="rounded-full mb-4 border-4 border-white/30"
+                  className="rounded-full mb-4 mix-blend-screen"
                 />
                 <h3 className="text-xl font-bold text-white">SkillBridge</h3>
                 <p className="text-blue-100 text-sm">Institute Of Technology</p>
