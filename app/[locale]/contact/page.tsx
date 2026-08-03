@@ -7,7 +7,7 @@ import { useTranslations } from "next-intl";
 import { MapPin, Mail, Phone, Send } from "lucide-react";
 
 const Contact = () => {
-  const [form, setForm] = useState({ name: "", company: "", phone: "", email: "", subject: "", message: "" });
+  const [form, setForm] = useState({ name: "", phone: "", email: "", subject: "", message: "" });
   const t = useTranslations("contactPage");
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -101,20 +101,15 @@ const Contact = () => {
                     className="w-full border border-gray-200 dark:border-gray-600 rounded-lg px-3 py-2.5 text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#2196F3]" />
                 </div>
                 <div>
-                  <label className="text-xs text-gray-500 dark:text-gray-400 mb-1 block">Company</label>
-                  <input name="company" type="text" placeholder="Company" value={form.company} onChange={handleChange}
-                    className="w-full border border-gray-200 dark:border-gray-600 rounded-lg px-3 py-2.5 text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#2196F3]" />
-                </div>
-                <div>
                   <label className="text-xs text-gray-500 dark:text-gray-400 mb-1 block">Phone</label>
                   <input name="phone" type="text" placeholder="Phone" value={form.phone} onChange={handleChange}
                     className="w-full border border-gray-200 dark:border-gray-600 rounded-lg px-3 py-2.5 text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#2196F3]" />
                 </div>
-                <div>
-                  <label className="text-xs text-gray-500 dark:text-gray-400 mb-1 block">Email</label>
-                  <input name="email" type="email" placeholder="Email" value={form.email} onChange={handleChange} required
-                    className="w-full border border-gray-200 dark:border-gray-600 rounded-lg px-3 py-2.5 text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#2196F3]" />
-                </div>
+              </div>
+              <div className="mb-4">
+                <label className="text-xs text-gray-500 dark:text-gray-400 mb-1 block">Email</label>
+                <input name="email" type="email" placeholder="Email" value={form.email} onChange={handleChange} required
+                  className="w-full border border-gray-200 dark:border-gray-600 rounded-lg px-3 py-2.5 text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#2196F3]" />
               </div>
               <div className="mb-4">
                 <label className="text-xs text-gray-500 dark:text-gray-400 mb-1 block">Subject</label>
