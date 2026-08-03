@@ -72,7 +72,8 @@ const Contact = () => {
                   </div>
                   <div>
                     <p className="font-semibold text-gray-800 dark:text-gray-200 text-sm">{t("phoneLabel")}</p>
-                    <p className="text-gray-500 dark:text-gray-400 text-sm mt-0.5">+251-901-123-456</p>
+                    <p className="text-gray-500 dark:text-gray-400 text-sm mt-0.5">+251955935455</p>
+                    <p className="text-gray-500 dark:text-gray-400 text-sm">+251974424372</p>
                     <p className="text-gray-500 dark:text-gray-400 text-sm">@skillbridgesupport2</p>
                   </div>
                 </div>
