@@ -113,28 +113,20 @@ export default function AboutPage() {
             <p className="text-gray-500 dark:text-gray-400 mt-3 max-w-xl mx-auto">{aboutPage.whyUs.subtitle}</p>
           </div>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {/* First card: orange accent (featured) */}
-            {aboutPage.whyUs.cards.map((card: any, index: number) => {
+            {aboutPage.whyUs.cards.map((card: any) => {
               const IconComponent = iconMap[card.id as keyof typeof iconMap]
-              const isFeatured = index === 0
               return (
                 <div
                   key={card.id}
-                  className={`rounded-2xl p-7 flex flex-col gap-4 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl border ${
-                    isFeatured
-                      ? "bg-orange-500 text-white border-orange-500"
-                      : "bg-white dark:bg-gray-800 border-gray-100 dark:border-gray-700"
-                  }`}
+                  className="rounded-2xl p-7 flex flex-col gap-4 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl border border-orange-200/40 dark:border-orange-800/30"
+                  style={{ background: "rgba(251, 146, 60, 0.08)", backdropFilter: "blur(8px)" }}
                 >
-                  <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${isFeatured ? "bg-white/20" : "bg-blue-50 dark:bg-blue-900/30"}`}>
-                    <IconComponent className={`w-6 h-6 ${isFeatured ? "text-white" : "text-[#2196F3]"}`} />
+                  <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{ background: "rgba(251, 146, 60, 0.15)" }}>
+                    <IconComponent className="w-6 h-6 text-orange-500" />
                   </div>
-                  <h3 className={`font-bold text-lg ${isFeatured ? "text-white" : "text-gray-900 dark:text-white"}`}>{card.title}</h3>
-                  <p className={`text-sm leading-relaxed flex-1 ${isFeatured ? "text-orange-100" : "text-gray-500 dark:text-gray-400"}`}>{card.description}</p>
-                  <Link
-                    href="/courses"
-                    className={`text-sm font-semibold flex items-center gap-1 mt-auto ${isFeatured ? "text-white hover:text-orange-100" : "text-[#2196F3] hover:text-blue-700"}`}
-                  >
+                  <h3 className="font-bold text-lg text-gray-900 dark:text-white">{card.title}</h3>
+                  <p className="text-sm leading-relaxed flex-1 text-gray-600 dark:text-gray-400">{card.description}</p>
+                  <Link href="/courses" className="text-sm font-semibold flex items-center gap-1 mt-auto text-orange-500 hover:text-orange-600">
                     Learn More <ArrowRight className="w-3.5 h-3.5" />
                   </Link>
                 </div>
