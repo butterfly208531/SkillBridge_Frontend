@@ -325,12 +325,7 @@ const ApplicationForm = () => {
                           </label>
                           <input id="fullName" name="fullName" value={form.fullName} onChange={handleChange} placeholder={t("fields.name.placeholder")} className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl shadow-sm bg-white dark:bg-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-[#2196F3] focus:border-transparent transition-all duration-200 text-sm" />
                         </div>
-                        <div>
-                          <label htmlFor="dateOfBirth" className="block text-sm font-medium mb-1.5 text-gray-700 dark:text-gray-300">
-                            {t("fields.dob.label")} <span className="text-red-500">*</span>
-                          </label>
-                          <input type="date" id="dateOfBirth" name="dateOfBirth" value={form.dateOfBirth} onChange={handleChange} className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl shadow-sm bg-white dark:bg-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-[#2196F3] focus:border-transparent transition-all duration-200 text-sm" />
-                        </div>
+
                         <div className="relative">
                           <label htmlFor="gender" className="block text-sm font-medium mb-1.5 text-gray-700 dark:text-gray-300">
                             {t("fields.gender.label")} <span className="text-red-500">*</span>
@@ -339,7 +334,6 @@ const ApplicationForm = () => {
                             <option value="">{t("select")}</option>
                             <option value="Male">{t("fields.gender.options.male")}</option>
                             <option value="Female">{t("fields.gender.options.female")}</option>
-                            <option value="Other">{t("other")}</option>
                           </select>
                           <ArrowDown className="absolute right-3 top-[42px] text-gray-400 dark:text-gray-500 pointer-events-none w-4 h-4" />
                         </div>
@@ -365,12 +359,7 @@ const ApplicationForm = () => {
                           </label>
                           <input id="telegramHandle" name="telegramHandle" value={form.telegramHandle} onChange={handleChange} placeholder={t("fields.telegram.placeholder")} className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl shadow-sm bg-white dark:bg-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-[#2196F3] focus:border-transparent transition-all duration-200 text-sm" />
                         </div>
-                        <div>
-                          <label htmlFor="university" className="block text-sm font-medium mb-1.5 text-gray-700 dark:text-gray-300">
-                            {t("fields.university.label")} <span className="text-red-500">*</span>
-                          </label>
-                          <input id="university" name="university" value={form.university} onChange={handleChange} placeholder="Addis Ababa University" className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl shadow-sm bg-white dark:bg-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-[#2196F3] focus:border-transparent transition-all duration-200 text-sm" />
-                        </div>
+
                         <div className="md:col-span-2">
                           <label htmlFor="address" className="block text-sm font-medium mb-1.5 text-gray-700 dark:text-gray-300">
                             {t("fields.address.label")} <span className="text-red-500">*</span>
