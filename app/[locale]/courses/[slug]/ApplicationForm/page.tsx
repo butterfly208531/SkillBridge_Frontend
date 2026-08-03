@@ -12,7 +12,6 @@ import toast, { Toaster } from "react-hot-toast";
 import { useTranslations } from "next-intl";
 import { Navbar } from "@/app/[locale]/components/navbar";
 import Footer from "@/app/[locale]/components/footer";
-import LeftPanel from "./LeftPanel";
 
 const slugify = (text: string) => {
   return text
@@ -253,9 +252,7 @@ const ApplicationForm = () => {
     <>
       <Navbar />
       <div className="min-h-screen bg-white dark:bg-gray-900 transition-colors duration-300">
-        <div className="flex flex-col lg:flex-row min-h-[calc(100vh-80px)]">
-          <LeftPanel />
-          <div className="flex-1 py-10 px-4 lg:px-10 overflow-y-auto bg-white dark:bg-gray-900">
+        <div className="py-10 px-4 lg:px-10">
             <Toaster position="top-right" reverseOrder={false} />
             {validationErrors.length > 0 && (
               <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm px-4">
@@ -498,7 +495,6 @@ const ApplicationForm = () => {
                 </form>
               </div>
             </div>
-          </div>
         </div>
       </div>
       <Footer />
