@@ -118,15 +118,15 @@ export default function AboutPage() {
               return (
                 <div
                   key={card.id}
-                  className="rounded-2xl p-7 flex flex-col gap-4 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl border border-orange-200/40 dark:border-orange-800/30"
-                  style={{ background: "rgba(251, 146, 60, 0.08)", backdropFilter: "blur(8px)" }}
+                  className="rounded-2xl p-7 flex flex-col gap-4 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl border border-blue-200/40 dark:border-blue-800/30"
+                  style={{ background: "rgba(33, 150, 243, 0.07)", backdropFilter: "blur(8px)" }}
                 >
-                  <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{ background: "rgba(251, 146, 60, 0.15)" }}>
-                    <IconComponent className="w-6 h-6 text-orange-500" />
+                  <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{ background: "rgba(33, 150, 243, 0.15)" }}>
+                    <IconComponent className="w-6 h-6 text-[#2196F3]" />
                   </div>
                   <h3 className="font-bold text-lg text-gray-900 dark:text-white">{card.title}</h3>
                   <p className="text-sm leading-relaxed flex-1 text-gray-600 dark:text-gray-400">{card.description}</p>
-                  <Link href="/courses" className="text-sm font-semibold flex items-center gap-1 mt-auto text-orange-500 hover:text-orange-600">
+                  <Link href="/courses" className="text-sm font-semibold flex items-center gap-1 mt-auto text-[#2196F3] hover:text-blue-700">
                     Learn More <ArrowRight className="w-3.5 h-3.5" />
                   </Link>
                 </div>
