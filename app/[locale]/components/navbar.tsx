@@ -92,21 +92,20 @@ export function Navbar() {
               </div>
               <div className='flex max-[375px]:gap-3 min-[375px]:gap-6 sm:gap-10 min-[1760px]:gap-16 items-center justify-between'>
 
-                <div className='flex gap-2 items-center justify-center'>
-                  <label htmlFor='lang' className="cursor-pointer">
-                    <Globe className='h-5 w-5 text-[#2196F3]' />
-                  </label>
-                  <select
-                    name='lang'
-                    id='lang'
-                    className='appearance-none bg-orange-500/10 backdrop-blur-sm text-xs sm:text-sm font-medium text-[#F57C00] focus:outline-none rounded-md px-2 py-1 border border-orange-400/40 cursor-pointer hover:bg-orange-500/20 hover:border-orange-500 transition-colors'
-                    onChange={changeLanguage}
-                    value="select"
-                  >
-                    <option value='select' disabled>Select Language</option>
-                    <option value='en'>English</option>
-                    <option value='am'>አማርኛ</option>
-                  </select>
+                <div className='flex items-center justify-center'>
+                  <div className='relative flex items-center gap-1.5 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-full px-3 py-1.5 hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-colors cursor-pointer'>
+                    <Globe className='h-4 w-4 text-[#2196F3] flex-shrink-0' />
+                    <select
+                      name='lang'
+                      id='lang'
+                      className='appearance-none bg-transparent text-xs font-semibold text-[#2196F3] focus:outline-none cursor-pointer pr-1'
+                      onChange={changeLanguage}
+                      defaultValue='en'
+                    >
+                      <option value='en'>EN</option>
+                      <option value='am'>አማ</option>
+                    </select>
+                  </div>
                 </div>
                 <div className='hidden md:block'>
                   <ThemeToggle />
