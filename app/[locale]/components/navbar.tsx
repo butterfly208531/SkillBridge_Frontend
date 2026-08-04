@@ -96,30 +96,24 @@ export function Navbar() {
 
                 <div className='flex items-center justify-center relative group'>
                   <button
-                    className='flex items-center justify-center w-10 h-10 rounded-xl hover:scale-105 active:scale-95 transition-all duration-200 select-none'
+                    className='flex items-center justify-center w-12 h-12 rounded-xl hover:scale-105 active:scale-95 transition-all duration-200 select-none'
                     aria-label="Select language"
                   >
-                    <div className="relative w-9 h-9">
+                    <div className="relative w-11 h-11">
                       {/* Blue square with አ */}
-                      <div className="absolute top-0 left-0 w-6 h-6 bg-[#2196F3] rounded-lg flex items-center justify-center shadow-md">
-                        <span className="text-white text-xs font-bold leading-none">አ</span>
+                      <div className="absolute top-0 left-0 w-7 h-7 bg-[#2196F3] rounded-xl flex items-center justify-center shadow-lg">
+                        <span className="text-white text-sm font-black leading-none">አ</span>
                       </div>
                       {/* White square with EN */}
-                      <div className="absolute bottom-0 right-0 w-6 h-6 bg-white border-2 border-[#2196F3] rounded-lg flex items-center justify-center shadow-md">
-                        <span className="text-[#2196F3] text-[9px] font-extrabold leading-none">EN</span>
+                      <div className="absolute bottom-0 right-0 w-7 h-7 bg-white border-2 border-[#2196F3] rounded-xl flex items-center justify-center shadow-lg">
+                        <span className="text-[#2196F3] text-[11px] font-black leading-none tracking-tight">EN</span>
                       </div>
                       {/* Swap arrows */}
-                      <svg className="absolute inset-0 w-full h-full" viewBox="0 0 36 36" fill="none">
-                        <path d="M22 8 Q30 8 30 16" stroke="#2196F3" strokeWidth="1.5" strokeLinecap="round" fill="none" markerEnd="url(#arr)"/>
-                        <path d="M14 28 Q6 28 6 20" stroke="#2196F3" strokeWidth="1.5" strokeLinecap="round" fill="none" markerEnd="url(#arr2)"/>
-                        <defs>
-                          <marker id="arr" markerWidth="4" markerHeight="4" refX="2" refY="2" orient="auto">
-                            <path d="M0,0 L4,2 L0,4" fill="none" stroke="#2196F3" strokeWidth="1"/>
-                          </marker>
-                          <marker id="arr2" markerWidth="4" markerHeight="4" refX="2" refY="2" orient="auto">
-                            <path d="M0,0 L4,2 L0,4" fill="none" stroke="#2196F3" strokeWidth="1"/>
-                          </marker>
-                        </defs>
+                      <svg className="absolute inset-0 w-full h-full" viewBox="0 0 44 44" fill="none">
+                        <path d="M26 9 Q36 9 36 19" stroke="#2196F3" strokeWidth="2" strokeLinecap="round" fill="none"/>
+                        <path d="M34 17 L36 19 L38 17" stroke="#2196F3" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                        <path d="M18 35 Q8 35 8 25" stroke="#2196F3" strokeWidth="2" strokeLinecap="round" fill="none"/>
+                        <path d="M6 27 L8 25 L10 27" stroke="#2196F3" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                       </svg>
                     </div>
                   </button>
