@@ -1,10 +1,12 @@
 "use client"
 
 import Image from "next/image"
-import Link from "next/link"
-import { Target, CheckCircle, Zap, BookOpen, Users, Code, GraduationCap, Clock, Trophy, ArrowRight } from "lucide-react"
+import { Users, Target, Code, Star, CheckCircle, Clock, Trophy, BookOpen, Zap, GraduationCap } from "lucide-react"
 import { useTranslations } from "next-intl"
+import { Button } from "./ui/button"
+import { Card, CardHeader, CardTitle, CardContent } from "./ui/card"
 
+// Icon mapping for the cards
 const iconMap = {
   1: BookOpen,
   2: Users,
@@ -14,165 +16,296 @@ const iconMap = {
   6: Trophy,
 }
 
+// Color mapping for the cards
+const colorMap = {
+  1: "rgba(33, 150, 243, 0.1)",
+  2: "rgb(220, 252, 231)", // green-100
+  3: "rgb(243, 232, 255)", // purple-100
+  4: "rgb(255, 237, 213)", // orange-100
+  5: "rgb(254, 226, 226)", // red-100
+  6: "rgb(204, 251, 241)", // teal-100
+}
+
+const darkColorMap = {
+  2: "rgb(20, 83, 45)", // green-900
+  3: "rgb(88, 28, 135)", // purple-900
+  4: "rgb(154, 52, 18)", // orange-900
+  5: "rgb(127, 29, 29)", // red-900
+  6: "rgb(19, 78, 74)", // teal-900
+}
+
 export default function AboutPage() {
   const t = useTranslations()
   const aboutPage = t.raw("aboutPage") as any
 
   return (
-    <div className="overflow-hidden">
-
-      {/* 1. HERO BANNER */}
-      <section className="relative h-56 md:h-72 flex items-center justify-center text-white overflow-hidden -mx-4 lg:-mx-0">
-        <div className="absolute inset-0 bg-gradient-to-r from-gray-900/90 to-gray-800/80 z-10" />
-        <Image
-          src="https://i.ibb.co/whBnS4Nh/about_image1.webp"
-          alt="About Hero"
-          fill
-          className="object-cover"
-          priority
-        />
-        <div className="relative z-20 text-center px-4">
-          <h1 className="text-4xl md:text-5xl font-extrabold tracking-wide uppercase">About Us</h1>
-        </div>
-      </section>
-
-      {/* 2. ABOUT + MISSION + VISION */}
-      <section className="py-20 px-4">
-        <div className="max-w-6xl mx-auto">
-          <div className="grid lg:grid-cols-2 gap-12 items-start">
-            {/* Left: stacked images */}
-            <div className="relative">
-              <div className="relative rounded-2xl overflow-hidden shadow-xl aspect-[4/3]">
-                <Image
-                  src="https://i.ibb.co/whBnS4Nh/about_image1.webp"
-                  alt="About SkillBridge"
-                  width={580}
-                  height={440}
-                  className="w-full h-full object-cover"
-                />
+    <>
+      {/* Hero Section */}
+      <section className="text-gray-900 dark:text-white py-16 px-4 relative">
+        <div className="max-w-7xl mx-auto">
+          <div className="grid lg:grid-cols-2 gap-12 items-center">
+            <div>
+              <div className="mb-4">
+                <Button className="text-sm px-3 py-1 text-white border-0" style={{ backgroundColor: "#2196F3" }}>
+                  {aboutPage.title}
+                </Button>
               </div>
-              <div className="absolute -bottom-6 -right-6 w-40 h-40 rounded-2xl overflow-hidden shadow-2xl border-4 border-white dark:border-gray-900 hidden md:block">
-                <Image
-                  src="https://i.ibb.co/gZjJvXrd/about_image2.jpg"
-                  alt="Team"
-                  width={160}
-                  height={160}
-                  className="w-full h-full object-cover"
-                />
-              </div>
-            </div>
-
-            {/* Right: About Us text + Mission + Vision */}
-            <div className="lg:pl-6">
-              <span className="text-[#2196F3] font-semibold text-sm uppercase tracking-widest mb-2 block">{aboutPage.title}</span>
-              <h2 className="text-3xl md:text-4xl font-extrabold text-gray-900 dark:text-white mb-4 leading-tight">
-                {aboutPage.heroText.split(".")[0]}.<br />
-                <span className="text-orange-400">{aboutPage.heroText.split(".")[1]}.</span>
-              </h2>
-              <p className="text-gray-600 dark:text-gray-400 mb-8 leading-relaxed">{aboutPage.description}</p>
-
-              {/* Mission */}
-              <div className="mb-6">
-                <div className="flex items-center gap-3 mb-2">
-                  <div className="w-9 h-9 rounded-xl bg-blue-100 dark:bg-blue-900/40 flex items-center justify-center flex-shrink-0">
-                    <Target className="w-5 h-5 text-[#2196F3]" />
-                  </div>
-                  <h3 className="text-lg font-bold text-gray-900 dark:text-white">{aboutPage.purpose.mission.title}</h3>
+              <h1 className="text-5xl font-bold mb-6 leading-tight">
+                <span style={{ color: "#2196F3" }}>
+                  {aboutPage.heroText.split(".")[0]}. {aboutPage.heroText.split(".")[1]}.
+                </span>{" "}
+                <span className="text-orange-400">{aboutPage.heroText.split(".")[2]}.</span>
+              </h1>
+              <p className="text-lg mb-8 text-gray-600 dark:text-gray-300 leading-relaxed">{aboutPage.description}</p>
+              <div className="flex gap-8 text-sm">
+                <div className="flex items-center gap-2">
+                  <Star className="w-4 h-4" style={{ color: "#2196F3" }} />
+                  <span style={{ color: "#2196F3" }}>4.8/5 {aboutPage.ratingText}</span>
                 </div>
-                <p className="text-gray-600 dark:text-gray-400 text-sm leading-relaxed pl-12">{aboutPage.purpose.mission.description}</p>
-              </div>
-
-              {/* Vision */}
-              <div className="mb-8">
-                <div className="flex items-center gap-3 mb-2">
-                  <div className="w-9 h-9 rounded-xl bg-orange-100 dark:bg-orange-900/40 flex items-center justify-center flex-shrink-0">
-                    <Zap className="w-5 h-5 text-orange-500" />
-                  </div>
-                  <h3 className="text-lg font-bold text-gray-900 dark:text-white">{aboutPage.purpose.vision.title}</h3>
+                <div className="flex items-center gap-2">
+                  <Trophy className="w-4 h-4" style={{ color: "#2196F3" }} />
+                  <span style={{ color: "#2196F3" }}>{aboutPage.jobText}</span>
                 </div>
-                <p className="text-gray-600 dark:text-gray-400 text-sm leading-relaxed pl-12">{aboutPage.purpose.vision.description}</p>
               </div>
-
-              <Link href="/courses">
-                <button className="inline-flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white font-bold px-7 py-3 rounded-xl transition-colors">
-                  Explore Courses <ArrowRight className="w-4 h-4" />
-                </button>
-              </Link>
             </div>
           </div>
         </div>
       </section>
 
-
-      {/* 3. SERVICES / WHY US CARDS */}
-      <section className="py-20 px-4 bg-gray-50 dark:bg-gray-900">
+      {/* Our Story Section */}
+      <section className="py-20">
         <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-14">
-            <span className="text-[#2196F3] font-semibold text-sm uppercase tracking-widest mb-2 block">Our Services</span>
-            <h2 className="text-3xl md:text-4xl font-extrabold text-gray-900 dark:text-white">{aboutPage.whyUs.title}</h2>
-            <p className="text-gray-500 dark:text-gray-400 mt-3 max-w-xl mx-auto">{aboutPage.whyUs.subtitle}</p>
+          <div className="items-center">
+            <div>
+              <h2 className="text-4xl font-bold text-gray-900 dark:text-white mb-8">{aboutPage.storyHeading}</h2>
+              <p className="text-lg mb-8 text-gray-600 dark:text-gray-300 leading-relaxed font-semibold">{aboutPage.storySubheading}</p>
+              <div className="space-y-6 text-gray-700 dark:text-gray-300 leading-relaxed">
+                <p>{aboutPage.storyText1}</p>
+                <p>{aboutPage.storyText2}</p>
+                <p>{aboutPage.storyText3}</p>
+              </div>
+            </div>
           </div>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {aboutPage.whyUs.cards.map((card: any, index: number) => {
+        </div>
+      </section>
+
+      {/* Our Purpose Section */}
+      <section className="py-20 bg-gray-50 dark:bg-gray-900 2xl:-mx-8 px-4 lg:px-8">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">{aboutPage.purpose.title}</h2>
+            <p className="text-xl text-gray-600 dark:text-gray-400 max-w-3xl mx-auto">{aboutPage.purpose.subtitle}</p>
+          </div>
+          <div className="grid lg:grid-cols-2 gap-8">
+            {/* Mission Card */}
+            <Card
+              className="border-l-4 shadow-sm h-full dark:bg-gray-800 dark:border-gray-700"
+              style={{ borderLeftColor: "#2196F3" }}
+            >
+              <CardHeader className="pb-4">
+                <div className="flex items-center mb-4">
+                  <div
+                    className="w-8 h-8 rounded-full flex items-center justify-center mr-3"
+                    style={{ backgroundColor: "rgba(33, 150, 243, 0.1)" }}
+                  >
+                    <Target className="w-5 h-5" style={{ color: "#2196F3" }} />
+                  </div>
+                  <CardTitle className="text-2xl dark:text-white" style={{ color: "#2196F3" }}>
+                    {aboutPage.purpose.mission.title}
+                  </CardTitle>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <p className="text-gray-700 dark:text-gray-300 leading-relaxed mb-6">
+                  {aboutPage.purpose.mission.description}
+                </p>
+                <div className="space-y-3">
+                  {Object.values(aboutPage.purpose.mission.checkPoint).map((point: any, index: number) => (
+                    <div key={index} className="flex items-center text-sm text-gray-600 dark:text-gray-400">
+                      <CheckCircle className="w-4 h-4 mr-2 flex-shrink-0" style={{ color: "#2196F3" }} />
+                      <span>{point}</span>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Vision Card */}
+            <Card className="border-l-4 border-l-orange-500 shadow-sm h-full dark:bg-gray-800 dark:border-gray-700">
+              <CardHeader className="pb-4">
+                <div className="flex items-center mb-4">
+                  <div className="w-8 h-8 bg-orange-100 dark:bg-orange-900 rounded-full flex items-center justify-center mr-3">
+                    <Zap className="w-5 h-5 text-orange-600" />
+                  </div>
+                  <CardTitle className="text-2xl text-orange-600 dark:text-orange-400">
+                    {aboutPage.purpose.vision.title}
+                  </CardTitle>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <p className="text-gray-700 dark:text-gray-300 leading-relaxed mb-6">
+                  {aboutPage.purpose.vision.description}
+                </p>
+                <div className="space-y-3">
+                  {Object.values(aboutPage.purpose.vision.checkpoint).map((point: any, index: number) => (
+                    <div key={index} className="flex items-center text-sm text-gray-600 dark:text-gray-400">
+                      <CheckCircle className="w-4 h-4 text-orange-500 mr-2 flex-shrink-0" />
+                      <span>{point}</span>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </section>
+
+      {/* Our Learning Methodology */}
+      <section className="py-20">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">{aboutPage.methodology.title}</h2>
+            <p className="text-xl text-gray-600 dark:text-gray-400">{aboutPage.methodology.description}</p>
+          </div>
+          <div className="items-center">
+            <div className="space-y-8 max-w-4xl mx-auto">
+              {aboutPage.methodology.lists.map((item: any) => (
+                <div key={item.id} className="flex items-start gap-4">
+                  <div
+                    className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 mt-1"
+                    style={{ backgroundColor: "#2196F3" }}
+                  >
+                    <span className="text-white font-bold text-sm">{item.id}</span>
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-semibold mb-2 dark:text-white" style={{ color: "#2196F3" }}>
+                      {item.heading}
+                    </h3>
+                    <p className="text-gray-600 dark:text-gray-400">{item.paragraph}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Why Students Choose SkillBridge */}
+      <section className="py-20 bg-gray-50 dark:bg-gray-900  2xl:-mx-8 px-4 lg:px-8">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">{aboutPage.whyUs.title}</h2>
+            <p className="text-xl text-gray-600 dark:text-gray-400">{aboutPage.whyUs.subtitle}</p>
+          </div>
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {aboutPage.whyUs.cards.map((card: any) => {
               const IconComponent = iconMap[card.id as keyof typeof iconMap]
-              const palette = [
-                { bg: "rgba(33,150,243,0.08)", border: "rgba(33,150,243,0.25)", iconBg: "rgba(33,150,243,0.15)", iconColor: "#2196F3", linkColor: "#2196F3" },
-                { bg: "rgba(245,124,0,0.08)", border: "rgba(245,124,0,0.25)", iconBg: "rgba(245,124,0,0.15)", iconColor: "#F57C00", linkColor: "#F57C00" },
-                { bg: "rgba(255,255,255,0.6)", border: "rgba(200,200,200,0.4)", iconBg: "rgba(33,150,243,0.1)", iconColor: "#2196F3", linkColor: "#F57C00" },
-              ]
-              const p = palette[index % 3]
+              const bgColor = card.id === 1 ? colorMap[1] : colorMap[card.id as keyof typeof colorMap]
+              const darkBgColor = card.id === 1 ? colorMap[1] : darkColorMap[card.id as keyof typeof darkColorMap]
+
               return (
-                <div
+                <Card
                   key={card.id}
-                  className="rounded-2xl p-7 flex flex-col gap-4 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl border dark:border-gray-700"
-                  style={{ background: p.bg, borderColor: p.border, backdropFilter: "blur(8px)" }}
+                  className="text-center hover:shadow-lg transition-shadow bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 h-full flex flex-col min-h-[280px]"
                 >
-                  <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{ background: p.iconBg }}>
-                    <IconComponent className="w-6 h-6" style={{ color: p.iconColor }} />
-                  </div>
-                  <h3 className="font-bold text-lg text-gray-900 dark:text-white">{card.title}</h3>
-                  <p className="text-sm leading-relaxed flex-1 text-gray-600 dark:text-gray-400">{card.description}</p>
-                  <Link href="/courses" className="text-sm font-semibold flex items-center gap-1 mt-auto hover:opacity-80" style={{ color: p.linkColor }}>
-                    Learn More <ArrowRight className="w-3.5 h-3.5" />
-                  </Link>
-                </div>
+                  <CardHeader className="pb-6 flex-shrink-0">
+                    <div
+                      className={`mx-auto w-16 h-16 rounded-lg flex items-center justify-center mb-6 ${card.id === 1 ? "" : `dark:bg-[${darkBgColor}]`}`}
+                      style={{ backgroundColor: bgColor }}
+                    >
+                      <IconComponent className="w-8 h-8" style={{ color: "oklch(44.6% 0.03 256.802)" }} />
+                    </div>
+                    <CardTitle className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                      {card.title}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="flex-grow px-6 pb-6">
+                    <p className="text-gray-600 dark:text-gray-400 text-sm leading-relaxed">{card.description}</p>
+                  </CardContent>
+                </Card>
               )
             })}
           </div>
         </div>
       </section>
 
-      {/* 4. CTA BANNER */}
-      <section className="relative py-24 px-4 overflow-hidden">
-        <div className="absolute inset-0 z-0">
-          <Image
-            src="https://i.ibb.co/gZjJvXrd/about_image2.jpg"
-            alt="CTA Background"
-            fill
-            className="object-cover"
-          />
-          <div className="absolute inset-0 bg-gray-900/80" />
-        </div>
-        <div className="relative z-10 max-w-3xl mx-auto text-center text-white">
-          <h2 className="text-4xl md:text-5xl font-extrabold mb-6 leading-tight">
-            {aboutPage.startJourney.title}
-          </h2>
-          <p className="text-gray-300 text-lg mb-10 max-w-xl mx-auto">{aboutPage.startJourney.subtitle}</p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link href="/signup">
-              <button className="bg-[#2196F3] hover:bg-blue-600 text-white font-bold px-10 py-4 rounded-xl transition-colors text-base inline-flex items-center gap-2">
-                {aboutPage.startJourney.explore} <ArrowRight className="w-4 h-4" />
-              </button>
-            </Link>
-            <Link href="/contact">
-              <button className="border-2 border-white text-white hover:bg-white hover:text-gray-900 font-bold px-10 py-4 rounded-xl transition-colors text-base">
-                {aboutPage.startJourney.consultation}
-              </button>
-            </Link>
+      {/* Complete Learning Paths */}
+      <section className="py-20">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">{aboutPage.learningPaths.title}</h2>
+            <p className="text-xl text-gray-600 dark:text-gray-400">{aboutPage.learningPaths.subtitle}</p>
+          </div>
+          <div className="items-start">
+            <div className="max-w-4xl mx-auto">
+              <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-8">
+                {aboutPage.learningPaths.header}
+              </h3>
+              <div className="space-y-6">
+                {aboutPage.learningPaths.courseLists.map((course: any, index: number) => {
+                  const isOrange = course.buttonText === "High Demand"
+                  const borderColor = isOrange ? "#f97316" : "#2196F3"
+                  const badgeColor = isOrange ? "#f97316" : "#2196F3"
+
+                  return (
+                    <Card
+                      key={index}
+                      className="hover:shadow-lg transition-shadow bg-white dark:bg-gray-800 border-l-4 h-full dark:border-gray-700"
+                      style={{ borderLeftColor: borderColor }}
+                    >
+                      <CardContent className="p-6">
+                        <div className="flex items-center justify-between mb-3">
+                          <h4 className="font-semibold text-lg text-gray-900 dark:text-white">{course.courseTitle}</h4>
+                          <Button
+                            className="text-xs px-2 py-1 text-white border-0"
+                            style={{ backgroundColor: badgeColor }}
+                          >
+                            {course.buttonText}
+                          </Button>
+                        </div>
+                        <p className="text-gray-600 dark:text-gray-400 mb-4 text-sm leading-relaxed">
+                          {course.description}
+                        </p>
+                        <div className="flex items-center text-xs text-gray-500 dark:text-gray-500">
+                          <Clock className="w-3 h-3 mr-1" style={{ color: "oklch(44.6% 0.03 256.802)" }} />
+                          <span style={{ color: "oklch(44.6% 0.03 256.802)" }}>{course.reviews}</span>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )
+                })}
+              </div>
+            </div>
           </div>
         </div>
       </section>
 
-    </div>
+      {/* Ready to Start Your Journey */}
+      <section className="py-20 bg-gray-50 dark:bg-gray-900 2xl:-mx-8 px-4 lg:px-8">
+        <div className="max-w-4xl mx-auto text-center">
+          <h2 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">{aboutPage.startJourney.title}</h2>
+          <p className="text-xl text-gray-600 dark:text-gray-400 mb-12 max-w-2xl mx-auto">
+            {aboutPage.startJourney.subtitle}
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Button
+              size="lg"
+              className="px-8 py-3 text-base text-white hover:opacity-90"
+              style={{ backgroundColor: "#2196F3" }}
+            >
+              {aboutPage.startJourney.explore}
+            </Button>
+            <Button
+              size="lg"
+              variant="outline"
+              className="px-8 py-3 text-base bg-transparent hover:bg-opacity-10 dark:border-gray-600 dark:text-gray-300"
+              style={{ borderColor: "#2196F3", color: "#2196F3" }}
+            >
+              {aboutPage.startJourney.consultation}
+            </Button>
+          </div>
+        </div>
+      </section>
+    </>
   )
 }

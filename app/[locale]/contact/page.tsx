@@ -4,151 +4,129 @@ import { Navbar } from "@/app/[locale]/components/navbar";
 import Footer from "@/app/[locale]/components/footer";
 import React, { useState } from "react";
 import { useTranslations } from "next-intl";
-import { MapPin, Mail, Phone, Send } from "lucide-react";
 
 const Contact = () => {
-  const [form, setForm] = useState({ name: "", phone: "", email: "", subject: "", message: "" });
+  const [form, setForm] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    message: "",
+  });
+
   const t = useTranslations("contactPage");
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     alert("Message sent!");
+    console.log(form);
+  };
+
+  const scrollToMap = () => {
+    const map = document.getElementById("contact-map");
+    if (map) map.scrollIntoView({ behavior: "smooth" });
   };
 
   return (
-    <div className="min-h-screen font-montserrat bg-gray-50 dark:bg-gray-900 flex flex-col">
+    <div className='min-h-screen font-montserrat bg-white dark:bg-gray-900 transition-colors duration-300 flex flex-col'>
       <Navbar />
 
-      {/* HERO BANNER */}
-      <div className="relative h-64 md:h-80 flex items-center justify-center overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-r from-[#2196F3]/90 to-gray-900/80 z-10" />
-        <img
-          src="https://i.ibb.co/gZjJvXrd/about_image2.jpg"
-          alt="Contact Hero"
-          className="absolute inset-0 w-full h-full object-cover"
-        />
-        <div className="relative z-20 text-center text-white px-4">
-          <h1 className="text-4xl md:text-5xl font-extrabold mb-3">Contact Us</h1>
-          <p className="text-blue-100 text-base md:text-lg max-w-md mx-auto">{t("description")}</p>
-        </div>
-      </div>
-
-      {/* MAIN CARD — overlaps hero */}
-      <main className="flex-grow px-4 -mt-16 relative z-20 pb-0">
-        <div className="max-w-5xl mx-auto bg-white dark:bg-gray-800 rounded-2xl shadow-2xl overflow-hidden">
-          <div className="grid lg:grid-cols-2">
-
-            {/* LEFT: Get in touch */}
-            <div className="p-8 md:p-10 border-r border-gray-100 dark:border-gray-700">
-              <h2 className="text-2xl font-extrabold text-gray-900 dark:text-white mb-2">Get in touch</h2>
-              <p className="text-gray-500 dark:text-gray-400 text-sm mb-8">{t("description")}</p>
-
-              <div className="space-y-6">
-                <div className="flex items-start gap-4">
-                  <div className="w-10 h-10 rounded-full bg-[#2196F3] flex items-center justify-center flex-shrink-0">
-                    <MapPin className="w-5 h-5 text-white" />
-                  </div>
-                  <div>
-                    <p className="font-semibold text-gray-800 dark:text-gray-200 text-sm">{t("office")}</p>
-                    <p className="text-gray-500 dark:text-gray-400 text-sm mt-0.5">{t("office_info")}</p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-4">
-                  <div className="w-10 h-10 rounded-full bg-[#2196F3] flex items-center justify-center flex-shrink-0">
-                    <Mail className="w-5 h-5 text-white" />
-                  </div>
-                  <div>
-                    <p className="font-semibold text-gray-800 dark:text-gray-200 text-sm">{t("emailAddress")}</p>
-                    <p className="text-gray-500 dark:text-gray-400 text-sm mt-0.5">skillbridgeinstituteoftech@gmail.com</p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-4">
-                  <div className="w-10 h-10 rounded-full bg-[#2196F3] flex items-center justify-center flex-shrink-0">
-                    <Phone className="w-5 h-5 text-white" />
-                  </div>
-                  <div>
-                    <p className="font-semibold text-gray-800 dark:text-gray-200 text-sm">{t("phoneLabel")}</p>
-                    <p className="text-gray-500 dark:text-gray-400 text-sm mt-0.5">+251955935455</p>
-                    <p className="text-gray-500 dark:text-gray-400 text-sm">+251974424372</p>
-                    <p className="text-gray-500 dark:text-gray-400 text-sm">@skillbridgesupport2</p>
-                  </div>
-                </div>
+      <main className='flex-grow container mx-auto px-4 py-12 lg:px-16'>
+        <div className='flex flex-col lg:flex-row gap-8'>
+          <div className='flex-1 space-y-6 shadow-md p-8 rounded-lg bg-white dark:bg-gray-800 dark:shadow-gray-800/50'>
+            <h1 className='text-4xl font-bold text-blue-500 dark:text-blue-400'>
+              {t("span1")} <span className='text-orange-500 dark:text-orange-400'>{t("span2")}</span> {t("span3")}
+            </h1>
+            <p className='text-gray-700 dark:text-gray-300'>{t("description")}</p>
+            <div className='space-y-4 text-gray-700 dark:text-gray-300'>
+              <div>
+                <h4 className='font-semibold text-gray-800 dark:text-gray-200'>📞 {t("phoneLabel")}</h4>
+                <p>+251-901-123-456</p>
               </div>
-
-              {/* Social icons */}
-              <div className="mt-10">
-                <p className="text-xs text-gray-400 mb-3 uppercase tracking-widest">Follow our social media</p>
-                <div className="flex gap-3">
-                  {[
-                    { label: "Facebook", url: "https://www.facebook.com/profile.php?id=61574189453702", icon: "f" },
-                    { label: "Instagram", url: "https://www.instagram.com/skillbridgeinstituteoftech", icon: "ig" },
-                    { label: "LinkedIn", url: "https://www.linkedin.com/company/skillbridge-institute-of-technology", icon: "in" },
-                    { label: "Telegram", url: "https://t.me/skillbridgeinstituteoftech", icon: "tg" },
-                    { label: "YouTube", url: "https://www.youtube.com/@SkillBridgeInstituteOfTech", icon: "yt" },
-                    { label: "TikTok", url: "https://www.tiktok.com/@skillbridge417", icon: "tk" },
-                  ].map((s) => (
-                    <a key={s.label} href={s.url} target="_blank" rel="noopener noreferrer" aria-label={s.label}
-                      className="w-9 h-9 rounded-full bg-[#2196F3] flex items-center justify-center hover:bg-blue-700 transition-colors">
-                      <span className="text-white text-xs font-bold">{s.icon}</span>
-                    </a>
-                  ))}
-                </div>
+              <div>
+                <h4 className='font-semibold text-gray-800 dark:text-gray-200'>📧 {t("emailAddress")}</h4>
+                <p>skillbridgeinstituteoftech@gmail.com</p>
+              </div>
+              <div>
+                <h4 className='font-semibold text-gray-800 dark:text-gray-200'>📍 {t("office")}</h4>
+                <p>{t("office_info")}</p>
+              </div>
+              <div>
+                <h4 className='font-semibold text-gray-800 dark:text-gray-200'>📨 {t("telegram")}</h4>
+                <p>@skillbridgesupport2</p>
               </div>
             </div>
-
-            {/* RIGHT: Send us a message */}
-            <form onSubmit={handleSubmit} className="p-8 md:p-10">
-              <h2 className="text-2xl font-extrabold text-gray-900 dark:text-white mb-6">Send us a message</h2>
-              <div className="grid grid-cols-2 gap-4 mb-4">
-                <div>
-                  <label className="text-xs text-gray-500 dark:text-gray-400 mb-1 block">Name</label>
-                  <input name="name" type="text" placeholder="Name" value={form.name} onChange={handleChange} required
-                    className="w-full border border-gray-200 dark:border-gray-600 rounded-lg px-3 py-2.5 text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#2196F3]" />
-                </div>
-                <div>
-                  <label className="text-xs text-gray-500 dark:text-gray-400 mb-1 block">Phone</label>
-                  <input name="phone" type="text" placeholder="Phone" value={form.phone} onChange={handleChange}
-                    className="w-full border border-gray-200 dark:border-gray-600 rounded-lg px-3 py-2.5 text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#2196F3]" />
-                </div>
-              </div>
-              <div className="mb-4">
-                <label className="text-xs text-gray-500 dark:text-gray-400 mb-1 block">Email</label>
-                <input name="email" type="email" placeholder="Email" value={form.email} onChange={handleChange} required
-                  className="w-full border border-gray-200 dark:border-gray-600 rounded-lg px-3 py-2.5 text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#2196F3]" />
-              </div>
-              <div className="mb-4">
-                <label className="text-xs text-gray-500 dark:text-gray-400 mb-1 block">Subject</label>
-                <input name="subject" type="text" placeholder="Subject" value={form.subject} onChange={handleChange}
-                  className="w-full border border-gray-200 dark:border-gray-600 rounded-lg px-3 py-2.5 text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#2196F3]" />
-              </div>
-              <div className="mb-6">
-                <label className="text-xs text-gray-500 dark:text-gray-400 mb-1 block">Message</label>
-                <textarea name="message" placeholder="Message" rows={4} value={form.message} onChange={handleChange} required
-                  className="w-full border border-gray-200 dark:border-gray-600 rounded-lg px-3 py-2.5 text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#2196F3] resize-none" />
-              </div>
-              <button type="submit"
-                className="w-full bg-[#2196F3] hover:bg-blue-600 text-white font-bold py-3 rounded-xl transition-colors flex items-center justify-center gap-2">
-                <Send className="w-4 h-4" /> Send Message
-              </button>
-            </form>
           </div>
+
+          <form
+            onSubmit={handleSubmit}
+            className='flex-1 shadow-lg p-8 rounded-2xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 space-y-4'
+          >
+            <h2 className='text-2xl font-bold mb-2 text-gray-800 dark:text-gray-200'>{t("message")}</h2>
+            <input
+              name='name'
+              type='text'
+              placeholder={t("namePlaceholder")}
+              className='w-full border px-4 py-2 rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400'
+              value={form.name}
+              onChange={handleChange}
+              required
+            />
+            <input
+              name='email'
+              type='email'
+              placeholder={t("emailPlaceholder")}
+              className='w-full border px-4 py-2 rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400'
+              value={form.email}
+              onChange={handleChange}
+              required
+            />
+            <input
+              name='phone'
+              type='text'
+              placeholder='Phone'
+              className='w-full border px-4 py-2 rounded outline-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400'
+              value={form.phone}
+              onChange={handleChange}
+            />
+            <textarea
+              name='message'
+              placeholder={t("meessagePlaceholder")}
+              className='w-full border px-4 py-2 rounded h-32 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400'
+              value={form.message}
+              onChange={handleChange}
+              required
+            />
+            <button
+              type='submit'
+              className='bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 transition dark:bg-blue-700 dark:hover:bg-blue-800'
+            >
+              {t("messageButton")}
+            </button>
+          </form>
         </div>
 
-        {/* MAP */}
-        <div className="max-w-5xl mx-auto mt-8 rounded-2xl overflow-hidden shadow-lg mb-12">
-          <iframe
-            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3939.6719600732655!2d38.75776007590039!3d9.030151990986828!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x164b85f57f3d87ff%3A0x6f6242500e5b2a4a!2sAddis%20Ababa!5e0!3m2!1sen!2set!4v1687598230123"
-            width="100%"
-            height="380"
-            style={{ border: 0, display: "block" }}
-            loading="lazy"
-            allowFullScreen
-            referrerPolicy="no-referrer-when-downgrade"
-          />
+        <div className='mt-16'>
+          <h2 className='text-xl font-semibold text-center mb-4 text-gray-800 dark:text-gray-200'>
+            {t("mapTitle")}
+          </h2>
+          <div className='w-full h-96 rounded-lg overflow-hidden shadow-lg dark:shadow-gray-800/50'>
+            <iframe
+              src='https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3939.6719600732655!2d38.75776007590039!3d9.030151990986828!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x164b85f57f3d87ff%3A0x6f6242500e5b2a4a!2sAddis%20Ababa!5e0!3m2!1sen!2set!4v1687598230123'
+              width='100%'
+              height='100%'
+              style={{ border: 0 }}
+              loading='lazy'
+              allowFullScreen
+              referrerPolicy='no-referrer-when-downgrade'
+              className='dark:grayscale-[20%] dark:invert-[10%]'
+            ></iframe>
+          </div>
         </div>
       </main>
 

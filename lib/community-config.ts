@@ -32,5 +32,5 @@ export const hubConfig = {
   telegramBotUrl: "https://t.me/skillbridgesupport2",
   youtubeUrl: "https://www.youtube.com/@SkillBridgeInstituteOfTech",
   phone1: "+251955935455",
-  phone2: "+251974424372",
+  phone2: "+251932058398",
 };
