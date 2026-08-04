@@ -118,6 +118,14 @@ export function VideosSection() {
                     <CalendarDays className="h-3 w-3" />
                     {formatDate(video.publishDate)}
                   </div>
+                  <a
+                    href={video.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-3 flex items-center justify-center gap-2 w-full bg-[#2196F3] hover:bg-blue-600 text-white text-xs font-semibold py-2 rounded-lg transition-colors"
+                  >
+                    <Play className="h-3 w-3 fill-white" /> Watch Now
+                  </a>
                 </div>
               </motion.a>
             ))}
