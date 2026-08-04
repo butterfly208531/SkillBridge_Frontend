@@ -7,7 +7,7 @@ import Image from "next/image";
 import { Clock, CalendarDays, Play, Loader2 } from "lucide-react";
 import { SectionHeading } from "@/app/[locale]/components/ui/section-heading";
 import { Button } from "@/app/[locale]/components/ui/button";
-import { hubConfig } from "@/lib/community-config";
+import Link from "next/link";
 
 interface YouTubeVideo {
   id: string;
@@ -126,9 +126,9 @@ export function VideosSection() {
 
         <div className="flex justify-center mt-10">
           <Button variant="outline" className="border-[#2196F3] text-[#2196F3] hover:bg-blue-50 dark:hover:bg-blue-950/30 px-8 h-11" asChild>
-            <a href={hubConfig.youtubeUrl} target="_blank" rel="noopener noreferrer">
+            <Link href="/videos">
               {t("viewAll")}
-            </a>
+            </Link>
           </Button>
         </div>
       </div>
