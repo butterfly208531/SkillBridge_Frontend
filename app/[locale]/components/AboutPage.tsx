@@ -59,21 +59,7 @@ export default function AboutPage() {
             </div>
           </div>
         </div>
-        {/* Stats bar */}
-        <div className="relative max-w-4xl mx-auto mt-16 grid grid-cols-2 md:grid-cols-4 gap-4">
-          {[
-            { icon: Users, value: "500+", label: "Students" },
-            { icon: BookOpen, value: "10+", label: "Courses" },
-            { icon: Trophy, value: "95%", label: "Job Rate" },
-            { icon: Star, value: "4.8", label: "Rating" },
-          ].map((stat, i) => (
-            <div key={i} className="bg-white dark:bg-gray-800 rounded-2xl p-5 text-center shadow-sm border border-gray-100 dark:border-gray-700">
-              <stat.icon className="w-6 h-6 mx-auto mb-2" style={{ color: "#2196F3" }} />
-              <div className="text-2xl font-bold text-gray-900 dark:text-white">{stat.value}</div>
-              <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{stat.label}</div>
-            </div>
-          ))}
-        </div>
+
       </section>
 
       {/* Our Story Section */}
