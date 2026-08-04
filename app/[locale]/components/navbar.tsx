@@ -96,27 +96,45 @@ export function Navbar() {
 
                 <div className='flex items-center justify-center relative group'>
                   <button
-                    className='flex items-center gap-2 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 active:scale-95 text-white rounded-full px-3 py-1.5 shadow-sm transition-all duration-200 select-none'
+                    className='flex items-center justify-center w-10 h-10 rounded-xl hover:scale-105 active:scale-95 transition-all duration-200 select-none'
                     aria-label="Select language"
                   >
-                    <Globe className='h-3.5 w-3.5 flex-shrink-0' />
-                    <span className='text-xs font-bold tracking-wide'>
-                      {currentLocale === "en" ? "EN" : "አማ"}
-                    </span>
-                    <svg className="w-3 h-3 opacity-70" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+                    <div className="relative w-9 h-9">
+                      {/* Blue square with አ */}
+                      <div className="absolute top-0 left-0 w-6 h-6 bg-[#2196F3] rounded-lg flex items-center justify-center shadow-md">
+                        <span className="text-white text-xs font-bold leading-none">አ</span>
+                      </div>
+                      {/* White square with EN */}
+                      <div className="absolute bottom-0 right-0 w-6 h-6 bg-white border-2 border-[#2196F3] rounded-lg flex items-center justify-center shadow-md">
+                        <span className="text-[#2196F3] text-[9px] font-extrabold leading-none">EN</span>
+                      </div>
+                      {/* Swap arrows */}
+                      <svg className="absolute inset-0 w-full h-full" viewBox="0 0 36 36" fill="none">
+                        <path d="M22 8 Q30 8 30 16" stroke="#2196F3" strokeWidth="1.5" strokeLinecap="round" fill="none" markerEnd="url(#arr)"/>
+                        <path d="M14 28 Q6 28 6 20" stroke="#2196F3" strokeWidth="1.5" strokeLinecap="round" fill="none" markerEnd="url(#arr2)"/>
+                        <defs>
+                          <marker id="arr" markerWidth="4" markerHeight="4" refX="2" refY="2" orient="auto">
+                            <path d="M0,0 L4,2 L0,4" fill="none" stroke="#2196F3" strokeWidth="1"/>
+                          </marker>
+                          <marker id="arr2" markerWidth="4" markerHeight="4" refX="2" refY="2" orient="auto">
+                            <path d="M0,0 L4,2 L0,4" fill="none" stroke="#2196F3" strokeWidth="1"/>
+                          </marker>
+                        </defs>
+                      </svg>
+                    </div>
                   </button>
-                  <div className='absolute top-full mt-1 right-0 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 overflow-hidden opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 min-w-[100px]'>
+                  <div className='absolute top-full mt-1 right-0 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 overflow-hidden opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 min-w-[110px]'>
                     <button
                       onClick={() => { const p = `/en${pathname?.replace(/^\/[a-z]{2}/, "")}`; router.push(p); }}
                       className={`w-full flex items-center gap-2 px-4 py-2.5 text-sm font-medium hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors ${currentLocale === "en" ? "text-[#2196F3]" : "text-gray-700 dark:text-gray-300"}`}
                     >
-                      <span>🇺🇸</span> English
+                      🇺🇸 English
                     </button>
                     <button
                       onClick={() => { const p = `/am${pathname?.replace(/^\/[a-z]{2}/, "")}`; router.push(p); }}
                       className={`w-full flex items-center gap-2 px-4 py-2.5 text-sm font-medium hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors ${currentLocale === "am" ? "text-[#2196F3]" : "text-gray-700 dark:text-gray-300"}`}
                     >
-                      <span>🇪🇹</span> አማርኛ
+                      🇪🇹 አማርኛ
                     </button>
                   </div>
                 </div>
