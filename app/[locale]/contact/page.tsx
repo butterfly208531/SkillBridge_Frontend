@@ -46,7 +46,7 @@ const Contact = () => {
             <div className='space-y-4 text-gray-700 dark:text-gray-300'>
               <div>
                 <h4 className='font-semibold text-gray-800 dark:text-gray-200'>📞 {t("phoneLabel")}</h4>
-                <p>+251-901-123-456</p>
+                <p>+251-955-935-455 / +251-974-424-372</p>
               </div>
               <div>
                 <h4 className='font-semibold text-gray-800 dark:text-gray-200'>📧 {t("emailAddress")}</h4>

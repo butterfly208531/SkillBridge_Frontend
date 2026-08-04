@@ -95,7 +95,7 @@ export default function TermsPage() {
             <p>For questions regarding these Terms, please contact us:</p>
             <ul className="list-none space-y-1 mt-2">
               <li>📧 <a href="mailto:skillbridgeinstitituteoftech@gmail.com" className="text-[#2196F3] hover:underline">skillbridgeinstitituteoftech@gmail.com</a></li>
-              <li>📞 +251 955 935 455</li>
+              <li>📞 +251-955-935-455 / +251-974-424-372</li>
               <li>📍 Addis Ababa, Ethiopia</li>
             </ul>
           </section>
