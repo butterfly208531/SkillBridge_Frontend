@@ -104,14 +104,14 @@ export function Navbar() {
                       <div className="absolute top-0 left-0 w-7 h-7 bg-[#2196F3] rounded-xl flex items-center justify-center shadow-lg">
                         <span className="text-white text-sm font-black leading-none">አ</span>
                       </div>
-                      {/* White square with EN */}
-                      <div className="absolute bottom-0 right-0 w-7 h-7 bg-white border-2 border-[#2196F3] rounded-xl flex items-center justify-center shadow-lg">
-                        <span className="text-[#2196F3] text-[11px] font-black leading-none tracking-tight">EN</span>
+                      {/* Orange square with EN */}
+                      <div className="absolute bottom-0 right-0 w-7 h-7 bg-white border-2 border-[#F57C00] rounded-xl flex items-center justify-center shadow-lg">
+                        <span className="text-[#F57C00] text-[11px] font-black leading-none tracking-tight">EN</span>
                       </div>
                       {/* Swap arrows */}
                       <svg className="absolute inset-0 w-full h-full" viewBox="0 0 44 44" fill="none">
-                        <path d="M26 9 Q36 9 36 19" stroke="#2196F3" strokeWidth="2" strokeLinecap="round" fill="none"/>
-                        <path d="M34 17 L36 19 L38 17" stroke="#2196F3" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                        <path d="M26 9 Q36 9 36 19" stroke="#F57C00" strokeWidth="2" strokeLinecap="round" fill="none"/>
+                        <path d="M34 17 L36 19 L38 17" stroke="#F57C00" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                         <path d="M18 35 Q8 35 8 25" stroke="#2196F3" strokeWidth="2" strokeLinecap="round" fill="none"/>
                         <path d="M6 27 L8 25 L10 27" stroke="#2196F3" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                       </svg>
@@ -126,7 +126,7 @@ export function Navbar() {
                     </button>
                     <button
                       onClick={() => { const p = `/am${pathname?.replace(/^\/[a-z]{2}/, "")}`; router.push(p); }}
-                      className={`w-full flex items-center gap-2 px-4 py-2.5 text-sm font-medium hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors ${currentLocale === "am" ? "text-[#2196F3]" : "text-gray-700 dark:text-gray-300"}`}
+                      className={`w-full flex items-center gap-2 px-4 py-2.5 text-sm font-medium hover:bg-orange-50 dark:hover:bg-orange-900/30 transition-colors ${currentLocale === "am" ? "text-[#F57C00]" : "text-gray-700 dark:text-gray-300"}`}
                     >
                       🇪🇹 አማርኛ
                     </button>
