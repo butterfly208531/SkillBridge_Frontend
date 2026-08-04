@@ -3,15 +3,13 @@
 import { useTranslations } from "next-intl";
 import { motion } from "framer-motion";
 import {
-  Code2, Database, Rocket, Globe, Brain, Layers,
-  GraduationCap, Briefcase, BookOpen, FlaskConical,
-  Network, Cpu, Search, DollarSign, Trophy, Zap,
+  Search, Rocket, DollarSign, Trophy, Brain,
+  GraduationCap, Network, Zap, Globe, Layers, Code2, Database,
 } from "lucide-react";
 import { SectionHeading } from "@/app/[locale]/components/ui/section-heading";
 
 const STEP_ICONS = [Search, Rocket, DollarSign, Trophy, Brain, GraduationCap, Network, Zap, Globe, Layers, Code2, Database];
-
-const STEP_COLORS = ["#2196F3", "#F57C00", "#2196F3", "#F57C00", "#2196F3", "#F57C00", "#2196F3", "#F57C00"];
+const COLORS = ["#2196F3", "#F57C00"];
 
 const paths = [
   { id: "softwareEngineering", titleColor: "#2196F3", outcomeColor: "#2196F3" },
@@ -25,56 +23,57 @@ function SnakePath({ pathId, titleColor, outcomeColor }: { pathId: string; title
 
   return (
     <div className="flex flex-col items-center w-full max-w-xs mx-auto">
-      <h3 className="text-lg font-bold mb-8 text-center" style={{ color: titleColor }}>
+      <h3 className="text-base font-bold mb-6 text-center" style={{ color: titleColor }}>
         {t(`${pathId}.title`)}
       </h3>
 
       <div className="relative w-full flex flex-col gap-0">
         {steps.map((step, si) => {
-          const color = STEP_COLORS[si % STEP_COLORS.length];
+          const color = COLORS[si % 2];
           const Icon = STEP_ICONS[si % STEP_ICONS.length];
-          const isEven = si % 2 === 0;
+          const isEven = si % 2 === 0; // icon on right, odd = icon on left
 
           return (
             <div key={si} className="relative">
-              {/* Oval pill */}
+              {/* Outer colored track */}
               <motion.div
                 initial={{ opacity: 0, x: isEven ? -20 : 20 }}
                 whileInView={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.45, delay: si * 0.1 }}
                 viewport={{ once: true }}
-                className="relative flex items-center bg-white dark:bg-gray-100 shadow-lg"
-                style={{
-                  border: `4px solid ${color}`,
-                  borderRadius: "50px",
-                  minHeight: "80px",
-                  padding: "12px 12px",
-                }}
+                className="relative"
+                style={{ padding: "6px", borderRadius: "50px", backgroundColor: color }}
               >
-                {/* Icon on left for odd steps */}
-                {!isEven && (
-                  <div
-                    className="w-14 h-14 rounded-full flex items-center justify-center shrink-0 bg-white shadow-md border-2 mr-3"
-                    style={{ borderColor: color }}
-                  >
-                    <Icon className="h-6 w-6" style={{ color }} />
-                  </div>
-                )}
+                {/* Inner white pill */}
+                <div
+                  className="relative flex items-center bg-white dark:bg-gray-50 shadow-inner"
+                  style={{ borderRadius: "44px", minHeight: "68px", padding: "8px 10px" }}
+                >
+                  {/* Icon circle on left for odd */}
+                  {!isEven && (
+                    <div
+                      className="w-14 h-14 rounded-full flex items-center justify-center shrink-0 bg-white shadow-md border-2 mr-3"
+                      style={{ borderColor: color }}
+                    >
+                      <Icon className="h-6 w-6" style={{ color }} />
+                    </div>
+                  )}
 
-                {/* Text */}
-                <div className="flex-1 px-1">
-                  <p className="text-sm font-bold text-gray-800 leading-snug">{step}</p>
+                  {/* Text */}
+                  <div className="flex-1 px-2">
+                    <p className="text-sm font-bold text-gray-800 leading-snug">{step}</p>
+                  </div>
+
+                  {/* Icon circle on right for even */}
+                  {isEven && (
+                    <div
+                      className="w-14 h-14 rounded-full flex items-center justify-center shrink-0 bg-white shadow-md border-2 ml-3"
+                      style={{ borderColor: color }}
+                    >
+                      <Icon className="h-6 w-6" style={{ color }} />
+                    </div>
+                  )}
                 </div>
-
-                {/* Icon on right for even steps */}
-                {isEven && (
-                  <div
-                    className="w-14 h-14 rounded-full flex items-center justify-center shrink-0 bg-white shadow-md border-2 ml-3"
-                    style={{ borderColor: color }}
-                  >
-                    <Icon className="h-6 w-6" style={{ color }} />
-                  </div>
-                )}
               </motion.div>
 
               {/* Snake connector */}
@@ -83,20 +82,20 @@ function SnakePath({ pathId, titleColor, outcomeColor }: { pathId: string; title
                   {isEven ? (
                     <svg viewBox="0 0 200 40" className="w-full h-full" preserveAspectRatio="none">
                       <path
-                        d="M 155 0 Q 195 20 155 40"
+                        d="M 150 0 Q 198 20 150 40"
                         fill="none"
-                        stroke={STEP_COLORS[(si + 1) % STEP_COLORS.length]}
-                        strokeWidth="8"
+                        stroke={COLORS[(si + 1) % 2]}
+                        strokeWidth="12"
                         strokeLinecap="round"
                       />
                     </svg>
                   ) : (
                     <svg viewBox="0 0 200 40" className="w-full h-full" preserveAspectRatio="none">
                       <path
-                        d="M 45 0 Q 5 20 45 40"
+                        d="M 50 0 Q 2 20 50 40"
                         fill="none"
-                        stroke={STEP_COLORS[(si + 1) % STEP_COLORS.length]}
-                        strokeWidth="8"
+                        stroke={COLORS[(si + 1) % 2]}
+                        strokeWidth="12"
                         strokeLinecap="round"
                       />
                     </svg>

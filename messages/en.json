@@ -4937,7 +4937,7 @@
       "softwareEngineering": {
          "title": "Software Engineering Path",
          "outcome": "Software Engineer",
-         "steps": ["Programming Fundamentals", "Full-Stack Development", "Advanced Backend & APIs", "Internship", "Software Engineer"]
+         "steps": ["Programming Fundamentals", "Python", "Full-Stack Development", "Advanced Backend & APIs", "AI & Machine Learning", "Internship", "Software Engineer"]
       },
       "erpConsultant": {
          "title": "ERP Consultant Path",
