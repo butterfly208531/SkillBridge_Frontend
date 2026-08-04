@@ -29,19 +29,29 @@ async function fetchYouTubeVideos(): Promise<YouTubeVideo[]> {
   const channelId = process.env.NEXT_PUBLIC_YOUTUBE_CHANNEL_ID;
   if (!apiKey || !channelId) return [];
 
-  const res = await fetch(
-    `https://www.googleapis.com/youtube/v3/search?key=${apiKey}&channelId=${channelId}&part=snippet&order=date&maxResults=6&type=video`
+  // Get uploads playlist ID from channel
+  const channelRes = await fetch(
+    `https://www.googleapis.com/youtube/v3/channels?key=${apiKey}&id=${channelId}&part=contentDetails`
   );
-  if (!res.ok) return [];
-  const data = await res.json();
+  if (!channelRes.ok) return [];
+  const channelData = await channelRes.json();
+  const uploadsPlaylistId = channelData.items?.[0]?.contentDetails?.relatedPlaylists?.uploads;
+  if (!uploadsPlaylistId) return [];
 
-  return (data.items || []).map((item: any) => ({
-    id: item.id.videoId,
+  // Fetch latest videos from uploads playlist
+  const playlistRes = await fetch(
+    `https://www.googleapis.com/youtube/v3/playlistItems?key=${apiKey}&playlistId=${uploadsPlaylistId}&part=snippet&maxResults=6`
+  );
+  if (!playlistRes.ok) return [];
+  const playlistData = await playlistRes.json();
+
+  return (playlistData.items || []).map((item: any) => ({
+    id: item.snippet.resourceId.videoId,
     title: item.snippet.title,
     description: item.snippet.description,
     thumbnail: item.snippet.thumbnails?.high?.url || item.snippet.thumbnails?.medium?.url || "",
     publishDate: item.snippet.publishedAt,
-    url: `https://www.youtube.com/watch?v=${item.id.videoId}`,
+    url: `https://www.youtube.com/watch?v=${item.snippet.resourceId.videoId}`,
   }));
 }
 
