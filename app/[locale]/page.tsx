@@ -63,8 +63,8 @@ export default function Home() {
       <HeroSection />
       <BootcampsSection />
       <LearningPathsSection />
-      <WhySection />
       <ProjectsSection />
+      <WhySection />
       <HubSection />
       <ScholarshipsSection />
       <TestimonialsSection />
