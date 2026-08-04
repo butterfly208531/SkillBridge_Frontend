@@ -63,9 +63,6 @@ function SnakePath({ pathId, titleColor, outcomeColor }: { pathId: string; title
 
                 {/* Text */}
                 <div className="flex-1 px-1">
-                  <p className="text-[10px] font-black uppercase tracking-widest mb-0.5" style={{ color }}>
-                    STEP {String(si + 1).padStart(2, "0")}
-                  </p>
                   <p className="text-sm font-bold text-gray-800 leading-snug">{step}</p>
                 </div>
 
