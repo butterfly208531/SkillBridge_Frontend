@@ -64,7 +64,7 @@ export function Navbar() {
     <>
       <header className='sticky top-0 2xl:pt-3 min-[1710px]:pt-4 z-40 bg-white/50 backdrop-blur-xl dark:bg-gray-950/50'>
         <section className='mx-auto px-2 xl:px-8 py-1 flex items-center justify-between'>
-            <div className='spacing flex !justify-between !w-[98%] items-center gap-20 sm:gap-6 md:gap-4 lg:gap-20 xl:gap-80 2xl:gap-60 min-[1710px]:gap-72'>
+            <div className='spacing flex !justify-between !w-[98%] items-center gap-4 sm:gap-4 md:gap-4 lg:gap-8 xl:gap-20 2xl:gap-40 min-[1710px]:gap-60'>
               <div className='flex gap-2 md:gap-4 lg:gap-8'>
                 <Link
                   href='/'
@@ -76,12 +76,12 @@ export function Navbar() {
                     className='logo_width w-16 sm:w-20 md:w-24 lg:w-16 xl:w-20 h-16 sm:h-20 md:h-24 lg:h-16 xl:h-20 2xl:w-24 2xl:h-24'
                   />
                 </Link>
-                <nav className='hidden lg:flex items-center gap-6 lg:gap-12 xl:gap-16 min-[1710px]:gap-24 font-inter justify-between'>
+                <nav className='hidden lg:flex items-center gap-4 lg:gap-6 xl:gap-10 min-[1710px]:gap-16 font-inter justify-between'>
                   {navbarItems.map((item, index) => (
                     <Link
                       key={index}
                       href={item.path}
-                      className={`font-medium font-inter text-sm lg:text-xs xl:text-sm 2xl:text-[18px] ${
+                      className={`font-medium font-inter text-xs lg:text-xs xl:text-sm 2xl:text-[16px] whitespace-nowrap ${
                         isActive(item.path)
                           ? "text-[#2196F3]"
                           : "text-gray-700 dark:text-gray-300 hover:text-[#2196F3]"
