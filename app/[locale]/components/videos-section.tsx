@@ -40,7 +40,7 @@ async function fetchYouTubeVideos(): Promise<YouTubeVideo[]> {
 
   // Fetch latest videos from uploads playlist
   const playlistRes = await fetch(
-    `https://www.googleapis.com/youtube/v3/playlistItems?key=${apiKey}&playlistId=${uploadsPlaylistId}&part=snippet&maxResults=6`
+    `https://www.googleapis.com/youtube/v3/playlistItems?key=${apiKey}&playlistId=${uploadsPlaylistId}&part=snippet&maxResults=3`
   );
   if (!playlistRes.ok) return [];
   const playlistData = await playlistRes.json();
