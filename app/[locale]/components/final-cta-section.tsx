@@ -9,7 +9,7 @@ export function FinalCTASection() {
   const t = useTranslations("finalCTA");
 
   return (
-    <section className="py-20 bg-gradient-to-b from-white via-[#e3f2fd] to-[#1565C0] dark:from-gray-900 dark:via-blue-950 dark:to-gray-950 relative overflow-hidden">
+    <section className="py-20 bg-gradient-to-b from-[#1565C0] to-[#0D47A1] dark:from-blue-900 dark:to-blue-950 relative overflow-hidden">
       {/* Orange accent blobs */}
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute top-0 right-0 w-80 h-80 bg-[#F57C00] opacity-20 rounded-full blur-3xl translate-x-1/3 -translate-y-1/3" />
@@ -25,28 +25,28 @@ export function FinalCTASection() {
           viewport={{ once: true }}
           className="text-center max-w-3xl mx-auto"
         >
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-[#1565C0] dark:text-white mb-6 leading-tight">
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white dark:text-white mb-6 leading-tight">
             <span className="inline-block bg-[#F57C00] text-white text-xs font-bold px-3 py-1 rounded-full mb-4 tracking-wide uppercase">
               Take the next step
             </span>
             <br />
             {t("headline")}
           </h2>
-          <p className="text-[#1976D2] dark:text-blue-100 text-base sm:text-lg mb-10 leading-relaxed">
+          <p className="text-blue-100 dark:text-blue-100 text-base sm:text-lg mb-10 leading-relaxed">
             {t("description")}
           </p>
 
           <div className="flex flex-wrap gap-4 justify-center">
             <Button
               size="lg"
-              className="bg-[#1565C0] text-white hover:bg-[#1976D2] font-semibold h-12 px-8 shadow-lg hover:shadow-xl transition-all"
+              className="bg-white text-[#1565C0] hover:bg-blue-50 font-semibold h-12 px-8 shadow-lg hover:shadow-xl transition-all"
               asChild
             >
               <Link href="/courses">{t("registerBootcamp")}</Link>
             </Button>
             <Button
               size="lg"
-              className="border-2 border-[#1565C0] text-[#1565C0] bg-transparent hover:bg-[#1565C0] hover:text-white dark:border-white dark:text-white dark:hover:bg-white dark:hover:text-[#1565C0] font-semibold h-12 px-8 transition-all"
+              className="border-2 border-white text-white bg-transparent hover:bg-white hover:text-[#1565C0] font-semibold h-12 px-8 transition-all"
               asChild
             >
               <Link href="/contact">{t("contactAdmissions")}</Link>
