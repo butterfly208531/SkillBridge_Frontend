@@ -42,9 +42,11 @@ export function Navbar() {
 
   const closeMobileMenu = () => setMobileOpen(false);
 
-  const changeLanguage = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const locale = e.target.value;
-    const newPath = `/${locale}${pathname?.replace(/^\/[a-z]{2}/, "")}`;
+  const currentLocale = pathname?.split("/")[1] || "en";
+
+  const toggleLanguage = () => {
+    const newLocale = currentLocale === "en" ? "am" : "en";
+    const newPath = `/${newLocale}${pathname?.replace(/^\/[a-z]{2}/, "")}`;
     router.push(newPath);
   };
 
@@ -93,19 +95,19 @@ export function Navbar() {
               <div className='flex max-[375px]:gap-3 min-[375px]:gap-6 sm:gap-10 min-[1760px]:gap-16 items-center justify-between'>
 
                 <div className='flex items-center justify-center'>
-                  <div className='relative flex items-center gap-1.5 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-full px-3 py-1.5 hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-colors cursor-pointer'>
-                    <Globe className='h-4 w-4 text-[#2196F3] flex-shrink-0' />
-                    <select
-                      name='lang'
-                      id='lang'
-                      className='appearance-none bg-transparent text-xs font-semibold text-[#2196F3] focus:outline-none cursor-pointer pr-1'
-                      onChange={changeLanguage}
-                      defaultValue='en'
-                    >
-                      <option value='en'>EN</option>
-                      <option value='am'>አማ</option>
-                    </select>
-                  </div>
+                  <button
+                    onClick={toggleLanguage}
+                    className='flex items-center gap-2 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 active:scale-95 text-white rounded-full px-3 py-1.5 shadow-sm transition-all duration-200 select-none'
+                    aria-label="Toggle language"
+                  >
+                    <Globe className='h-3.5 w-3.5 flex-shrink-0' />
+                    <span className='text-xs font-bold tracking-wide'>
+                      {currentLocale === "en" ? "EN" : "አማ"}
+                    </span>
+                    <span className='text-[10px] opacity-70'>
+                      {currentLocale === "en" ? "→ አማ" : "→ EN"}
+                    </span>
+                  </button>
                 </div>
                 <div className='hidden md:block'>
                   <ThemeToggle />
