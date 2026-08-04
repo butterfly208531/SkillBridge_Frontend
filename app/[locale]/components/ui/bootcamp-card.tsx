@@ -177,7 +177,7 @@ export default function BootcampCard({
           </Button>
           <Button
             size="sm"
-            className="flex-1 bg-[#F57C00] hover:bg-orange-500 text-white focus-visible:ring-2 focus-visible:ring-orange-400"
+            className="flex-1 bg-[#2196F3] hover:bg-blue-500 text-white focus-visible:ring-2 focus-visible:ring-blue-400"
             asChild
           >
             <Link href={`/courses/${id}/ApplicationForm`}>Enroll Now</Link>
