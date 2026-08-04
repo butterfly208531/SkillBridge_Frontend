@@ -41,7 +41,7 @@ export default function Footer() {
   const footer = t.raw("footer") as any;
 
   return (
-    <footer className="bg-[#1565C0] text-white dark:bg-gray-950 -mt-1">
+    <footer className="bg-gradient-to-b from-[#1565C0] to-[#0D47A1] text-white -mt-1">
       <div className="container mx-auto px-4 py-14">
         <motion.div
           variants={container}
