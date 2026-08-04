@@ -62,11 +62,11 @@ export default function Footer() {
               />
               <span className="font-bold text-base leading-tight">
                 SkillBridge<br />
-                <span className="text-xs font-normal text-white/80">Institute of Technology</span>
+                <span className="text-xs font-normal text-white">Institute of Technology</span>
               </span>
             </Link>
 
-            <p className="text-sm text-white/85 leading-relaxed">
+            <p className="text-sm text-white leading-relaxed">
               {footer.description}
             </p>
 
@@ -79,7 +79,7 @@ export default function Footer() {
                     target="_blank"
                     rel="noopener noreferrer"
                     aria-label={label}
-                    className="flex items-center justify-center w-8 h-8 rounded-full bg-white/10 hover:bg-white/30 transition-colors"
+                    className="flex items-center justify-center w-8 h-8 rounded-full bg-white/25 hover:bg-white/40 transition-colors"
                   >
                     <Icon size={15} />
                   </Link>
@@ -90,7 +90,7 @@ export default function Footer() {
 
           {/* Column 2 — Quick Links */}
           <motion.div variants={fadeInUp}>
-            <h3 className="text-base font-bold mb-4 border-b border-white/20 pb-2">
+            <h3 className="text-base font-bold mb-4 border-b border-white/50 pb-2">
               {footer.quickLinks.title}
             </h3>
             <ul className="space-y-2">
@@ -99,7 +99,7 @@ export default function Footer() {
                   <li key={i}>
                     <Link
                       href={link.href}
-                      className="text-sm text-white/80 hover:text-[#F57C00] hover:translate-x-1 inline-block transition-all duration-200"
+                      className="text-sm text-white hover:text-[#F57C00] hover:translate-x-1 inline-block transition-all duration-200"
                     >
                       › {link.label}
                     </Link>
@@ -111,7 +111,7 @@ export default function Footer() {
 
           {/* Column 3 — Popular Bootcamps */}
           <motion.div variants={fadeInUp}>
-            <h3 className="text-base font-bold mb-4 border-b border-white/20 pb-2">
+            <h3 className="text-base font-bold mb-4 border-b border-white/50 pb-2">
               {footer.popular.title}
             </h3>
             <ul className="space-y-2">
@@ -120,7 +120,7 @@ export default function Footer() {
                   <li key={i}>
                     <Link
                       href={link.href}
-                      className="text-sm text-white/80 hover:text-[#F57C00] hover:translate-x-1 inline-block transition-all duration-200"
+                      className="text-sm text-white hover:text-[#F57C00] hover:translate-x-1 inline-block transition-all duration-200"
                     >
                       › {link.label}
                     </Link>
@@ -132,52 +132,44 @@ export default function Footer() {
 
           {/* Column 4 — Contact */}
           <motion.div variants={fadeInUp}>
-            <h3 className="text-base font-bold mb-4 border-b border-white/20 pb-2">
+            <h3 className="text-base font-bold mb-4 border-b border-white/50 pb-2">
               {footer.contact.title}
             </h3>
             <ul className="space-y-3 text-sm">
               <li className="flex items-start gap-2">
-                <Mail size={15} className="mt-0.5 shrink-0 text-white/70" />
-                <a
-                  href="mailto:skillbridgeinstitituteoftech@gmail.com"
-                  className="text-white/85 hover:text-[#F57C00] break-all"
-                >
+                <Mail size={15} className="mt-0.5 shrink-0 text-white/90" />
+                <a href="mailto:skillbridgeinstitituteoftech@gmail.com" className="text-white hover:text-[#F57C00] break-all">
                   skillbridgeinstitituteoftech@gmail.com
                 </a>
               </li>
               <li className="flex items-center gap-2">
-                <Phone size={15} className="shrink-0 text-white/70" />
-                <a href="tel:+251955935455" className="text-white/85 hover:text-[#F57C00]">
+                <Phone size={15} className="shrink-0 text-white/90" />
+                <a href="tel:+251955935455" className="text-white hover:text-[#F57C00]">
                   +251 955 935 455
                 </a>
               </li>
               <li className="flex items-center gap-2">
-                <Phone size={15} className="shrink-0 text-white/70" />
-                <a href="tel:+251974424372" className="text-white/85 hover:text-[#F57C00]">
+                <Phone size={15} className="shrink-0 text-white/90" />
+                <a href="tel:+251974424372" className="text-white hover:text-[#F57C00]">
                   +251 974 424 372
                 </a>
               </li>
               <li className="flex items-center gap-2">
-                <MessageCircle size={15} className="shrink-0 text-white/70" />
-                <a
-                  href="https://t.me/skillbridgesupport2"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-white/85 hover:text-[#F57C00]"
-                >
+                <MessageCircle size={15} className="shrink-0 text-white/90" />
+                <a href="https://t.me/skillbridgesupport2" target="_blank" rel="noopener noreferrer" className="text-white hover:text-[#F57C00]">
                   @skillbridgesupport2
                 </a>
               </li>
               <li className="flex items-start gap-2">
-                <MapPin size={15} className="mt-0.5 shrink-0 text-white/70" />
-                <span className="text-white/85">Addis Ababa, Ethiopia</span>
+                <MapPin size={15} className="mt-0.5 shrink-0 text-white/90" />
+                <span className="text-white">Addis Ababa, Ethiopia</span>
               </li>
             </ul>
 
             {/* FAQ link */}
             <Link
               href="/faq"
-              className="inline-flex items-center gap-2 mt-5 text-sm text-white/70 hover:text-[#F57C00] transition-colors"
+              className="inline-flex items-center gap-2 mt-5 text-sm text-white hover:text-[#F57C00] transition-colors"
             >
               <HelpCircle className="w-5 h-5 text-[#F57C00]" />
               Frequently Asked Questions
@@ -191,7 +183,7 @@ export default function Footer() {
           whileInView={{ opacity: 1 }}
           viewport={{ once: true }}
           transition={{ delay: 0.4, duration: 0.8 }}
-          className="border-t border-white/20 mt-10 pt-6 flex flex-col md:flex-row items-center justify-between gap-3 text-sm text-white/70"
+          className="border-t border-white/40 mt-10 pt-6 flex flex-col md:flex-row items-center justify-between gap-3 text-sm text-white"
         >
           <p>&copy; {new Date().getFullYear()} {footer.copyright.text}</p>
           <div className="flex gap-4">
@@ -204,7 +196,7 @@ export default function Footer() {
         </motion.div>
       </div>
       {/* Dark bottom strip */}
-      <div className="bg-[#0D47A1] py-3 px-4 text-center text-xs text-white/60">
+      <div className="bg-[#0D47A1] py-3 px-4 text-center text-xs text-white/90">
         SkillBridge Institute of Technology &mdash; Bridging Gaps, Building Skills, Transforming Futures.
       </div>
     </footer>
