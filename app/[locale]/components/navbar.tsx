@@ -175,7 +175,7 @@ export function Navbar() {
                     size='sm'
                     className='hidden md:block bg-[#2196F3] hover:bg-blue-500 h-9 2xl:h-12 px-5'
                   >
-                    <Link href='/signup' className='text-base 2xl:text-lg'>
+                    <Link href='/courses' className='text-base 2xl:text-lg'>
                       {t("navbar.getStarted")}
                     </Link>
                   </Button>
@@ -253,7 +253,7 @@ export function Navbar() {
                   size='sm'
                   className='block md:hidden bg-[#2196F3] hover:bg-blue-500 h-9 px-5'
                 >
-                  <Link href='/signup'>{t("navbar.getStarted")}</Link>
+                  <Link href='/courses'>{t("navbar.getStarted")}</Link>
                 </Button>
               )}
             </div>
