@@ -62,7 +62,9 @@ export function CommunitySection() {
         <div className="relative flex justify-center items-center mb-12" style={{ height: "340px" }}>
           {communityConfig.map((platform, i) => {
             const Icon = platformIcons[platform.key] ?? Globe;
-            const accent = platformAccent[platform.key] ?? { icon: "text-[#2196F3]", iconBg: "bg-blue-50", bar: "bg-[#2196F3]", count: "text-[#2196F3]" };
+            const accent = i % 2 === 0
+              ? { icon: "text-[#2196F3]", iconBg: "bg-blue-50 dark:bg-blue-900/20", bar: "bg-[#2196F3]", count: "text-[#2196F3]" }
+              : { icon: "text-[#F57C00]", iconBg: "bg-orange-50 dark:bg-orange-900/20", bar: "bg-[#F57C00]", count: "text-[#F57C00]" };
             const total = communityConfig.length;
             const mid = Math.floor(total / 2);
             const offset = i - mid;
