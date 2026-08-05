@@ -1,4 +1,5 @@
 "use client";
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import {
@@ -462,7 +463,7 @@ const ApplicationForm = () => {
                           <input type="checkbox" name="agreeTerms" checked={form.agreeTerms} onChange={handleChange} className="mt-0.5 w-4 h-4 accent-[#2196F3]" />
                           <span className="text-sm text-gray-600 dark:text-gray-300">
                             {t("fields.agreeTermsfirst")}{" "}
-                            <a href="/terms" className="text-[#2196F3] hover:underline font-medium">{t("fields.terms")}</a>{" "}
+                            <Link href="/terms" className="text-[#2196F3] hover:underline font-medium">{t("fields.terms")}</Link>{" "}
                             {t("fields.agreeTermslast")}
                           </span>
                         </label>
