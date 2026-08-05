@@ -71,7 +71,7 @@ export function Navbar() {
                   className='logo_width flex items-center mt-2 max-[375px]:mr-0 xs:mr-8 sm:mr-2 xl:mr-0 2xl:mr-4'
                 >
                   <img
-                    src='/Logo.svg'
+                    src='/logo.png'
                     alt='Skill Bridge Logo'
                     className='logo_width w-16 sm:w-20 md:w-24 lg:w-16 xl:w-20 h-16 sm:h-20 md:h-24 lg:h-16 xl:h-20 2xl:w-24 2xl:h-24'
                   />
@@ -209,7 +209,7 @@ export function Navbar() {
           <div className='flex justify-between items-center p-4 border-b'>
             <div className='flex items-center gap-2'>
               <Image
-                src='https://i.ibb.co/ZRYfMLWK/skills.png'
+                src='/logo.png'
                 alt='Skill Bridge Mobile Logo'
                 width={36}
                 height={36}

@@ -55,7 +55,7 @@ export default function Footer() {
             {/* Logo */}
             <Link href="/" className="flex items-center gap-2 mb-1">
               <Image
-                src="/Logo.svg"
+                src="/logo.png"
                 alt="SkillBridge Institute of Technology logo"
                 width={36}
                 height={36}
