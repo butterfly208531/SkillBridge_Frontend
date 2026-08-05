@@ -41,7 +41,7 @@ export default function Footer() {
   const footer = t.raw("footer") as any;
 
   return (
-    <footer className="bg-gradient-to-b from-[#1565C0] to-[#0D47A1] text-white -mt-1">
+    <footer className="bg-[#5C5CFF] text-white -mt-1">
       <div className="container mx-auto px-4 py-14">
         <motion.div
           variants={container}
@@ -196,7 +196,7 @@ export default function Footer() {
         </motion.div>
       </div>
       {/* Dark bottom strip */}
-      <div className="bg-[#0D47A1] py-3 px-4 text-center text-xs text-white/90">
+      <div className="bg-[#4A4AE0] py-3 px-4 text-center text-xs text-white/90">
         SkillBridge Institute of Technology &mdash; Bridging Gaps, Building Skills, Transforming Futures.
       </div>
     </footer>
