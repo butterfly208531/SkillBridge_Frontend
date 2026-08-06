@@ -5,6 +5,7 @@ import { ThemeProvider } from "@/app/[locale]/components/theme-provider";
 import { hasLocale, NextIntlClientProvider } from "next-intl";
 import { notFound } from "next/navigation";
 import { routing } from "@/i18n/routing";
+import { SocialSidebar } from "@/app/[locale]/components/social-sidebar";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -63,7 +64,10 @@ export default async function RootLayout({
     >
       <body className='antialiased font-jakarta'>
         <ThemeProvider attribute='class' defaultTheme='light' enableSystem>
-          <NextIntlClientProvider>{children}</NextIntlClientProvider>
+          <NextIntlClientProvider>
+            <SocialSidebar />
+            {children}
+          </NextIntlClientProvider>
         </ThemeProvider>
       </body>
     </html>
