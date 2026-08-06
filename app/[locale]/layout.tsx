@@ -42,9 +42,9 @@ export const metadata: Metadata = {
   title: "SkillBridge - Your Future Begins With One Click",
   description: "Bridging Gaps, Building Skills, Transforming Futures",
   icons: {
-    icon: "/Logo.svg",
-    shortcut: "/Logo.svg",
-    apple: "/Logo.svg",
+    icon: "/logo.png",
+    shortcut: "/logo.png",
+    apple: "/logo.png",
   },
 };
 
@@ -68,8 +68,8 @@ export default async function RootLayout({
       suppressHydrationWarning
     >
       <head>
-        <link rel="icon" href="/Logo.svg" type="image/svg+xml" />
-        <link rel="shortcut icon" href="/Logo.svg" />
+        <link rel="icon" href="/logo.png" type="image/png" />
+        <link rel="shortcut icon" href="/logo.png" />
       </head>
       <body className='antialiased font-jakarta'>
         <ThemeProvider attribute='class' defaultTheme='light' enableSystem>
