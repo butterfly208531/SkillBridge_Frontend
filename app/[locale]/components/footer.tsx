@@ -160,6 +160,12 @@ export default function Footer() {
                   @skillbridgesupport2
                 </a>
               </li>
+              <li className="flex items-center gap-2">
+                <MessageCircle size={15} className="shrink-0 text-white/70" />
+                <a href="https://t.me/skillbridgesupport3" target="_blank" rel="noopener noreferrer" className="text-white/90 hover:text-[#F57C00]">
+                  @skillbridgesupport3
+                </a>
+              </li>
               <li className="flex items-start gap-2">
                 <MapPin size={15} className="mt-0.5 shrink-0 text-white/70" />
                 <span className="text-white/90">Addis Ababa, Ethiopia</span>

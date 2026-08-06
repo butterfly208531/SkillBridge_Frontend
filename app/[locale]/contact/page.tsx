@@ -58,7 +58,7 @@ const Contact = () => {
               </div>
               <div>
                 <h4 className='font-semibold text-gray-800 dark:text-gray-200'>📨 {t("telegram")}</h4>
-                <p>@skillbridgesupport2</p>
+                <p>@skillbridgesupport2 / @skillbridgesupport3</p>
               </div>
             </div>
           </div>
