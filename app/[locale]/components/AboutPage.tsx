@@ -205,17 +205,17 @@ export default function AboutPage() {
       </section>
 
       {/* CTA */}
-      <section className="py-24 px-4 relative overflow-hidden bg-gradient-to-br from-blue-600 to-blue-700 dark:from-blue-800 dark:to-blue-900">
+      <section className="py-24 px-4 relative overflow-hidden bg-gradient-to-b from-white via-[#a8d4ff] to-[#1E90FF]">
         <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute top-0 right-0 w-96 h-96 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/2" />
-          <div className="absolute bottom-0 left-0 w-64 h-64 bg-white/5 rounded-full translate-y-1/2 -translate-x-1/2" />
+          <div className="absolute top-0 right-0 w-96 h-96 bg-[#F57C00]/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+          <div className="absolute bottom-0 left-0 w-64 h-64 bg-[#F57C00]/10 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2" />
         </div>
         <div className="relative max-w-3xl mx-auto text-center">
-          <h2 className="text-4xl font-extrabold text-white mb-4">{aboutPage.startJourney.title}</h2>
-          <p className="text-lg text-blue-100 mb-10 max-w-xl mx-auto">{aboutPage.startJourney.subtitle}</p>
+          <h2 className="text-4xl font-extrabold text-white drop-shadow mb-4">{aboutPage.startJourney.title}</h2>
+          <p className="text-lg text-white/90 mb-10 max-w-xl mx-auto">{aboutPage.startJourney.subtitle}</p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link href="/courses">
-              <Button size="lg" className="px-8 py-3 text-base bg-white text-blue-600 hover:bg-blue-50 font-bold shadow-lg">
+              <Button size="lg" className="px-8 py-3 text-base bg-white text-[#1E90FF] hover:bg-blue-50 font-bold shadow-lg">
                 {aboutPage.startJourney.explore} <ArrowRight className="ml-2 w-4 h-4" />
               </Button>
             </Link>
