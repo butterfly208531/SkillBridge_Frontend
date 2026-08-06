@@ -14,7 +14,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     const token = sessionStorage.getItem("adminToken");
 
     if (!token && !isLoginPage) {
-      router.replace("/admin/login");
+      window.location.href = "/en/admin/login";
     } else {
       setChecked(true);
     }

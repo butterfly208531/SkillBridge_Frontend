@@ -22,11 +22,10 @@ export default function AdminLoginPage() {
     const DEMO_EMAIL = "admin@example.com";
     const DEMO_PASSWORD = "password123";
 
-    if (email === DEMO_EMAIL && password === DEMO_PASSWORD) {
+    if (email.trim() === DEMO_EMAIL && password === DEMO_PASSWORD) {
       sessionStorage.setItem("adminToken", "demo-token");
       sessionStorage.setItem("adminUser", JSON.stringify({ email, name: "Admin" }));
-      router.push("/admin/dashboard");
-      setLoading(false);
+      window.location.href = "/en/admin/dashboard";
       return;
     }
 
@@ -46,9 +45,9 @@ export default function AdminLoginPage() {
       const data = await res.json();
       sessionStorage.setItem("adminToken", data.accessToken || data.token || "");
       sessionStorage.setItem("adminUser", JSON.stringify(data.user || { email }));
-      router.push("/admin/dashboard");
+      window.location.href = "/en/admin/dashboard";
     } catch (err: any) {
-      setError(err.message || "Login failed");
+      setError(err.message || "Invalid credentials");
     } finally {
       setLoading(false);
     }
