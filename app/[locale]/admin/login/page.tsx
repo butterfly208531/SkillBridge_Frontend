@@ -19,8 +19,8 @@ export default function AdminLoginPage() {
     setLoading(true);
 
     // Demo credentials fallback
-    const DEMO_EMAIL = "admin@example.com";
-    const DEMO_PASSWORD = "password123";
+    const DEMO_EMAIL = "admin@skillbridge.com";
+    const DEMO_PASSWORD = "Admin123!";
 
     if (email.trim() === DEMO_EMAIL && password === DEMO_PASSWORD) {
       sessionStorage.setItem("adminToken", "demo-token");
