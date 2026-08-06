@@ -19,6 +19,17 @@ export function HeroSection() {
 
   return (
     <section className="container !mx-auto px-4 lg:px-0 lg:pl-8 pt-6 pb-16 relative flex gap-12 justify-center items-center">
+      {/* Logo watermark background */}
+      <div className="absolute inset-0 flex items-center justify-center pointer-events-none overflow-hidden">
+        <Image
+          src="/logo.png"
+          alt=""
+          width={600}
+          height={600}
+          className="opacity-5 w-[400px] h-[400px] lg:w-[600px] lg:h-[600px] object-contain select-none"
+          aria-hidden="true"
+        />
+      </div>
       <div className="grid md:grid-cols-2 gap-8 md:gap-3 lg:gap-16 xl:gap-[10rem] 2xl:gap-64 items-center w-full">
 
         {/* Left column */}
