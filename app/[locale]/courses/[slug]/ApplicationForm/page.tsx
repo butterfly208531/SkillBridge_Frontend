@@ -150,9 +150,7 @@ const ApplicationForm = () => {
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) errors.push("Invalid Email Address.");
     if (!form.phone) errors.push("Phone Number is required.");
     if (!form.telegramHandle) errors.push("Telegram Handle is required.");
-    if (!form.university) errors.push("University is required.");
     if (!form.address) errors.push("Address is required.");
-    if (!form.dateOfBirth) errors.push("Date of Birth is required.");
     if (!form.gender) errors.push("Gender is required.");
     if (errors.length > 0) { setValidationErrors(errors); return false; }
     return true;
