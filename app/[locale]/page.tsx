@@ -64,12 +64,12 @@ export default function Home() {
       <BootcampsSection />
       <LearningPathsSection />
       <ProjectsSection />
-      <WhySection />
-      <HubSection />
       <ScholarshipsSection />
       <TestimonialsSection />
-      <CommunitySection />
+      <WhySection />
       <VideosSection />
+      <HubSection />
+      <CommunitySection />
       <FinalCTASection />
       <Footer />
     </div>
