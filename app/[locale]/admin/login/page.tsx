@@ -13,28 +13,22 @@ export default function AdminLoginPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  // Local admin credentials (bypass for frontend access)
-  const LOCAL_ADMIN_EMAIL    = "admin@skillbridge.com";
-  const LOCAL_ADMIN_PASSWORD = "Skillbridge@2025";
-
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     setLoading(true);
 
-    // ── Local bypass ──────────────────────────────────────────
-    if (email === LOCAL_ADMIN_EMAIL && password === LOCAL_ADMIN_PASSWORD) {
-      sessionStorage.setItem("adminToken", "local-admin-token");
-      sessionStorage.setItem("adminUser", JSON.stringify({
-        name: "Admin",
-        email: LOCAL_ADMIN_EMAIL,
-        role: "admin",
-      }));
+    // Demo credentials fallback
+    const DEMO_EMAIL = "admin@example.com";
+    const DEMO_PASSWORD = "password123";
+
+    if (email === DEMO_EMAIL && password === DEMO_PASSWORD) {
+      sessionStorage.setItem("adminToken", "demo-token");
+      sessionStorage.setItem("adminUser", JSON.stringify({ email, name: "Admin" }));
       router.push("/admin/dashboard");
       setLoading(false);
       return;
     }
-    // ─────────────────────────────────────────────────────────
 
     try {
       const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "https://skillbridge-backend2-h1u9.onrender.com/api";
@@ -54,7 +48,7 @@ export default function AdminLoginPage() {
       sessionStorage.setItem("adminUser", JSON.stringify(data.user || { email }));
       router.push("/admin/dashboard");
     } catch (err: any) {
-      setError(err.message || "Invalid email or password");
+      setError(err.message || "Login failed");
     } finally {
       setLoading(false);
     }
