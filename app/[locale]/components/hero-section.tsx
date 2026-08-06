@@ -23,22 +23,6 @@ export function HeroSection() {
 
         {/* Left column */}
         <div className="hero_left_section pt-4 md:pt-6">
-          {/* Logo */}
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4 }}
-            className="flex justify-center md:justify-start mb-5"
-          >
-            <Image
-              src="/Logo.svg"
-              alt="SkillBridge Institute of Technology"
-              width={64}
-              height={64}
-              priority
-            />
-          </motion.div>
-
           <motion.h1
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
