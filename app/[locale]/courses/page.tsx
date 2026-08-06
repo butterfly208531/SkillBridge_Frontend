@@ -128,7 +128,7 @@ export default function CoursesPage() {
             <p className="text-base font-medium">{t("coursePage.noCourse")}</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 items-stretch">
             {sorted.map((course) => (
               <BootcampCard key={course.id} {...course} showViewDetails />
             ))}

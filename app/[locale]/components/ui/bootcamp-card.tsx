@@ -62,7 +62,7 @@ export default function BootcampCard({
   return (
     <div
       className={cn(
-        "flex flex-col rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700",
+        "flex flex-col h-full rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700",
         "bg-white dark:bg-gray-900",
         "shadow-sm hover:shadow-lg transition-shadow duration-300"
       )}

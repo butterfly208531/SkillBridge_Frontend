@@ -29,13 +29,14 @@ export function BootcampsSection() {
       <div className="container mx-auto px-4">
         <SectionHeading title={t("heading")} subtitle={t("subheading")} center />
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-10">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-10 items-stretch">
           {BOOTCAMPS.slice(0, 3).map((course, i) => (
             <motion.div
               key={course.id}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.4, delay: i * 0.05 }}
+              className="h-full"
             >
               <BootcampCard {...course} />
             </motion.div>
