@@ -104,7 +104,10 @@ const Contact = () => {
             />
             <button
               type='submit'
-              className='bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 transition dark:bg-blue-700 dark:hover:bg-blue-800'
+              className='text-white px-6 py-2 rounded transition'
+              style={{ backgroundColor: "#1E90FF" }}
+              onMouseEnter={e => (e.currentTarget.style.backgroundColor = "#1a7fe0")}
+              onMouseLeave={e => (e.currentTarget.style.backgroundColor = "#1E90FF")}
             >
               {t("messageButton")}
             </button>
