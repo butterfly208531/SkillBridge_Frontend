@@ -9,7 +9,7 @@ export function FinalCTASection() {
   const t = useTranslations("finalCTA");
 
   return (
-    <section className="py-20 bg-gradient-to-b from-white via-[#bfdbfe] to-[#4285F4] dark:from-gray-900 dark:via-blue-950 dark:to-blue-900 relative overflow-hidden">
+    <section className="py-24 bg-gradient-to-b from-white via-[#e0f0ff] via-[#93c5fd] to-[#1E90FF] dark:from-gray-900 dark:via-blue-950 dark:to-blue-900 relative overflow-hidden">
       {/* Orange accent blobs */}
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute top-0 right-0 w-80 h-80 bg-[#F57C00] opacity-20 rounded-full blur-3xl translate-x-1/3 -translate-y-1/3" />
