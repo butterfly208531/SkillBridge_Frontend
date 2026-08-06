@@ -41,6 +41,11 @@ const merriweather = Merriweather({
 export const metadata: Metadata = {
   title: "SkillBridge - Your Future Begins With One Click",
   description: "Bridging Gaps, Building Skills, Transforming Futures",
+  icons: {
+    icon: "/Logo.svg",
+    shortcut: "/Logo.svg",
+    apple: "/Logo.svg",
+  },
 };
 
 export default async function RootLayout({
@@ -62,6 +67,10 @@ export default async function RootLayout({
       className={`${montserrat.variable} ${inter.variable} ${poppins.variable} ${plusJakarta.variable} ${merriweather.variable}`}
       suppressHydrationWarning
     >
+      <head>
+        <link rel="icon" href="/Logo.svg" type="image/svg+xml" />
+        <link rel="shortcut icon" href="/Logo.svg" />
+      </head>
       <body className='antialiased font-jakarta'>
         <ThemeProvider attribute='class' defaultTheme='light' enableSystem>
           <NextIntlClientProvider>
