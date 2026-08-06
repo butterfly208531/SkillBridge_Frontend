@@ -18,6 +18,9 @@ export default function AdminLoginPage() {
     setError("");
     setLoading(true);
 
+    // Derive locale from current path e.g. /en/admin/login → /en
+    const locale = window.location.pathname.split("/")[1] || "en";
+
     // Demo credentials fallback
     const DEMO_EMAIL = "admin@skillbridge.com";
     const DEMO_PASSWORD = "Admin123!";
@@ -25,7 +28,7 @@ export default function AdminLoginPage() {
     if (email.trim() === DEMO_EMAIL && password === DEMO_PASSWORD) {
       sessionStorage.setItem("adminToken", "demo-token");
       sessionStorage.setItem("adminUser", JSON.stringify({ email, name: "Admin" }));
-      window.location.href = "/en/admin/dashboard";
+      window.location.href = `/${locale}/admin/dashboard`;
       return;
     }
 
@@ -45,7 +48,7 @@ export default function AdminLoginPage() {
       const data = await res.json();
       sessionStorage.setItem("adminToken", data.accessToken || data.token || "");
       sessionStorage.setItem("adminUser", JSON.stringify(data.user || { email }));
-      window.location.href = "/en/admin/dashboard";
+      window.location.href = `/${locale}/admin/dashboard`;
     } catch (err: any) {
       setError(err.message || "Invalid credentials");
     } finally {

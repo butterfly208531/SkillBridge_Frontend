@@ -167,7 +167,7 @@ export default function DashboardPage() {
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
           <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
             <h2 className="text-sm font-bold text-gray-800">Recent Applications</h2>
-            <a href="/admin/applications" className="text-xs font-medium text-[#1E90FF] hover:underline">View all →</a>
+            <a href={`/${typeof window !== "undefined" ? window.location.pathname.split("/")[1] : "en"}/admin/applications`} className="text-xs font-medium text-[#1E90FF] hover:underline">View all →</a>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
