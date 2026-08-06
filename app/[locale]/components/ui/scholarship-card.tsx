@@ -43,7 +43,7 @@ export default function ScholarshipCard({
     .filter(Boolean)
 
   return (
-    <div className="flex flex-col rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-shadow duration-300 bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800">
+    <div className="flex flex-col h-full rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-shadow duration-300 bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800">
 
       {/* ── Header — dark teal block ── */}
       <div

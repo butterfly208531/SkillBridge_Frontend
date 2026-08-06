@@ -19,7 +19,7 @@ export function ScholarshipsSection({ showAll = false }: { showAll?: boolean }) 
         <SectionHeading title={t("heading")} subtitle={t("subheading")} center />
 
         {/* Scholarship cards */}
-        <div className={`grid grid-cols-1 md:grid-cols-2 ${showAll ? "lg:grid-cols-4" : "lg:grid-cols-3"} gap-6 mb-8`}>
+        <div className={`grid grid-cols-1 md:grid-cols-2 ${showAll ? "lg:grid-cols-4" : "lg:grid-cols-3"} gap-6 mb-8 items-stretch`}>
           {visible.map((scholarship, i) => (
             <motion.div
               key={scholarship.id}
@@ -27,6 +27,7 @@ export function ScholarshipsSection({ showAll = false }: { showAll?: boolean }) 
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.4, delay: i * 0.1 }}
               viewport={{ once: true }}
+              className="h-full"
             >
               <ScholarshipCard
                 id={scholarship.id}
