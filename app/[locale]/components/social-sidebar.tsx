@@ -5,14 +5,17 @@ import { Facebook, Instagram, Linkedin } from "lucide-react";
 import { SiX, SiTiktok, SiTelegram, SiYoutube } from "react-icons/si";
 import { motion } from "framer-motion";
 
+const BLUE   = "#1E90FF";
+const ORANGE = "#F57C00";
+
 const socials = [
-  { Icon: Facebook,   url: "https://www.facebook.com/profile.php?id=61574189453702",               label: "Facebook",  color: "#1877F2" },
-  { Icon: Instagram,  url: "https://www.instagram.com/skillbridgeinstituteoftech",                 label: "Instagram", color: "#E1306C" },
-  { Icon: Linkedin,   url: "https://www.linkedin.com/company/skillbridge-institute-of-technology", label: "LinkedIn",  color: "#0A66C2" },
-  { Icon: SiTelegram, url: "https://t.me/skillbridgeinstituteoftech",                              label: "Telegram",  color: "#26A5E4" },
-  { Icon: SiYoutube,  url: "https://www.youtube.com/@SkillBridgeInstituteOfTech",                  label: "YouTube",   color: "#FF0000" },
-  { Icon: SiTiktok,   url: "https://www.tiktok.com/@skillbridge417",                               label: "TikTok",    color: "#010101" },
-  { Icon: SiX,        url: "https://x.com",                                                        label: "X",         color: "#14171A" },
+  { Icon: Facebook,   url: "https://www.facebook.com/profile.php?id=61574189453702",               label: "Facebook",  color: BLUE   },
+  { Icon: Instagram,  url: "https://www.instagram.com/skillbridgeinstituteoftech",                 label: "Instagram", color: ORANGE },
+  { Icon: Linkedin,   url: "https://www.linkedin.com/company/skillbridge-institute-of-technology", label: "LinkedIn",  color: BLUE   },
+  { Icon: SiTelegram, url: "https://t.me/skillbridgeinstituteoftech",                              label: "Telegram",  color: ORANGE },
+  { Icon: SiYoutube,  url: "https://www.youtube.com/@SkillBridgeInstituteOfTech",                  label: "YouTube",   color: BLUE   },
+  { Icon: SiTiktok,   url: "https://www.tiktok.com/@skillbridge417",                               label: "TikTok",    color: ORANGE },
+  { Icon: SiX,        url: "https://x.com",                                                        label: "X",         color: BLUE   },
 ];
 
 export function SocialSidebar() {
