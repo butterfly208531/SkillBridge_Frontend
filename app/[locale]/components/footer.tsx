@@ -41,7 +41,7 @@ export default function Footer() {
   const footer = t.raw("footer") as any;
 
   return (
-    <footer className="bg-[#0098BA] text-gray-900 -mt-1">
+    <footer className="bg-[#4285F4] text-white -mt-1">
       <div className="container mx-auto px-4 py-14">
         <motion.div
           variants={container}
@@ -62,11 +62,11 @@ export default function Footer() {
               />
               <span className="font-bold text-base leading-tight">
                 SkillBridge<br />
-                <span className="text-xs font-normal text-[#1565C0]">Institute of Technology</span>
+                <span className="text-xs font-normal text-white/90">Institute of Technology</span>
               </span>
             </Link>
 
-            <p className="text-sm text-gray-800 leading-relaxed">
+            <p className="text-sm text-white/90 leading-relaxed">
               {footer.description}
             </p>
 
@@ -79,7 +79,7 @@ export default function Footer() {
                     target="_blank"
                     rel="noopener noreferrer"
                     aria-label={label}
-                    className="flex items-center justify-center w-8 h-8 rounded-full bg-white/60 hover:bg-white transition-colors text-[#1565C0]"
+                    className="flex items-center justify-center w-8 h-8 rounded-full bg-white/20 hover:bg-white/40 transition-colors text-white"
                   >
                     <Icon size={15} />
                   </Link>
@@ -193,7 +193,7 @@ export default function Footer() {
         </motion.div>
       </div>
       {/* Dark bottom strip */}
-      <div className="bg-[#007A96] py-3 px-4 text-center text-xs text-white">
+      <div className="bg-[#2A6FCC] py-3 px-4 text-center text-xs text-white">
         SkillBridge Institute of Technology &mdash; Bridging Gaps, Building Skills, Transforming Futures.
       </div>
     </footer>
