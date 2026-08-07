@@ -291,7 +291,10 @@ export default function ScholarshipsPage() {
                     </div>
 
                     <div className="flex gap-2 pt-3 border-t border-gray-100">
-                      <button onClick={() => { setEditing(s); setShowModal(true); }}
+                      <button onClick={() => {
+                        const locale = window.location.pathname.split("/")[1] || "en";
+                        window.location.href = `/${locale}/admin/scholarships/edit/${s.id}`;
+                      }}
                         className="flex items-center gap-1.5 flex-1 justify-center py-1.5 text-xs text-[#1E90FF] border border-[#1E90FF]/30 rounded-lg hover:bg-[#1E90FF]/5 transition-colors">
                         <Pencil size={12} /> Edit
                       </button>
