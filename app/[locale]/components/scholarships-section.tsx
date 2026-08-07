@@ -1,6 +1,5 @@
 "use client";
 
-import { useTranslations } from "next-intl";
 import { motion } from "framer-motion";
 import Image from "next/image";
 import { Link } from "@/i18n/navigation";
@@ -9,6 +8,7 @@ import { SectionHeading } from "@/app/[locale]/components/ui/section-heading";
 import ScholarshipCard from "@/app/[locale]/components/ui/scholarship-card";
 import { scholarshipsConfig, scholarshipWinnersConfig, isClosed } from "@/lib/scholarships-config";
 import { Archive } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 export function ScholarshipsSection({ showAll = false }: { showAll?: boolean }) {
   const t = useTranslations("scholarshipsSection");
@@ -35,11 +35,11 @@ export function ScholarshipsSection({ showAll = false }: { showAll?: boolean }) 
             >
               <ScholarshipCard
                 id={scholarship.id}
-                name={t(`scholarships.${scholarship.nameKey}.name`)}
+                name={scholarship.displayName}
                 applicationsCount={scholarship.applicationsCount}
                 deadline={scholarship.deadline}
                 winnersCount={scholarship.winnersCount}
-                eligibility={t(`scholarships.${scholarship.eligibilityKey}.eligibility`)}
+                eligibility={scholarship.eligibility}
                 courseId={scholarship.courseId}
                 fundingType={scholarship.fundingType}
                 tuitionAmount={scholarship.tuitionAmount}

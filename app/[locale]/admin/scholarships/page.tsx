@@ -35,26 +35,30 @@ function formatDate(iso: string) {
   return isNaN(d.getTime()) ? iso : d.toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" });
 }
 
-// Map lib config to page shape
+// Map lib config to page shape — uses real display names
 const FALLBACK_SCHOLARSHIPS: Scholarship[] = scholarshipsConfig.map(s => ({
   id: s.id,
-  name: s.nameKey.replace(/([A-Z])/g, " $1").trim() + " Scholarship",
+  name: s.displayName,
   courseId: s.courseId,
-  course: s.courseId.replace(/-/g, " ").replace(/\b\w/g, l => l.toUpperCase()),
+  course: s.courseName,
   applicationsCount: s.applicationsCount,
   winnersCount: s.winnersCount,
   deadline: s.deadline,
-  eligibility: s.eligibilityKey.replace(/([A-Z])/g, " $1").trim(),
+  eligibility: s.eligibility,
   status: "active",
+  applicationFormUrl: s.applicationFormUrl,
 }));
 
-const FALLBACK_WINNERS: Winner[] = scholarshipWinnersConfig.map(w => ({
-  id: w.id,
-  name: w.name,
-  scholarship: w.scholarshipKey.replace(/([A-Z])/g, " $1").trim() + " Scholarship",
-  year: w.year,
-  status: "active",
-}));
+const FALLBACK_WINNERS: Winner[] = scholarshipWinnersConfig.map(w => {
+  const sch = scholarshipsConfig.find(s => s.nameKey === w.scholarshipKey);
+  return {
+    id: w.id,
+    name: w.name,
+    scholarship: sch?.displayName ?? w.scholarshipKey,
+    year: w.year,
+    status: "active",
+  };
+});
 
 export default function ScholarshipsPage() {
   const [scholarships, setScholarships] = useState<Scholarship[]>([]);
