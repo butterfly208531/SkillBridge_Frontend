@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Search } from "lucide-react";
 import { Navbar } from "../components/navbar";
@@ -8,40 +8,59 @@ import Footer from "@/app/[locale]/components/footer";
 import BootcampCard from "@/app/[locale]/components/ui/bootcamp-card";
 import { Button } from "@/app/[locale]/components/ui/button";
 import { Input } from "@/app/[locale]/components/ui/input";
-import { imagePaths } from "@/app/[locale]/data/image-paths";
+import { fetchCourses } from "@/lib/apI";
 import { cn } from "@/lib/utils";
 
-const BOOTCAMPS = [
-  { id: "odoo-functional-erp", image: imagePaths.courses.design, title: "Odoo Functional ERP", description: "Master Odoo ERP modules — CRM, Sales, Inventory, HR, Accounting and more with real business scenarios.", duration: "8 weeks", startDate: "Aug 2025", mode: "Online", level: "Beginner", category: "ERP", rating: 4.7, reviews: 40 },
-  { id: "odoo-technical-development", image: imagePaths.courses.machineLearning, title: "Odoo Technical Development", description: "Build custom Odoo modules from scratch — models, views, ORM, reports, and deployment.", duration: "8 weeks", startDate: "Aug 2025", mode: "Online", level: "Intermediate", category: "ERP", rating: 4.9, reviews: 50 },
-  { id: "full-stack-development", image: imagePaths.courses.webDevelopment, title: "Full-Stack Development", description: "Learn React, Node.js, PostgreSQL and build 16+ real-world projects for your portfolio.", duration: "4 months", startDate: "Aug 2025", mode: "Online", level: "Beginner", category: "Development", rating: 4.8, reviews: 50 },
-  { id: "python-programming", image: imagePaths.courses.machineLearning, title: "Python Programming", description: "From basics to advanced Python — automation, data analysis, and scripting for real projects.", duration: "6 weeks", startDate: "Aug 2025", mode: "Online", level: "Beginner", category: "Development", rating: 4.8, reviews: 60 },
-  { id: "ai-machine-learning", image: imagePaths.courses.machineLearning, title: "AI & Machine Learning", description: "Build intelligent models with Python, Scikit-learn, and TensorFlow on real datasets.", duration: "3 months", startDate: "Sep 2025", mode: "Online", level: "Intermediate", category: "AI", rating: 4.9, reviews: 35 },
-  { id: "data-science", image: imagePaths.courses.machineLearning, title: "Data Science", description: "Master data analysis, visualization, and statistical modeling with Python.", duration: "10 weeks", startDate: "Sep 2025", mode: "Online", level: "Intermediate", category: "AI", rating: 4.7, reviews: 28 },
-  { id: "n8n-automation", image: imagePaths.courses.webDevelopment, title: "n8n Automation", description: "Automate business workflows without code — integrate APIs, CRMs, and tools with n8n.", duration: "4 weeks", startDate: "Sep 2025", mode: "Online", level: "Beginner", category: "Automation", rating: 4.6, reviews: 22 },
-  { id: "ielts-preparation", image: imagePaths.courses.design, title: "IELTS Preparation", description: "Achieve your target IELTS band score with expert guidance, practice tests, and personalized feedback.", duration: "8 weeks", startDate: "Aug 2025", mode: "Physical", level: "All Levels", category: "Language", rating: 4.7, reviews: 30 },
-  { id: "toefl-preparation", image: imagePaths.courses.design, title: "TOEFL Preparation", description: "Comprehensive TOEFL prep covering Reading, Listening, Speaking, and Writing sections.", duration: "8 weeks", startDate: "Aug 2025", mode: "Physical", level: "All Levels", category: "Language", rating: 4.6, reviews: 18 },
-  { id: "duolingo-preparation", image: imagePaths.courses.design, title: "Duolingo Preparation", description: "Prepare for the Duolingo English Test with targeted practice and proven strategies.", duration: "4 weeks", startDate: "Aug 2025", mode: "Online", level: "All Levels", category: "Language", rating: 4.5, reviews: 15 },
-];
-
-const CATEGORIES = ["All", "ERP", "Development", "AI", "Automation", "Language"];
+function courseToCardProps(c: any) {
+  return {
+    id: c.id || c._id || "",
+    image: c.imageUrl || c.image || "",
+    title: c.title || "",
+    description: c.shortDescription || c.description || "",
+    duration: c.duration || "",
+    startDate: c.startDate
+      ? new Date(c.startDate).toLocaleDateString("en-US", { month: "short", year: "numeric" })
+      : undefined,
+    mode: c.mode,
+    level: c.level,
+    category: c.category?.name || c.category || "",
+    rating: c.rating,
+    reviews: c.studentsEnrolled || c.reviews,
+    showViewDetails: true,
+  };
+}
 
 export default function CoursesPage() {
   const t = useTranslations();
+  const [courses, setCourses] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   const [activeCategory, setActiveCategory] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState("popular");
 
-  const filtered = BOOTCAMPS.filter(c => {
-    const matchCat = activeCategory === "All" || c.category === activeCategory;
+  useEffect(() => {
+    fetchCourses()
+      .then(data => setCourses(Array.isArray(data) ? data : []))
+      .catch(() => setCourses([]))
+      .finally(() => setLoading(false));
+  }, []);
+
+  // Build dynamic categories from real data
+  const categories = ["All", ...Array.from(new Set(courses.map(c => c.category?.name || c.category || "Other")))];
+
+  const filtered = courses.filter(c => {
+    const cat = c.category?.name || c.category || "";
+    const matchCat = activeCategory === "All" || cat === activeCategory;
     const matchSearch = !searchQuery ||
-      c.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      c.description.toLowerCase().includes(searchQuery.toLowerCase());
+      (c.title || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (c.shortDescription || c.description || "").toLowerCase().includes(searchQuery.toLowerCase());
     return matchCat && matchSearch;
   });
 
   const sorted = [...filtered].sort((a, b) =>
-    sortBy === "newest" ? a.id.localeCompare(b.id) : b.reviews - a.reviews
+    sortBy === "newest"
+      ? new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()
+      : (b.studentsEnrolled || b.reviews || 0) - (a.studentsEnrolled || a.reviews || 0)
   );
 
   return (
@@ -60,7 +79,6 @@ export default function CoursesPage() {
           <p className="text-blue-100 text-base md:text-lg mb-8 leading-relaxed">
             {t("coursePage.description")}
           </p>
-          {/* Integrated search */}
           <div className="relative max-w-xl mx-auto">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 h-5 w-5" />
             <Input
@@ -78,7 +96,7 @@ export default function CoursesPage() {
         {/* Category tabs + sort */}
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-8">
           <div className="flex flex-wrap gap-2">
-            {CATEGORIES.map((cat) => (
+            {categories.map((cat) => (
               <button
                 key={cat}
                 onClick={() => setActiveCategory(cat)}
@@ -95,42 +113,47 @@ export default function CoursesPage() {
             ))}
           </div>
           <div className="flex gap-2 shrink-0">
-            <Button
-              size="sm"
-              variant={sortBy === "popular" ? "default" : "outline"}
+            <Button size="sm" variant={sortBy === "popular" ? "default" : "outline"}
               onClick={() => setSortBy("popular")}
-              className={cn("rounded-xl text-sm", sortBy === "popular" ? "bg-[#2196F3] text-white hover:bg-blue-600" : "")}
-            >
+              className={cn("rounded-xl text-sm", sortBy === "popular" ? "bg-[#2196F3] text-white hover:bg-blue-600" : "")}>
               {t("coursePage.sort")}
             </Button>
-            <Button
-              size="sm"
-              variant={sortBy === "newest" ? "default" : "outline"}
+            <Button size="sm" variant={sortBy === "newest" ? "default" : "outline"}
               onClick={() => setSortBy("newest")}
-              className={cn("rounded-xl text-sm", sortBy === "newest" ? "bg-[#2196F3] text-white hover:bg-blue-600" : "")}
-            >
+              className={cn("rounded-xl text-sm", sortBy === "newest" ? "bg-[#2196F3] text-white hover:bg-blue-600" : "")}>
               {t("coursePage.newest")}
             </Button>
           </div>
         </div>
 
         {/* Result count */}
-        {searchQuery || activeCategory !== "All" ? (
+        {(searchQuery || activeCategory !== "All") && !loading && (
           <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
             {sorted.length} bootcamp{sorted.length !== 1 ? "s" : ""} found
           </p>
-        ) : null}
+        )}
+
+        {/* Loading skeleton */}
+        {loading && (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[1,2,3,4,5,6].map(i => (
+              <div key={i} className="h-80 rounded-xl bg-gray-200 dark:bg-gray-800 animate-pulse" />
+            ))}
+          </div>
+        )}
 
         {/* Cards grid */}
-        {sorted.length === 0 ? (
+        {!loading && sorted.length === 0 && (
           <div className="text-center py-20 text-gray-400 dark:text-gray-500">
             <div className="text-5xl mb-4">🔍</div>
             <p className="text-base font-medium">{t("coursePage.noCourse")}</p>
           </div>
-        ) : (
+        )}
+
+        {!loading && sorted.length > 0 && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 items-stretch">
-            {sorted.map((course) => (
-              <BootcampCard key={course.id} {...course} showViewDetails />
+            {sorted.map((course, i) => (
+              <BootcampCard key={course.id || course._id || i} {...courseToCardProps(course)} />
             ))}
           </div>
         )}
