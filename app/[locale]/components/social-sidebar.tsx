@@ -24,7 +24,7 @@ export function SocialSidebar() {
       {socials.map(({ Icon, url, label, color }, i) => (
         <motion.div
           key={label}
-          initial={{ x: -60, opacity: 0 }}
+          initial={{ x: 60, opacity: 0 }}
           animate={{ x: 0, opacity: 1 }}
           transition={{ duration: 0.4, delay: i * 0.07 }}
           whileHover={{ x: -6 }}

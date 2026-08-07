@@ -45,28 +45,41 @@ const categoryColors: Record<string, string> = {
 
 export default function DashboardPage() {
   const [applications, setApplications] = useState<any[]>([]);
+  const [courses, setCourses] = useState<any[]>([]);
   const [loadingApps, setLoadingApps] = useState(true);
 
   useEffect(() => {
     const token = sessionStorage.getItem("adminToken");
-    if (!token) return;
-    fetch(`${API}/applications`, { headers: { Authorization: `Bearer ${token}` } })
+    // Fetch real applications
+    fetch(`${API}/applications/with-receipt`, { headers: { Authorization: `Bearer ${token}` } })
       .then(r => r.ok ? r.json() : Promise.reject())
-      .then(data => setApplications(Array.isArray(data) ? data : []))
+      .then(data => setApplications(Array.isArray(data) ? data : data.data ?? []))
       .catch(() => setApplications([]))
       .finally(() => setLoadingApps(false));
+
+    // Fetch real courses
+    fetch(`${API}/courses`, { headers: { Authorization: `Bearer ${token}` } })
+      .then(r => r.ok ? r.json() : Promise.reject())
+      .then(data => setCourses(Array.isArray(data) ? data : data.data ?? []))
+      .catch(() => setCourses(BOOTCAMPS));
   }, []);
 
-  const totalApps   = applications.length || 126;
-  const pending     = applications.filter(a => a.status === "pending").length  || 34;
-  const approved    = applications.filter(a => a.status === "approved").length || 81;
+  const displayCourses = courses.length > 0 ? courses : BOOTCAMPS;
+  const totalApps = applications.length;
+  const pending  = applications.filter(a => (a.status || "").toLowerCase() === "pending").length;
+  const approved = applications.filter(a => (a.status || "").toLowerCase() === "approved").length;
+  const rejected = applications.filter(a => (a.status || "").toLowerCase() === "rejected").length;
 
-  // Category distribution for mini bar chart
-  const categoryCounts = BOOTCAMPS.reduce<Record<string, number>>((acc, c) => {
-    acc[c.category] = (acc[c.category] || 0) + c.reviews;
+  const categoryCounts = displayCourses.reduce<Record<string, number>>((acc, c) => {
+    const cat = c.category?.name || c.category || "Other";
+    acc[cat] = (acc[cat] || 0) + (c.studentsEnrolled || c.reviews || 1);
     return acc;
   }, {});
-  const maxCount = Math.max(...Object.values(categoryCounts));
+  const maxCount = Math.max(...Object.values(categoryCounts), 1);
+
+  const recentApps = [...applications]
+    .sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime())
+    .slice(0, 6);
 
   return (
     <div className="flex flex-col h-full">
@@ -76,10 +89,10 @@ export default function DashboardPage() {
 
         {/* Stats */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <StatCard title="Total Courses"      value={BOOTCAMPS.length} subtitle="Active bootcamps"         icon={BookOpen} color="blue"   trend={{ value: "2 new this month", up: true }} />
-          <StatCard title="Applications"       value={totalApps}        subtitle="All time"                  icon={FileText} color="orange" trend={{ value: "+12 this week", up: true }} />
-          <StatCard title="Approved"           value={approved}         subtitle="Enrolled students"         icon={CheckCircle} color="green"  trend={{ value: `${Math.round(approved/totalApps*100)}% approval rate`, up: true }} />
-          <StatCard title="Scholarships"       value={4}                subtitle="Active programs"           icon={Award}    color="purple" />
+          <StatCard title="Total Courses"  value={displayCourses.length} subtitle="Active bootcamps"    icon={BookOpen}    color="blue"   trend={{ value: "Live from API", up: true }} />
+          <StatCard title="Applications"   value={totalApps}             subtitle="All time"             icon={FileText}    color="orange" trend={{ value: `${pending} pending`, up: true }} />
+          <StatCard title="Approved"       value={approved}              subtitle="Enrolled students"    icon={CheckCircle} color="green"  trend={{ value: totalApps > 0 ? `${Math.round(approved/totalApps*100)}% rate` : "0%", up: true }} />
+          <StatCard title="Scholarships"   value={4}                     subtitle="Active programs"      icon={Award}       color="purple" />
         </div>
 
         {/* Main grid */}
@@ -148,14 +161,14 @@ export default function DashboardPage() {
           <div className="lg:col-span-1 bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
             <h2 className="text-sm font-bold text-gray-800 mb-4">Top Courses by Enrollment</h2>
             <div className="space-y-3">
-              {[...BOOTCAMPS].sort((a, b) => b.reviews - a.reviews).slice(0, 5).map((c, i) => (
+              {[...displayCourses].sort((a, b) => (b.studentsEnrolled || b.reviews || 0) - (a.studentsEnrolled || a.reviews || 0)).slice(0, 5).map((c, i) => (
                 <div key={c.id} className="flex items-center gap-3">
                   <span className="w-5 h-5 rounded-full bg-gray-100 text-gray-500 text-[10px] font-bold flex items-center justify-center shrink-0">
                     {i + 1}
                   </span>
                   <div className="flex-1 min-w-0">
                     <p className="text-xs font-semibold text-gray-800 truncate">{c.title}</p>
-                    <p className="text-[10px] text-gray-400">{c.reviews} students · ⭐ {c.rating}</p>
+                    <p className="text-[10px] text-gray-400">{c.studentsEnrolled || c.reviews || 0} students · ⭐ {c.rating || "—"}</p>
                   </div>
                 </div>
               ))}
@@ -181,19 +194,26 @@ export default function DashboardPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-50">
-                {RECENT_APPLICATIONS.map(app => (
-                  <tr key={app.id} className="hover:bg-gray-50/50 transition-colors">
-                    <td className="px-5 py-3 text-xs text-gray-400 font-mono">{app.id}</td>
-                    <td className="px-5 py-3 font-medium text-gray-800">{app.name}</td>
-                    <td className="px-5 py-3 text-gray-500 text-xs">{app.course}</td>
-                    <td className="px-5 py-3 text-gray-400 text-xs">{app.date}</td>
-                    <td className="px-5 py-3">
-                      <span className={`px-2.5 py-1 rounded-full text-[11px] font-semibold capitalize ${statusStyle[app.status]}`}>
-                        {app.status}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
+                {(recentApps.length > 0 ? recentApps : RECENT_APPLICATIONS).map((app, i) => {
+                  const id   = app.id || app._id || app.id || `APP-${String(i+1).padStart(3,"0")}`;
+                  const name = app.fullName || app.name || "—";
+                  const course = app.courseId || app.course || "—";
+                  const date = app.createdAt ? new Date(app.createdAt).toLocaleDateString() : app.date || "—";
+                  const status = (app.status || "pending").toLowerCase();
+                  return (
+                    <tr key={id} className="hover:bg-gray-50/50 transition-colors">
+                      <td className="px-5 py-3 text-xs text-gray-400 font-mono">{id}</td>
+                      <td className="px-5 py-3 font-medium text-gray-800">{name}</td>
+                      <td className="px-5 py-3 text-gray-500 text-xs">{course}</td>
+                      <td className="px-5 py-3 text-gray-400 text-xs">{date}</td>
+                      <td className="px-5 py-3">
+                        <span className={`px-2.5 py-1 rounded-full text-[11px] font-semibold capitalize ${statusStyle[status] ?? "bg-gray-100 text-gray-500"}`}>
+                          {status}
+                        </span>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
