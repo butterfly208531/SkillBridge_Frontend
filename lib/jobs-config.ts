@@ -165,21 +165,21 @@ export const JOB_TYPES: JobType[]  = ["Full-Time", "Part-Time", "Contract", "Int
 export const JOB_LEVELS: JobLevel[] = ["Entry Level", "Mid Level", "Senior", "Lead", "Any Level"];
 
 export const categoryColor: Record<string, string> = {
-  Development: "bg-[#1E90FF]/10 text-[#1E90FF]",
-  ERP:         "bg-[#F57C00]/10 text-[#F57C00]",
-  "Data Science": "bg-purple-100 text-purple-600",
-  AI:          "bg-emerald-100 text-emerald-600",
-  Automation:  "bg-teal-100 text-teal-600",
-  Design:      "bg-pink-100 text-pink-600",
-  Language:    "bg-amber-100 text-amber-600",
+  Development:    "bg-[#1E90FF]/10 text-[#1E90FF]",
+  ERP:            "bg-[#F57C00]/10 text-[#F57C00]",
+  "Data Science": "bg-[#1E90FF]/10 text-[#1E90FF]",
+  AI:             "bg-[#F57C00]/10 text-[#F57C00]",
+  Automation:     "bg-[#1E90FF]/10 text-[#1E90FF]",
+  Design:         "bg-[#F57C00]/10 text-[#F57C00]",
+  Language:       "bg-[#1E90FF]/10 text-[#1E90FF]",
 };
 
 export const typeColor: Record<JobType, string> = {
-  "Full-Time":  "bg-blue-100 text-blue-700",
-  "Part-Time":  "bg-orange-100 text-orange-700",
-  "Contract":   "bg-purple-100 text-purple-700",
-  "Internship": "bg-emerald-100 text-emerald-700",
-  "Remote":     "bg-teal-100 text-teal-700",
+  "Full-Time":  "bg-[#1E90FF]/10 text-[#1E90FF]",
+  "Part-Time":  "bg-[#F57C00]/10 text-[#F57C00]",
+  "Contract":   "bg-[#F57C00]/10 text-[#F57C00]",
+  "Internship": "bg-[#1E90FF]/10 text-[#1E90FF]",
+  "Remote":     "bg-[#F57C00]/10 text-[#F57C00]",
 };
 
 export function daysUntilDeadline(deadline: string): number {

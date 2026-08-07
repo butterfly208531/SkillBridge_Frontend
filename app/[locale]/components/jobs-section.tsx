@@ -35,7 +35,7 @@ function JobCard({ job, index }: { job: Job; index: number }) {
         closed
           ? "border-gray-200 dark:border-gray-800 opacity-70"
           : closingSoon
-          ? "border-red-200 hover:shadow-xl hover:-translate-y-1"
+          ? "border-[#F57C00]/40 hover:shadow-xl hover:-translate-y-1"
           : "border-gray-100 dark:border-gray-800 hover:shadow-xl hover:-translate-y-1"
       )}
     >
@@ -43,8 +43,6 @@ function JobCard({ job, index }: { job: Job; index: number }) {
       <div className="h-1.5 w-full shrink-0" style={{
         background: closed
           ? "#e5e7eb"
-          : closingSoon
-          ? "linear-gradient(90deg,#ef4444,#f97316)"
           : "linear-gradient(90deg,#1E90FF,#F57C00)"
       }} />
 
@@ -67,7 +65,7 @@ function JobCard({ job, index }: { job: Job; index: number }) {
             <p className="text-xs font-semibold text-[#1E90FF] mt-0.5 truncate">{job.company}</p>
           </div>
           {closingSoon && !closed && (
-            <span className="shrink-0 px-2 py-0.5 rounded-lg text-[10px] font-bold bg-red-100 text-red-600 animate-pulse">
+            <span className="shrink-0 px-2 py-0.5 rounded-lg text-[10px] font-bold bg-[#F57C00]/10 text-[#F57C00] animate-pulse">
               ⚠ {days}d
             </span>
           )}
@@ -94,16 +92,16 @@ function JobCard({ job, index }: { job: Job; index: number }) {
           </div>
           {job.salary && (
             <div className="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-800 rounded-lg px-2.5 py-1.5">
-              <DollarSign size={11} className="text-emerald-500 shrink-0" />
+              <DollarSign size={11} className="text-[#F57C00] shrink-0" />
               <span className="truncate">{job.salary}</span>
             </div>
           )}
           {job.deadline && (
             <div className={cn(
               "flex items-center gap-1.5 text-xs rounded-lg px-2.5 py-1.5",
-              closingSoon ? "bg-red-50 text-red-500" : "bg-gray-50 text-gray-500 dark:bg-gray-800"
+              closingSoon ? "bg-[#F57C00]/10 text-[#F57C00]" : "bg-gray-50 text-gray-500 dark:bg-gray-800"
             )}>
-              <Calendar size={11} className={closingSoon ? "text-red-400 shrink-0" : "text-[#1E90FF] shrink-0"} />
+              <Calendar size={11} className="text-[#1E90FF] shrink-0" />
               <span>Deadline: <strong>{formatDate(job.deadline)}</strong></span>
             </div>
           )}
@@ -188,7 +186,7 @@ export function JobsSection() {
           {[
             { label: "Open Positions", value: jobsConfig.filter(j => !isJobClosed(j)).length, color: "text-[#1E90FF]" },
             { label: "Partner Companies", value: new Set(jobsConfig.map(j => j.company)).size, color: "text-[#F57C00]" },
-            { label: "Job Categories", value: new Set(jobsConfig.map(j => j.category)).size, color: "text-emerald-500" },
+            { label: "Job Categories",   value: new Set(jobsConfig.map(j => j.category)).size, color: "text-[#1E90FF]" },
           ].map(({ label, value, color }) => (
             <div key={label} className="flex items-center gap-2 bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-800 px-5 py-3 shadow-sm">
               <Briefcase className={cn("h-4 w-4", color)} />
