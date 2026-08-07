@@ -36,12 +36,12 @@ async function fetchAllVideos(): Promise<YouTubeVideo[]> {
   if (!uploadsPlaylistId) return [];
 
   const playlistRes = await fetch(
-    `https://www.googleapis.com/youtube/v3/playlistItems?key=${apiKey}&playlistId=${uploadsPlaylistId}&part=snippet&maxResults=50`
+    `https://www.googleapis.com/youtube/v3/playlistItems?key=${apiKey}&playlistId=${uploadsPlaylistId}&part=snippet&maxResults=30`
   );
   if (!playlistRes.ok) return [];
   const data = await playlistRes.json();
 
-  return (data.items || []).map((item: any) => ({
+  return (data.items || []).slice(0, 30).map((item: any) => ({
     id: item.snippet.resourceId.videoId,
     title: item.snippet.title,
     description: item.snippet.description,
