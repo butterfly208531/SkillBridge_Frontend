@@ -21,28 +21,60 @@ const socials = [
 export function SocialSidebar() {
   return (
     <div
-      className="fixed right-0 top-1/2 -translate-y-1/2 z-50 hidden md:flex flex-col gap-1"
+      style={{
+        position: "fixed",
+        right: 0,
+        top: "50%",
+        transform: "translateY(-50%)",
+        zIndex: 9999,
+        display: "flex",
+        flexDirection: "column",
+        gap: "4px",
+      }}
+      className="hidden md:flex"
     >
       {socials.map(({ Icon, url, label, color }, i) => (
         <motion.div
           key={label}
-          initial={{ x: 60, opacity: 0 }}
+          initial={{ x: 80, opacity: 0 }}
           animate={{ x: 0, opacity: 1 }}
           transition={{ duration: 0.4, delay: i * 0.07 }}
-          whileHover={{ x: -6 }}
         >
           <Link
             href={url}
             target="_blank"
             rel="noopener noreferrer"
             aria-label={label}
-            className="group flex flex-row-reverse items-center w-10 h-10 rounded-l-xl shadow-md overflow-hidden transition-all duration-200 hover:w-32"
-            style={{ backgroundColor: color }}
+            className="group flex items-center h-10 rounded-l-xl shadow-md overflow-hidden transition-all duration-300"
+            style={{
+              backgroundColor: color,
+              width: "40px",
+              flexDirection: "row-reverse",
+            }}
+            onMouseEnter={e => {
+              (e.currentTarget as HTMLElement).style.width = "120px";
+            }}
+            onMouseLeave={e => {
+              (e.currentTarget as HTMLElement).style.width = "40px";
+            }}
           >
-            <span className="flex items-center justify-center w-10 h-10 shrink-0">
+            {/* Icon — always on the right edge */}
+            <span
+              style={{
+                width: "40px",
+                height: "40px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                flexShrink: 0,
+              }}
+            >
               <Icon size={17} color="#fff" />
             </span>
-            <span className="text-white text-xs font-semibold whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pl-2">
+            {/* Label — appears to the left of icon on hover */}
+            <span
+              className="text-white text-xs font-semibold whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-300 pl-3"
+            >
               {label}
             </span>
           </Link>
