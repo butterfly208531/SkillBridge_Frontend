@@ -95,7 +95,7 @@ export default function CoursesAdminPage() {
               />
             </div>
             <button
-              onClick={() => { setEditing(null); setShowModal(true); }}
+              onClick={() => { window.location.href = `/${typeof window !== "undefined" ? window.location.pathname.split("/")[1] : "en"}/admin/courses/add`; }}
               className="flex items-center gap-1.5 px-3 py-1.5 bg-[#1E90FF] text-white text-xs font-semibold rounded-lg hover:bg-blue-500 transition-colors"
             >
               <Plus size={14} /> Add Course
