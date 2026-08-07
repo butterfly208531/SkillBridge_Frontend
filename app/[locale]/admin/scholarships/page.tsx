@@ -219,7 +219,8 @@ export default function ScholarshipsPage() {
               <RefreshCw size={14} className={cn("text-gray-500", loading && "animate-spin")} />
             </button>
             {tab === "programs" && (
-              <button onClick={() => { setEditing(null); setShowModal(true); }}
+              <button
+                onClick={() => window.location.href = `/${typeof window !== "undefined" ? window.location.pathname.split("/")[1] : "en"}/admin/scholarships/add`}
                 className="flex items-center gap-1.5 px-3 py-1.5 bg-[#1E90FF] text-white text-xs font-semibold rounded-lg hover:bg-blue-500 transition-colors">
                 <Plus size={14} /> Add Scholarship
               </button>
