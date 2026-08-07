@@ -402,27 +402,65 @@ function ScholarshipModal({ scholarship, saving, onClose, onSave, error }: {
         <h3 className="font-bold text-gray-800 mb-5">{scholarship ? "Edit Scholarship" : "Add Scholarship"}</h3>
 
         <div className="space-y-4">
-          {([
-            { label: "Scholarship Name",      field: "name",               type: "text"   },
-            { label: "Course Name",           field: "course",             type: "text"   },
-            { label: "Course ID / Slug",      field: "courseId",           type: "text"   },
-            { label: "Eligibility",           field: "eligibility",        type: "text"   },
-            { label: "Application Form URL",  field: "applicationFormUrl", type: "url",   placeholder: "https://forms.google.com/..." },
-            { label: "Deadline",              field: "deadline",           type: "date"   },
-            { label: "Winners Count",         field: "winnersCount",       type: "number" },
-          ] as { label: string; field: keyof Scholarship; type: string; placeholder?: string }[]).map(({ label, field, type, placeholder }) => (
-            <div key={field}>
-              <label className="block text-xs font-medium text-gray-600 mb-1">{label}</label>
-              {field === "applicationFormUrl" && (
-                <p className="text-[11px] text-gray-400 mb-1">Leave empty to use the default course application form</p>
-              )}
-              <input type={type} value={String(form[field] ?? "")}
-                placeholder={placeholder}
-                onChange={e => set(field, type === "number" ? Number(e.target.value) : e.target.value)}
+          {/* Scholarship Name */}
+          <div>
+            <label className="block text-xs font-medium text-gray-600 mb-1">Scholarship Name *</label>
+            <input type="text" value={form.name}
+              placeholder="e.g. Full-Stack Scholarship"
+              onChange={e => set("name", e.target.value)}
+              className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1E90FF]/30" />
+          </div>
+
+          {/* Course Name */}
+          <div>
+            <label className="block text-xs font-medium text-gray-600 mb-1">Course Name *</label>
+            <input type="text" value={form.course}
+              placeholder="e.g. Full-Stack Development"
+              onChange={e => set("course", e.target.value)}
+              className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1E90FF]/30" />
+          </div>
+
+          {/* Application Form URL — prominent */}
+          <div className="bg-[#1E90FF]/5 border border-[#1E90FF]/20 rounded-xl p-3">
+            <label className="block text-xs font-semibold text-[#1E90FF] mb-1">
+              🔗 Application Form URL
+            </label>
+            <p className="text-[11px] text-gray-400 mb-2">
+              Paste your Google Form, Typeform, or any external link. Leave empty to use the default course form.
+            </p>
+            <input type="url" value={form.applicationFormUrl ?? ""}
+              placeholder="https://forms.google.com/..."
+              onChange={e => set("applicationFormUrl", e.target.value)}
+              className="w-full px-3 py-2 text-sm border border-[#1E90FF]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1E90FF]/30 bg-white" />
+          </div>
+
+          {/* Eligibility */}
+          <div>
+            <label className="block text-xs font-medium text-gray-600 mb-1">Eligibility Requirements</label>
+            <input type="text" value={form.eligibility}
+              placeholder="e.g. Top performer in Python courses"
+              onChange={e => set("eligibility", e.target.value)}
+              className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1E90FF]/30" />
+          </div>
+
+          {/* Deadline + Winners Count side by side */}
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1">Deadline *</label>
+              <input type="date" value={form.deadline}
+                onChange={e => set("deadline", e.target.value)}
                 className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1E90FF]/30" />
             </div>
-          ))}
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1">Winners Count</label>
+              <input type="number" value={form.winnersCount}
+                min={1}
+                onChange={e => set("winnersCount", Number(e.target.value))}
+                className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1E90FF]/30" />
+            </div>
+          </div>
 
+          {/* Status */}
           <div>
             <label className="block text-xs font-medium text-gray-600 mb-1">Status</label>
             <select value={form.status} onChange={e => set("status", e.target.value)}
