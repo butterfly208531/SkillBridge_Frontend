@@ -73,6 +73,11 @@
             "name": "Contact Us",
             "path": "/contact",
             "type": "link"
+         },
+         {
+            "name": "Announcements",
+            "path": "/announcements",
+            "type": "link"
          }
       ],
       "searchPlaceholder": "What do you want to learn?",
@@ -5001,7 +5006,8 @@
          "fullStack": { "name": "Full-Stack Scholarship", "eligibility": "Top performer in Python and Web Development courses" },
          "odooFunctional": { "name": "Odoo Functional Scholarship", "eligibility": "Strong interest in ERP and business processes" },
          "python": { "name": "Python Scholarship", "eligibility": "Demonstrated programming aptitude and financial need" },
-         "ai": { "name": "AI Scholarship", "eligibility": "Excellence in mathematics and data science fundamentals" }
+         "ai": { "name": "AI Scholarship", "eligibility": "Excellence in mathematics and data science fundamentals" },
+         "dataScience": { "name": "Data Science Scholarship", "eligibility": "Strong analytical skills and interest in data-driven decision making" }
       }
    },
    "successSection": {

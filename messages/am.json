@@ -73,6 +73,11 @@
             "name": "ያግኙን",
             "path": "/contact",
             "type": "link"
+         },
+         {
+            "name": "ማስታወቂያዎች",
+            "path": "/announcements",
+            "type": "link"
          }
       ],
       "searchPlaceholder": "ምን መማር ይፈልጋሉ ? ",
@@ -889,7 +894,8 @@
          "fullStack": { "name": "ፉል-ስታክ ስኮላርሺፕ", "eligibility": "በ Python እና ዌብ ልማት ኮርሶች ምርጥ አፈጻጸም" },
          "odooFunctional": { "name": "Odoo ፋንክሽናል ስኮላርሺፕ", "eligibility": "ጠንካራ ፍላጎት በ ERP እና የንግድ ሂደቶች" },
          "python": { "name": "Python ስኮላርሺፕ", "eligibility": "የፕሮግራሚንግ ብቃት እና የፋይናንስ ፍላጎት" },
-         "ai": { "name": "AI ስኮላርሺፕ", "eligibility": "ምርጥነት በሒሳብ እና የዳታ ሳይንስ መሠረቶች" }
+         "ai": { "name": "AI ስኮላርሺፕ", "eligibility": "ምርጥነት በሒሳብ እና የዳታ ሳይንስ መሠረቶች" },
+         "dataScience": { "name": "የዳታ ሳይንስ ስኮላርሺፕ", "eligibility": "ጠንካራ ትንታኔ ክህሎቶች እና ፍላጎት በዳታ ላይ የተመሠረተ ውሳኔ አሰጣጥ" }
       }
    },
    "successSection": {
