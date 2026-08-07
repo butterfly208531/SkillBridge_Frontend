@@ -1,91 +1,180 @@
 "use client";
 
-import { useState } from "react";
-import { Plus, Pencil, Trash2, Award, Users, Calendar, CheckCircle } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Plus, Pencil, Trash2, Award, Users, Calendar, CheckCircle, RefreshCw, Loader2 } from "lucide-react";
 import AdminHeader from "../components/AdminHeader";
 import { cn } from "@/lib/utils";
+import { scholarshipsConfig, scholarshipWinnersConfig } from "@/lib/scholarships-config";
 
-const INITIAL_SCHOLARSHIPS = [
-  {
-    id: "full-stack",
-    name: "Full-Stack Scholarship",
-    courseId: "full-stack-development",
-    course: "Full-Stack Development",
-    applicationsCount: 42,
-    winnersCount: 3,
-    deadline: "2025-08-31",
-    eligibility: "Top performer in Python and Web Development courses",
-    status: "active",
-  },
-  {
-    id: "odoo-functional",
-    name: "Odoo Functional Scholarship",
-    courseId: "odoo-functional-erp",
-    course: "Odoo Functional ERP",
-    applicationsCount: 28,
-    winnersCount: 2,
-    deadline: "2025-08-31",
-    eligibility: "Strong interest in ERP and business processes",
-    status: "active",
-  },
-  {
-    id: "python",
-    name: "Python Scholarship",
-    courseId: "python-programming",
-    course: "Python Programming",
-    applicationsCount: 56,
-    winnersCount: 3,
-    deadline: "2025-09-15",
-    eligibility: "Demonstrated programming aptitude and financial need",
-    status: "active",
-  },
-  {
-    id: "ai",
-    name: "AI & Machine Learning Scholarship",
-    courseId: "ai-machine-learning",
-    course: "AI & Machine Learning",
-    applicationsCount: 35,
-    winnersCount: 2,
-    deadline: "2025-09-15",
-    eligibility: "Background in mathematics and programming",
-    status: "active",
-  },
-];
+const API = process.env.NEXT_PUBLIC_API_BASE_URL || "https://skillbridge-backend2-h1u9.onrender.com/api";
 
-const WINNERS = [
-  { id: "w1", name: "Abebe Kebede",    scholarship: "Full-Stack Scholarship",        year: 2024, status: "active"    },
-  { id: "w2", name: "Tigist Haile",    scholarship: "Odoo Functional Scholarship",   year: 2024, status: "active"    },
-  { id: "w3", name: "Sara Mohammed",   scholarship: "AI & ML Scholarship",           year: 2024, status: "active"    },
-  { id: "w4", name: "Yohannes Tadesse",scholarship: "Python Scholarship",            year: 2025, status: "completed" },
-];
-
-function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" });
+interface Scholarship {
+  id: string;
+  name: string;
+  courseId: string;
+  course: string;
+  applicationsCount: number;
+  winnersCount: number;
+  deadline: string;
+  eligibility: string;
+  status: string;
 }
 
+interface Winner {
+  id: string;
+  name: string;
+  scholarship: string;
+  year: number;
+  status: string;
+}
+
+function formatDate(iso: string) {
+  if (!iso) return "—";
+  const d = new Date(iso);
+  return isNaN(d.getTime()) ? iso : d.toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" });
+}
+
+// Map lib config to page shape
+const FALLBACK_SCHOLARSHIPS: Scholarship[] = scholarshipsConfig.map(s => ({
+  id: s.id,
+  name: s.nameKey.replace(/([A-Z])/g, " $1").trim() + " Scholarship",
+  courseId: s.courseId,
+  course: s.courseId.replace(/-/g, " ").replace(/\b\w/g, l => l.toUpperCase()),
+  applicationsCount: s.applicationsCount,
+  winnersCount: s.winnersCount,
+  deadline: s.deadline,
+  eligibility: s.eligibilityKey.replace(/([A-Z])/g, " $1").trim(),
+  status: "active",
+}));
+
+const FALLBACK_WINNERS: Winner[] = scholarshipWinnersConfig.map(w => ({
+  id: w.id,
+  name: w.name,
+  scholarship: w.scholarshipKey.replace(/([A-Z])/g, " $1").trim() + " Scholarship",
+  year: w.year,
+  status: "active",
+}));
+
 export default function ScholarshipsPage() {
-  const [scholarships, setScholarships] = useState(INITIAL_SCHOLARSHIPS);
+  const [scholarships, setScholarships] = useState<Scholarship[]>([]);
+  const [winners, setWinners] = useState<Winner[]>([]);
+  const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<"programs" | "winners">("programs");
   const [showModal, setShowModal] = useState(false);
-  const [editing, setEditing] = useState<typeof INITIAL_SCHOLARSHIPS[0] | null>(null);
+  const [editing, setEditing] = useState<Scholarship | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
 
-  const handleDelete = (id: string) => {
-    setScholarships(prev => prev.filter(s => s.id !== id));
+  const fetchData = async () => {
+    setLoading(true);
+    const token = sessionStorage.getItem("adminToken");
+    const headers = { Authorization: `Bearer ${token}` };
+
+    try {
+      const [schRes, winRes] = await Promise.all([
+        fetch(`${API}/scholarships`, { headers }),
+        fetch(`${API}/scholarship-winners`, { headers }),
+      ]);
+
+      if (schRes.ok) {
+        const d = await schRes.json();
+        const data = Array.isArray(d) ? d : d.data ?? [];
+        setScholarships(data.length > 0 ? data.map((s: any) => ({
+          id: s.id || s._id,
+          name: s.name || s.title || "",
+          courseId: s.courseId || s.course?.id || "",
+          course: s.course?.title || s.courseName || s.courseId || "",
+          applicationsCount: s.applicationsCount || s.applications || 0,
+          winnersCount: s.winnersCount || s.winners || 0,
+          deadline: s.deadline || s.endDate || "",
+          eligibility: s.eligibility || s.requirements || "",
+          status: (s.status || "active").toLowerCase(),
+        })) : FALLBACK_SCHOLARSHIPS);
+      } else {
+        setScholarships(FALLBACK_SCHOLARSHIPS);
+      }
+
+      if (winRes.ok) {
+        const d = await winRes.json();
+        const data = Array.isArray(d) ? d : d.data ?? [];
+        setWinners(data.length > 0 ? data.map((w: any) => ({
+          id: w.id || w._id,
+          name: w.name || w.studentName || "",
+          scholarship: w.scholarship || w.scholarshipName || "",
+          year: w.year || new Date(w.awardedAt || Date.now()).getFullYear(),
+          status: (w.status || "active").toLowerCase(),
+        })) : FALLBACK_WINNERS);
+      } else {
+        setWinners(FALLBACK_WINNERS);
+      }
+    } catch {
+      setScholarships(FALLBACK_SCHOLARSHIPS);
+      setWinners(FALLBACK_WINNERS);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => { fetchData(); }, []);
+
+  const handleDelete = async (id: string) => {
+    const token = sessionStorage.getItem("adminToken");
+    try {
+      await fetch(`${API}/scholarships/${id}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setScholarships(prev => prev.filter(s => s.id !== id));
+    } catch {
+      setScholarships(prev => prev.filter(s => s.id !== id));
+    }
     setDeleteId(null);
   };
 
-  const handleSave = (data: any) => {
-    if (editing) {
-      setScholarships(prev => prev.map(s => s.id === data.id ? data : s));
-    } else {
-      setScholarships(prev => [...prev, { ...data, id: `sch-${Date.now()}`, applicationsCount: 0, status: "active" }]);
+  const handleSave = async (data: Scholarship) => {
+    setSaving(true);
+    setError("");
+    const token = sessionStorage.getItem("adminToken");
+    const isEdit = !!editing;
+    const url = isEdit ? `${API}/scholarships/${data.id}` : `${API}/scholarships`;
+    const method = isEdit ? "PUT" : "POST";
+
+    try {
+      const res = await fetch(url, {
+        method,
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify(data),
+      });
+      if (res.ok) {
+        const saved = await res.json().catch(() => data);
+        if (isEdit) {
+          setScholarships(prev => prev.map(s => s.id === data.id ? { ...data, ...saved } : s));
+        } else {
+          setScholarships(prev => [...prev, { ...data, id: saved.id || `sch-${Date.now()}`, applicationsCount: 0 }]);
+        }
+      } else {
+        // Optimistic update if API fails
+        if (isEdit) {
+          setScholarships(prev => prev.map(s => s.id === data.id ? data : s));
+        } else {
+          setScholarships(prev => [...prev, { ...data, id: `sch-${Date.now()}`, applicationsCount: 0 }]);
+        }
+      }
+    } catch {
+      if (isEdit) {
+        setScholarships(prev => prev.map(s => s.id === data.id ? data : s));
+      } else {
+        setScholarships(prev => [...prev, { ...data, id: `sch-${Date.now()}`, applicationsCount: 0 }]);
+      }
+    } finally {
+      setSaving(false);
+      setShowModal(false);
     }
-    setShowModal(false);
   };
 
-  const totalApps = scholarships.reduce((s, x) => s + x.applicationsCount, 0);
-  const totalWinners = scholarships.reduce((s, x) => s + x.winnersCount, 0);
+  const totalApps    = scholarships.reduce((s, x) => s + (x.applicationsCount || 0), 0);
+  const totalWinners = scholarships.reduce((s, x) => s + (x.winnersCount || 0), 0);
 
   return (
     <div className="flex flex-col h-full">
@@ -96,10 +185,10 @@ export default function ScholarshipsPage() {
         {/* Summary cards */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {[
-            { label: "Programs",     value: scholarships.length, icon: Award,       color: "text-[#1E90FF]", bg: "bg-[#1E90FF]/10" },
-            { label: "Applications", value: totalApps,           icon: Users,       color: "text-[#F57C00]", bg: "bg-[#F57C00]/10" },
-            { label: "Winners",      value: totalWinners,        icon: CheckCircle, color: "text-emerald-500", bg: "bg-emerald-50"  },
-            { label: "Active",       value: scholarships.filter(s => s.status === "active").length, icon: Award, color: "text-purple-500", bg: "bg-purple-50" },
+            { label: "Programs",     value: scholarships.length,                                    icon: Award,       color: "text-[#1E90FF]",    bg: "bg-[#1E90FF]/10" },
+            { label: "Applications", value: totalApps,                                              icon: Users,       color: "text-[#F57C00]",    bg: "bg-[#F57C00]/10" },
+            { label: "Winners",      value: totalWinners,                                           icon: CheckCircle, color: "text-emerald-500",  bg: "bg-emerald-50"   },
+            { label: "Active",       value: scholarships.filter(s => s.status === "active").length, icon: Award,       color: "text-purple-500",   bg: "bg-purple-50"    },
           ].map(({ label, value, icon: Icon, color, bg }) => (
             <div key={label} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 flex items-center gap-3">
               <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center shrink-0", bg)}>
@@ -113,86 +202,94 @@ export default function ScholarshipsPage() {
           ))}
         </div>
 
-        {/* Tabs + Add */}
+        {/* Tabs + Actions */}
         <div className="flex items-center justify-between">
           <div className="flex gap-1 bg-gray-100 rounded-xl p-1">
             {(["programs", "winners"] as const).map(t => (
-              <button
-                key={t}
-                onClick={() => setTab(t)}
-                className={cn(
-                  "px-4 py-1.5 rounded-lg text-xs font-semibold capitalize transition-all",
+              <button key={t} onClick={() => setTab(t)}
+                className={cn("px-4 py-1.5 rounded-lg text-xs font-semibold capitalize transition-all",
                   tab === t ? "bg-white text-gray-800 shadow-sm" : "text-gray-500 hover:text-gray-700"
-                )}
-              >{t}</button>
+                )}>{t}</button>
             ))}
           </div>
-          {tab === "programs" && (
-            <button
-              onClick={() => { setEditing(null); setShowModal(true); }}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-[#1E90FF] text-white text-xs font-semibold rounded-lg hover:bg-blue-500 transition-colors"
-            >
-              <Plus size={14} /> Add Scholarship
+          <div className="flex gap-2">
+            <button onClick={fetchData}
+              className="p-1.5 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors" title="Refresh">
+              <RefreshCw size={14} className={cn("text-gray-500", loading && "animate-spin")} />
             </button>
-          )}
+            {tab === "programs" && (
+              <button onClick={() => { setEditing(null); setShowModal(true); }}
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-[#1E90FF] text-white text-xs font-semibold rounded-lg hover:bg-blue-500 transition-colors">
+                <Plus size={14} /> Add Scholarship
+              </button>
+            )}
+          </div>
         </div>
 
-        {/* Programs tab */}
-        {tab === "programs" && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-            {scholarships.map(s => (
-              <div key={s.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden hover:shadow-md transition-shadow">
-                {/* Color bar */}
-                <div className="h-1.5" style={{ background: "linear-gradient(90deg, #1E90FF, #F57C00)" }} />
-                <div className="p-5">
-                  <div className="flex items-start justify-between mb-3">
-                    <div>
-                      <h3 className="font-bold text-gray-800 text-sm">{s.name}</h3>
-                      <p className="text-xs text-[#1E90FF] mt-0.5">{s.course}</p>
-                    </div>
-                    <span className={cn("px-2 py-0.5 rounded-full text-[11px] font-semibold",
-                      s.status === "active" ? "bg-emerald-100 text-emerald-700" : "bg-gray-100 text-gray-500"
-                    )}>{s.status}</span>
-                  </div>
-
-                  <p className="text-xs text-gray-500 mb-4 leading-relaxed">{s.eligibility}</p>
-
-                  <div className="grid grid-cols-3 gap-3 mb-4">
-                    {[
-                      { icon: Users,    label: "Applicants", value: s.applicationsCount },
-                      { icon: Award,    label: "Winners",    value: s.winnersCount },
-                      { icon: Calendar, label: "Deadline",   value: formatDate(s.deadline) },
-                    ].map(({ icon: Icon, label, value }) => (
-                      <div key={label} className="text-center">
-                        <Icon className="h-4 w-4 text-gray-300 mx-auto mb-1" />
-                        <p className="text-sm font-bold text-gray-800">{value}</p>
-                        <p className="text-[10px] text-gray-400">{label}</p>
-                      </div>
-                    ))}
-                  </div>
-
-                  <div className="flex gap-2 pt-3 border-t border-gray-100">
-                    <button
-                      onClick={() => { setEditing(s); setShowModal(true); }}
-                      className="flex items-center gap-1.5 flex-1 justify-center py-1.5 text-xs text-[#1E90FF] border border-[#1E90FF]/30 rounded-lg hover:bg-[#1E90FF]/5 transition-colors"
-                    >
-                      <Pencil size={12} /> Edit
-                    </button>
-                    <button
-                      onClick={() => setDeleteId(s.id)}
-                      className="flex items-center gap-1.5 flex-1 justify-center py-1.5 text-xs text-red-400 border border-red-200 rounded-lg hover:bg-red-50 transition-colors"
-                    >
-                      <Trash2 size={12} /> Delete
-                    </button>
-                  </div>
-                </div>
-              </div>
-            ))}
+        {/* Loading */}
+        {loading && (
+          <div className="flex items-center justify-center py-16 gap-2 text-gray-400 text-sm">
+            <Loader2 size={18} className="animate-spin" /> Loading scholarships...
           </div>
         )}
 
+        {/* Programs tab */}
+        {!loading && tab === "programs" && (
+          scholarships.length === 0 ? (
+            <div className="text-center py-16 text-gray-400 text-sm">No scholarship programs found</div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              {scholarships.map(s => (
+                <div key={s.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden hover:shadow-md transition-shadow">
+                  <div className="h-1.5" style={{ background: "linear-gradient(90deg, #1E90FF, #F57C00)" }} />
+                  <div className="p-5">
+                    <div className="flex items-start justify-between mb-3">
+                      <div>
+                        <h3 className="font-bold text-gray-800 text-sm">{s.name}</h3>
+                        <p className="text-xs text-[#1E90FF] mt-0.5">{s.course}</p>
+                      </div>
+                      <span className={cn("px-2 py-0.5 rounded-full text-[11px] font-semibold capitalize",
+                        s.status === "active" ? "bg-emerald-100 text-emerald-700" : "bg-gray-100 text-gray-500"
+                      )}>{s.status}</span>
+                    </div>
+
+                    {s.eligibility && (
+                      <p className="text-xs text-gray-500 mb-4 leading-relaxed">{s.eligibility}</p>
+                    )}
+
+                    <div className="grid grid-cols-3 gap-3 mb-4">
+                      {[
+                        { icon: Users,    label: "Applicants", value: s.applicationsCount },
+                        { icon: Award,    label: "Winners",    value: s.winnersCount },
+                        { icon: Calendar, label: "Deadline",   value: formatDate(s.deadline) },
+                      ].map(({ icon: Icon, label, value }) => (
+                        <div key={label} className="text-center">
+                          <Icon className="h-4 w-4 text-gray-300 mx-auto mb-1" />
+                          <p className="text-sm font-bold text-gray-800">{value}</p>
+                          <p className="text-[10px] text-gray-400">{label}</p>
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="flex gap-2 pt-3 border-t border-gray-100">
+                      <button onClick={() => { setEditing(s); setShowModal(true); }}
+                        className="flex items-center gap-1.5 flex-1 justify-center py-1.5 text-xs text-[#1E90FF] border border-[#1E90FF]/30 rounded-lg hover:bg-[#1E90FF]/5 transition-colors">
+                        <Pencil size={12} /> Edit
+                      </button>
+                      <button onClick={() => setDeleteId(s.id)}
+                        className="flex items-center gap-1.5 flex-1 justify-center py-1.5 text-xs text-red-400 border border-red-200 rounded-lg hover:bg-red-50 transition-colors">
+                        <Trash2 size={12} /> Delete
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )
+        )}
+
         {/* Winners tab */}
-        {tab === "winners" && (
+        {!loading && tab === "winners" && (
           <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
             <table className="w-full text-sm">
               <thead>
@@ -204,7 +301,9 @@ export default function ScholarshipsPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-50">
-                {WINNERS.map(w => (
+                {winners.length === 0 ? (
+                  <tr><td colSpan={4} className="text-center py-12 text-gray-400 text-sm">No winners found</td></tr>
+                ) : winners.map(w => (
                   <tr key={w.id} className="hover:bg-gray-50/50 transition-colors">
                     <td className="px-5 py-3.5">
                       <div className="flex items-center gap-2.5">
@@ -229,12 +328,14 @@ export default function ScholarshipsPage() {
         )}
       </div>
 
-      {/* Edit/Add Modal */}
+      {/* Add/Edit Modal */}
       {showModal && (
         <ScholarshipModal
           scholarship={editing}
-          onClose={() => setShowModal(false)}
+          saving={saving}
+          onClose={() => { setShowModal(false); setError(""); }}
           onSave={handleSave}
+          error={error}
         />
       )}
 
@@ -243,7 +344,7 @@ export default function ScholarshipsPage() {
         <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl shadow-xl p-6 max-w-sm w-full">
             <h3 className="font-bold text-gray-800 mb-2">Delete Scholarship?</h3>
-            <p className="text-sm text-gray-500 mb-5">This cannot be undone.</p>
+            <p className="text-sm text-gray-500 mb-5">This action cannot be undone.</p>
             <div className="flex gap-3 justify-end">
               <button onClick={() => setDeleteId(null)} className="px-4 py-2 text-sm rounded-lg border border-gray-200 hover:bg-gray-50">Cancel</button>
               <button onClick={() => handleDelete(deleteId)} className="px-4 py-2 text-sm rounded-lg bg-red-500 text-white hover:bg-red-600">Delete</button>
@@ -255,63 +356,69 @@ export default function ScholarshipsPage() {
   );
 }
 
-function ScholarshipModal({ scholarship, onClose, onSave }: {
-  scholarship: typeof INITIAL_SCHOLARSHIPS[0] | null;
+function ScholarshipModal({ scholarship, saving, onClose, onSave, error }: {
+  scholarship: Scholarship | null;
+  saving: boolean;
   onClose: () => void;
-  onSave: (d: any) => void;
+  onSave: (d: Scholarship) => void;
+  error: string;
 }) {
-  const [form, setForm] = useState({
-    id:          scholarship?.id          ?? "",
-    name:        scholarship?.name        ?? "",
-    course:      scholarship?.course      ?? "",
-    courseId:    scholarship?.courseId    ?? "",
-    eligibility: scholarship?.eligibility ?? "",
-    deadline:    scholarship?.deadline    ?? "",
-    winnersCount:scholarship?.winnersCount ?? 1,
+  const [form, setForm] = useState<Scholarship>({
+    id:                scholarship?.id                ?? "",
+    name:              scholarship?.name              ?? "",
+    course:            scholarship?.course            ?? "",
+    courseId:          scholarship?.courseId          ?? "",
+    eligibility:       scholarship?.eligibility       ?? "",
+    deadline:          scholarship?.deadline          ?? "",
+    winnersCount:      scholarship?.winnersCount      ?? 1,
     applicationsCount: scholarship?.applicationsCount ?? 0,
-    status:      scholarship?.status      ?? "active",
+    status:            scholarship?.status            ?? "active",
   });
+
+  const set = (field: keyof Scholarship, value: any) => setForm(p => ({ ...p, [field]: value }));
 
   return (
     <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl shadow-xl p-6 max-w-md w-full max-h-[90vh] overflow-y-auto">
         <h3 className="font-bold text-gray-800 mb-5">{scholarship ? "Edit Scholarship" : "Add Scholarship"}</h3>
+
         <div className="space-y-4">
-          {[
-            { label: "Scholarship Name", field: "name",        type: "text" },
-            { label: "Course Name",      field: "course",      type: "text" },
-            { label: "Eligibility",      field: "eligibility", type: "text" },
-            { label: "Deadline",         field: "deadline",    type: "date" },
+          {([
+            { label: "Scholarship Name", field: "name",        type: "text"   },
+            { label: "Course Name",      field: "course",      type: "text"   },
+            { label: "Course ID / Slug", field: "courseId",    type: "text"   },
+            { label: "Eligibility",      field: "eligibility", type: "text"   },
+            { label: "Deadline",         field: "deadline",    type: "date"   },
             { label: "Winners Count",    field: "winnersCount",type: "number" },
-          ].map(({ label, field, type }) => (
+          ] as { label: string; field: keyof Scholarship; type: string }[]).map(({ label, field, type }) => (
             <div key={field}>
               <label className="block text-xs font-medium text-gray-600 mb-1">{label}</label>
-              <input
-                type={type}
-                value={(form as any)[field]}
-                onChange={e => setForm(p => ({ ...p, [field]: type === "number" ? Number(e.target.value) : e.target.value }))}
-                className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1E90FF]/30"
-              />
+              <input type={type} value={String(form[field])}
+                onChange={e => set(field, type === "number" ? Number(e.target.value) : e.target.value)}
+                className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1E90FF]/30" />
             </div>
           ))}
+
           <div>
             <label className="block text-xs font-medium text-gray-600 mb-1">Status</label>
-            <select
-              value={form.status}
-              onChange={e => setForm(p => ({ ...p, status: e.target.value }))}
-              className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1E90FF]/30"
-            >
+            <select value={form.status} onChange={e => set("status", e.target.value)}
+              className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1E90FF]/30">
               <option value="active">Active</option>
               <option value="closed">Closed</option>
+              <option value="upcoming">Upcoming</option>
             </select>
           </div>
         </div>
+
+        {error && (
+          <p className="mt-3 text-xs text-red-500 bg-red-50 rounded-lg px-3 py-2">{error}</p>
+        )}
+
         <div className="flex gap-3 justify-end mt-6">
           <button onClick={onClose} className="px-4 py-2 text-sm rounded-lg border border-gray-200 hover:bg-gray-50">Cancel</button>
-          <button
-            onClick={() => onSave(form)}
-            className="px-4 py-2 text-sm rounded-lg bg-[#1E90FF] text-white hover:bg-blue-500"
-          >
+          <button onClick={() => onSave(form)} disabled={saving}
+            className="flex items-center gap-2 px-4 py-2 text-sm rounded-lg bg-[#1E90FF] text-white hover:bg-blue-500 disabled:opacity-60">
+            {saving && <Loader2 size={13} className="animate-spin" />}
             {scholarship ? "Save Changes" : "Add Scholarship"}
           </button>
         </div>
