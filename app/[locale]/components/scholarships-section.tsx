@@ -1,21 +1,36 @@
 "use client";
 
+import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import { motion } from "framer-motion";
 import Image from "next/image";
 import { Link } from "@/i18n/navigation";
 import { Button } from "@/app/[locale]/components/ui/button";
 import { SectionHeading } from "@/app/[locale]/components/ui/section-heading";
 import ScholarshipCard from "@/app/[locale]/components/ui/scholarship-card";
-import { scholarshipsConfig, scholarshipWinnersConfig, isClosed } from "@/lib/scholarships-config";
+import { scholarshipWinnersConfig, isClosed } from "@/lib/scholarships-config";
+import { getStoredScholarships, type StoredScholarship } from "@/lib/scholarship-store";
 import { Archive } from "lucide-react";
-import { useTranslations } from "next-intl";
 
 export function ScholarshipsSection({ showAll = false }: { showAll?: boolean }) {
   const t = useTranslations("scholarshipsSection");
+  const [scholarships, setScholarships] = useState<StoredScholarship[]>([]);
+  const [loaded, setLoaded] = useState(false);
 
-  const active   = scholarshipsConfig.filter(s => !isClosed(s.deadline));
-  const archived = scholarshipsConfig.filter(s => isClosed(s.deadline));
+  useEffect(() => {
+    // Read from store (populated by admin or API)
+    const stored = getStoredScholarships();
+    setScholarships(stored);
+    setLoaded(true);
+  }, []);
+
+  const active   = scholarships.filter(s => !isClosed(s.deadline) && s.status !== "closed");
+  const archived = scholarships.filter(s => isClosed(s.deadline) || s.status === "closed");
   const visible  = showAll ? active : active.slice(0, 3);
+
+  if (!loaded) return null;
+
+  if (scholarships.length === 0) return null;
 
   return (
     <section className="py-16">
@@ -35,7 +50,7 @@ export function ScholarshipsSection({ showAll = false }: { showAll?: boolean }) 
             >
               <ScholarshipCard
                 id={scholarship.id}
-                name={scholarship.displayName}
+                name={scholarship.name}
                 applicationsCount={scholarship.applicationsCount}
                 deadline={scholarship.deadline}
                 winnersCount={scholarship.winnersCount}
