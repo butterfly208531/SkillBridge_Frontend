@@ -20,7 +20,9 @@ const socials = [
 
 export function SocialSidebar() {
   return (
-    <div className="fixed right-0 top-1/2 -translate-y-1/2 z-50 flex-col gap-1 hidden md:flex">
+    <div
+      className="fixed right-0 top-1/2 -translate-y-1/2 z-50 hidden md:flex flex-col gap-1"
+    >
       {socials.map(({ Icon, url, label, color }, i) => (
         <motion.div
           key={label}
@@ -34,14 +36,14 @@ export function SocialSidebar() {
             target="_blank"
             rel="noopener noreferrer"
             aria-label={label}
-            className="group flex items-center justify-end w-10 h-10 rounded-l-xl shadow-md overflow-hidden transition-all duration-200 hover:w-32"
+            className="group flex flex-row-reverse items-center w-10 h-10 rounded-l-xl shadow-md overflow-hidden transition-all duration-200 hover:w-32"
             style={{ backgroundColor: color }}
           >
-            <span className="text-white text-xs font-semibold whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pl-2">
-              {label}
-            </span>
             <span className="flex items-center justify-center w-10 h-10 shrink-0">
               <Icon size={17} color="#fff" />
+            </span>
+            <span className="text-white text-xs font-semibold whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pl-2">
+              {label}
             </span>
           </Link>
         </motion.div>
