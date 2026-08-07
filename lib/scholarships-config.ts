@@ -3,17 +3,14 @@ export type FundingType = "full" | "half";
 export interface ScholarshipConfig {
   id: string;
   nameKey: string;
-  displayName: string;       // proper human-readable name
-  courseName: string;        // proper course display name
   courseId: string;
   applicationsCount: number;
   deadline: string;
   winnersCount: number;
   eligibilityKey: string;
-  eligibility: string;       // human-readable eligibility text
   fundingType: FundingType;
   tuitionAmount: number;
-  applicationFormUrl?: string;
+  applicationFormUrl?: string; // custom URL set by admin (Google Form, Typeform, etc.)
 }
 
 export interface ScholarshipWinner {
@@ -28,72 +25,57 @@ export const scholarshipsConfig: ScholarshipConfig[] = [
   {
     id: "full-stack",
     nameKey: "fullStack",
-    displayName: "Full-Stack Scholarship",
-    courseName: "Full-Stack Development",
     courseId: "full-stack-development",
     applicationsCount: 42,
     deadline: "2026-09-30",
     winnersCount: 3,
     eligibilityKey: "fullStack",
-    eligibility: "Top performer in Python and Web Development courses",
     fundingType: "full",
-    tuitionAmount: 500,
+    tuitionAmount: 25000,
   },
   {
     id: "odoo-functional",
     nameKey: "odooFunctional",
-    displayName: "Odoo Functional Scholarship",
-    courseName: "Odoo Functional ERP",
     courseId: "odoo-functional-erp",
     applicationsCount: 28,
     deadline: "2026-09-30",
     winnersCount: 2,
     eligibilityKey: "odooFunctional",
-    eligibility: "Strong interest in ERP and business processes",
     fundingType: "half",
-    tuitionAmount: 400,
+    tuitionAmount: 20000,
   },
   {
     id: "python",
     nameKey: "python",
-    displayName: "Python Scholarship",
-    courseName: "Python Programming",
     courseId: "python-programming",
     applicationsCount: 56,
     deadline: "2026-10-15",
     winnersCount: 3,
     eligibilityKey: "python",
-    eligibility: "Demonstrated programming aptitude and financial need",
     fundingType: "full",
-    tuitionAmount: 350,
+    tuitionAmount: 18000,
   },
   {
     id: "ai",
     nameKey: "ai",
-    displayName: "AI & Machine Learning Scholarship",
-    courseName: "AI & Machine Learning",
     courseId: "ai-machine-learning",
     applicationsCount: 35,
-    deadline: "2026-08-14",
+    deadline: "2026-08-14",   // closing soon — < 7 days from Aug 7
     winnersCount: 2,
     eligibilityKey: "ai",
-    eligibility: "Background in mathematics and programming",
     fundingType: "half",
-    tuitionAmount: 600,
+    tuitionAmount: 30000,
   },
   {
     id: "data-science",
     nameKey: "dataScience",
-    displayName: "Data Science Scholarship",
-    courseName: "Data Science",
     courseId: "data-science",
     applicationsCount: 20,
-    deadline: "2026-07-31",
+    deadline: "2026-07-31",   // already past → archived
     winnersCount: 2,
     eligibilityKey: "dataScience",
-    eligibility: "Strong analytical skills and interest in data-driven decision making",
     fundingType: "full",
-    tuitionAmount: 450,
+    tuitionAmount: 22000,
   },
 ];
 

@@ -66,7 +66,7 @@ export default function ScholarshipsPage() {
             <div className="flex items-center gap-2 px-3 py-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-100 dark:border-blue-800">
               <span className="w-3 h-3 rounded-full bg-[#2196F3]" />
               <span className="font-semibold text-[#2196F3]">Fully Funded</span>
-              <span className="text-gray-500">— You pay $0</span>
+              <span className="text-gray-500">— You pay ETB 0</span>
             </div>
             <div className="flex items-center gap-2 px-3 py-2 bg-orange-50 dark:bg-orange-900/20 rounded-lg border border-orange-100 dark:border-orange-800">
               <span className="w-3 h-3 rounded-full bg-[#F57C00]" />

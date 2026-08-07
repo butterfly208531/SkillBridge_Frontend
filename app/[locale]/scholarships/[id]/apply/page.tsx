@@ -133,10 +133,10 @@ export default function ScholarshipApplyPage() {
                 "mt-4 rounded-xl px-4 py-3 flex items-center gap-3 text-sm border",
                 fundingType === "full" ? "bg-[#1E90FF]/5 border-[#1E90FF]/20" : "bg-[#F57C00]/5 border-[#F57C00]/20"
               )}>
-                <span className="text-gray-400 line-through">${tuition}</span>
+                <span className="text-gray-400 line-through">ETB {tuition}</span>
                 <span className="text-gray-400">→</span>
                 <span className={cn("font-black text-lg", fundingType === "full" ? "text-[#1E90FF]" : "text-[#F57C00]")}>
-                  You Pay: {fundingType === "full" ? "$0 🎉" : `$${pays}`}
+                  You Pay: {fundingType === "full" ? "ETB 0" : `ETB ${pays}`}
                 </span>
               </div>
             )}

@@ -187,22 +187,22 @@ export default function ScholarshipCard({
           <div className={cn(
             "rounded-xl px-4 py-3 text-center border",
             fundingType === "full"
-              ? "bg-emerald-50 border-emerald-200 dark:bg-emerald-900/20 dark:border-emerald-800"
-              : "bg-orange-50 border-orange-200 dark:bg-orange-900/20 dark:border-orange-800"
+              ? "bg-[#1E90FF]/5 border-[#1E90FF]/20"
+              : "bg-[#F57C00]/5 border-[#F57C00]/20"
           )}>
             <div className="flex items-center justify-center gap-3 text-sm flex-wrap">
               <span className="text-gray-500 dark:text-gray-400 line-through text-xs">
-                Original: ${tuitionAmount}
+                Original: ETB {tuitionAmount}
               </span>
               <span className="text-gray-400">→</span>
-              <span className={cn("font-black text-base", fundingType === "full" ? "text-emerald-600" : "text-orange-600")}>
-                {fundingType === "full" ? "You Pay: $0 🎉" : `You Pay: $${pays}`}
+              <span className={cn("font-black text-base", fundingType === "full" ? "text-[#1E90FF]" : "text-[#F57C00]")}>
+                {fundingType === "full" ? "You Pay: ETB 0" : `You Pay: ETB ${pays}`}
               </span>
             </div>
             <p className="text-[11px] mt-1 font-semibold text-gray-500">
               {fundingType === "full"
                 ? "100% tuition covered"
-                : `50% covered — save $${Math.round(tuitionAmount * 0.5)}`}
+                : `50% covered — save ETB ${Math.round(tuitionAmount * 0.5)}`}
             </p>
           </div>
         )}
