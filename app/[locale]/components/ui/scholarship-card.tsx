@@ -19,6 +19,7 @@ interface ScholarshipCardProps {
   fundingType?: FundingType;
   tuitionAmount?: number;
   archived?: boolean;
+  applicationFormUrl?: string; // custom URL set by admin
 }
 
 function formatDeadline(isoDate: string): string {
@@ -73,6 +74,7 @@ export default function ScholarshipCard({
   fundingType = "full",
   tuitionAmount,
   archived = false,
+  applicationFormUrl,
 }: ScholarshipCardProps) {
   const year = getYear(deadline);
   const days = daysRemaining(deadline);
@@ -239,7 +241,11 @@ export default function ScholarshipCard({
             style={{ background: fundingType === "full" ? "linear-gradient(90deg,#1565C0,#2196F3)" : "linear-gradient(90deg,#b45309,#F57C00)" }}
             asChild
           >
-            <Link href={`/courses/${courseId}/ApplicationForm`}>Apply Now</Link>
+            {applicationFormUrl ? (
+              <a href={applicationFormUrl} target="_blank" rel="noopener noreferrer">Apply Now</a>
+            ) : (
+              <Link href={`/courses/${courseId}/ApplicationForm`}>Apply Now</Link>
+            )}
           </Button>
         ) : (
           <Button disabled className="w-full font-bold bg-gray-200 text-gray-500 cursor-not-allowed">

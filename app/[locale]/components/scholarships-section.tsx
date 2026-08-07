@@ -43,6 +43,7 @@ export function ScholarshipsSection({ showAll = false }: { showAll?: boolean }) 
                 courseId={scholarship.courseId}
                 fundingType={scholarship.fundingType}
                 tuitionAmount={scholarship.tuitionAmount}
+                applicationFormUrl={scholarship.applicationFormUrl}
               />
             </motion.div>
           ))}

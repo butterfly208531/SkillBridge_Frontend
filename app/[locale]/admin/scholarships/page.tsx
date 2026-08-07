@@ -18,6 +18,7 @@ interface Scholarship {
   deadline: string;
   eligibility: string;
   status: string;
+  applicationFormUrl?: string;
 }
 
 interface Winner {
@@ -254,7 +255,24 @@ export default function ScholarshipsPage() {
                     </div>
 
                     {s.eligibility && (
-                      <p className="text-xs text-gray-500 mb-4 leading-relaxed">{s.eligibility}</p>
+                      <p className="text-xs text-gray-500 mb-3 leading-relaxed">{s.eligibility}</p>
+                    )}
+
+                    {/* Application form URL */}
+                    {s.applicationFormUrl && (
+                      <div className="mb-3 px-3 py-2 bg-[#1E90FF]/5 border border-[#1E90FF]/20 rounded-lg">
+                        <p className="text-[10px] text-gray-400 uppercase tracking-wide mb-1">Application Form</p>
+                        <a href={s.applicationFormUrl} target="_blank" rel="noopener noreferrer"
+                          className="text-xs text-[#1E90FF] hover:underline break-all font-medium flex items-center gap-1">
+                          🔗 {s.applicationFormUrl}
+                        </a>
+                      </div>
+                    )}
+
+                    {!s.applicationFormUrl && (
+                      <div className="mb-3 px-3 py-2 bg-gray-50 border border-dashed border-gray-200 rounded-lg">
+                        <p className="text-[10px] text-gray-400 italic">No custom form URL — using default course form</p>
+                      </div>
                     )}
 
                     <div className="grid grid-cols-3 gap-3 mb-4">
@@ -373,6 +391,7 @@ function ScholarshipModal({ scholarship, saving, onClose, onSave, error }: {
     winnersCount:      scholarship?.winnersCount      ?? 1,
     applicationsCount: scholarship?.applicationsCount ?? 0,
     status:            scholarship?.status            ?? "active",
+    applicationFormUrl: scholarship?.applicationFormUrl ?? "",
   });
 
   const set = (field: keyof Scholarship, value: any) => setForm(p => ({ ...p, [field]: value }));
@@ -384,16 +403,21 @@ function ScholarshipModal({ scholarship, saving, onClose, onSave, error }: {
 
         <div className="space-y-4">
           {([
-            { label: "Scholarship Name", field: "name",        type: "text"   },
-            { label: "Course Name",      field: "course",      type: "text"   },
-            { label: "Course ID / Slug", field: "courseId",    type: "text"   },
-            { label: "Eligibility",      field: "eligibility", type: "text"   },
-            { label: "Deadline",         field: "deadline",    type: "date"   },
-            { label: "Winners Count",    field: "winnersCount",type: "number" },
-          ] as { label: string; field: keyof Scholarship; type: string }[]).map(({ label, field, type }) => (
+            { label: "Scholarship Name",      field: "name",               type: "text"   },
+            { label: "Course Name",           field: "course",             type: "text"   },
+            { label: "Course ID / Slug",      field: "courseId",           type: "text"   },
+            { label: "Eligibility",           field: "eligibility",        type: "text"   },
+            { label: "Application Form URL",  field: "applicationFormUrl", type: "url",   placeholder: "https://forms.google.com/..." },
+            { label: "Deadline",              field: "deadline",           type: "date"   },
+            { label: "Winners Count",         field: "winnersCount",       type: "number" },
+          ] as { label: string; field: keyof Scholarship; type: string; placeholder?: string }[]).map(({ label, field, type, placeholder }) => (
             <div key={field}>
               <label className="block text-xs font-medium text-gray-600 mb-1">{label}</label>
-              <input type={type} value={String(form[field])}
+              {field === "applicationFormUrl" && (
+                <p className="text-[11px] text-gray-400 mb-1">Leave empty to use the default course application form</p>
+              )}
+              <input type={type} value={String(form[field] ?? "")}
+                placeholder={placeholder}
                 onChange={e => set(field, type === "number" ? Number(e.target.value) : e.target.value)}
                 className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1E90FF]/30" />
             </div>

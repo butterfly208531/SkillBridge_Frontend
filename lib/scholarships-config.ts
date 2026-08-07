@@ -5,11 +5,12 @@ export interface ScholarshipConfig {
   nameKey: string;
   courseId: string;
   applicationsCount: number;
-  deadline: string;       // ISO date string
+  deadline: string;
   winnersCount: number;
   eligibilityKey: string;
   fundingType: FundingType;
-  tuitionAmount: number;  // full course tuition in USD
+  tuitionAmount: number;
+  applicationFormUrl?: string; // custom URL set by admin (Google Form, Typeform, etc.)
 }
 
 export interface ScholarshipWinner {
