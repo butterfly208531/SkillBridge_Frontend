@@ -1,10 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Plus, Pencil, Trash2, Award, Users, Calendar, CheckCircle, RefreshCw, Loader2, Link2 } from "lucide-react";
+import { Plus, Pencil, Trash2, Award, Users, Calendar, CheckCircle, RefreshCw, Loader2, Save } from "lucide-react";
 import AdminHeader from "../components/AdminHeader";
 import { cn } from "@/lib/utils";
-import { saveScholarships } from "@/lib/scholarship-store";
+import { scholarshipsConfig, scholarshipWinnersConfig } from "@/lib/scholarships-config";
+import { getStoredScholarships, saveScholarships, type StoredScholarship } from "@/lib/scholarship-store";
 
 const API = process.env.NEXT_PUBLIC_API_BASE_URL || "https://skillbridge-backend2-h1u9.onrender.com/api";
 
@@ -18,8 +19,6 @@ interface Scholarship {
   deadline: string;
   eligibility: string;
   status: string;
-  fundingType?: "full" | "half";
-  tuitionAmount?: number;
   applicationFormUrl?: string;
 }
 
@@ -37,74 +36,110 @@ function formatDate(iso: string) {
   return isNaN(d.getTime()) ? iso : d.toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" });
 }
 
+// Map lib config to page shape
+const FALLBACK_SCHOLARSHIPS: Scholarship[] = scholarshipsConfig.map(s => ({
+  id: s.id,
+  name: s.nameKey.replace(/([A-Z])/g, " $1").trim() + " Scholarship",
+  courseId: s.courseId,
+  course: s.courseId.replace(/-/g, " ").replace(/\b\w/g, l => l.toUpperCase()),
+  applicationsCount: s.applicationsCount,
+  winnersCount: s.winnersCount,
+  deadline: s.deadline,
+  eligibility: s.eligibilityKey.replace(/([A-Z])/g, " $1").trim(),
+  status: "active",
+}));
+
+const FALLBACK_WINNERS: Winner[] = scholarshipWinnersConfig.map(w => ({
+  id: w.id,
+  name: w.name,
+  scholarship: w.scholarshipKey.replace(/([A-Z])/g, " $1").trim() + " Scholarship",
+  year: w.year,
+  status: "active",
+}));
+
 export default function ScholarshipsPage() {
   const [scholarships, setScholarships] = useState<Scholarship[]>([]);
-  const [winners,      setWinners]      = useState<Winner[]>([]);
-  const [loading,      setLoading]      = useState(true);
-  const [error,        setError]        = useState("");
-  const [tab,          setTab]          = useState<"programs" | "winners">("programs");
-  const [showModal,    setShowModal]    = useState(false);
-  const [editing,      setEditing]      = useState<Scholarship | null>(null);
-  const [deleteId,     setDeleteId]     = useState<string | null>(null);
-  const [saving,       setSaving]       = useState(false);
+  const [winners, setWinners] = useState<Winner[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [tab, setTab] = useState<"programs" | "winners">("programs");
+  const [showModal, setShowModal] = useState(false);
+  const [editing, setEditing] = useState<Scholarship | null>(null);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
 
   const fetchData = async () => {
     setLoading(true);
-    setError("");
     const token = sessionStorage.getItem("adminToken");
     const headers = { Authorization: `Bearer ${token}` };
+
+    // Load from localStorage first (admin-saved data)
+    const localData = getStoredScholarships();
 
     try {
       const [schRes, winRes] = await Promise.all([
         fetch(`${API}/scholarships`, { headers }),
-        fetch(`${API}/scholarship-winners`, { headers }).catch(() => null),
+        fetch(`${API}/scholarship-winners`, { headers }),
       ]);
 
       if (schRes.ok) {
         const d = await schRes.json();
-        const data: Scholarship[] = (Array.isArray(d) ? d : d.data ?? []).map((s: any) => ({
-          id:                 s.id || s._id || "",
-          name:               s.name || s.title || "",
-          courseId:           s.courseId || s.course?.id || "",
-          course:             s.course?.title || s.courseName || s.courseId || "",
-          applicationsCount:  s.applicationsCount ?? 0,
-          winnersCount:       s.winnersCount ?? 0,
-          deadline:           s.deadline || s.endDate || "",
-          eligibility:        s.eligibility || s.requirements || "",
-          status:             (s.status || "active").toLowerCase(),
-          fundingType:        s.fundingType,
-          tuitionAmount:      s.tuitionAmount,
-          applicationFormUrl: s.applicationFormUrl || "",
-        }));
-        setScholarships(data);
-        saveScholarships(data as any); // persist for public pages
+        const data = Array.isArray(d) ? d : d.data ?? [];
+        if (data.length > 0) {
+          const mapped = data.map((s: any) => ({
+            id: s.id || s._id,
+            name: s.name || s.title || "",
+            courseId: s.courseId || s.course?.id || "",
+            course: s.course?.title || s.courseName || s.courseId || "",
+            applicationsCount: s.applicationsCount || 0,
+            winnersCount: s.winnersCount || 0,
+            deadline: s.deadline || s.endDate || "",
+            eligibility: s.eligibility || s.requirements || "",
+            status: (s.status || "active").toLowerCase(),
+            applicationFormUrl: s.applicationFormUrl || "",
+          }));
+          setScholarships(mapped);
+          saveScholarships(mapped);
+        } else if (localData.length > 0) {
+          setScholarships(localData);
+        } else {
+          setScholarships(FALLBACK_SCHOLARSHIPS);
+        }
+      } else if (localData.length > 0) {
+        setScholarships(localData);
       } else {
-        setError(`API error ${schRes.status} — no scholarships loaded`);
-        setScholarships([]);
+        setScholarships(FALLBACK_SCHOLARSHIPS);
       }
 
-      if (winRes?.ok) {
+      if (winRes.ok) {
         const d = await winRes.json();
-        setWinners((Array.isArray(d) ? d : d.data ?? []).map((w: any) => ({
-          id:         w.id || w._id || "",
-          name:       w.name || w.studentName || "",
-          scholarship:w.scholarship || w.scholarshipName || "",
-          year:       w.year || new Date(w.awardedAt || Date.now()).getFullYear(),
-          status:     (w.status || "active").toLowerCase(),
-        })));
+        const data = Array.isArray(d) ? d : d.data ?? [];
+        setWinners(data.length > 0 ? data.map((w: any) => ({
+          id: w.id || w._id,
+          name: w.name || w.studentName || "",
+          scholarship: w.scholarship || w.scholarshipName || "",
+          year: w.year || new Date(w.awardedAt || Date.now()).getFullYear(),
+          status: (w.status || "active").toLowerCase(),
+        })) : FALLBACK_WINNERS);
       } else {
-        setWinners([]);
+        setWinners(FALLBACK_WINNERS);
       }
-    } catch (e: any) {
-      setError("Could not connect to API");
-      setScholarships([]);
-      setWinners([]);
+    } catch {
+      setScholarships(localData.length > 0 ? localData : FALLBACK_SCHOLARSHIPS);
+      setWinners(FALLBACK_WINNERS);
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => { fetchData(); }, []);
+  useEffect(() => { 
+    // Initialize store with fallback data if empty
+    const local = getStoredScholarships();
+    if (local.length === 0) {
+      saveScholarships(FALLBACK_SCHOLARSHIPS as any);
+    }
+    fetchData(); 
+  }, []);
 
   const handleDelete = async (id: string) => {
     const token = sessionStorage.getItem("adminToken");
@@ -122,41 +157,37 @@ export default function ScholarshipsPage() {
 
   const handleSave = async (data: Scholarship) => {
     setSaving(true);
+    setError("");
     const token = sessionStorage.getItem("adminToken");
     const isEdit = !!editing;
+    const url = isEdit ? `${API}/scholarships/${data.id}` : `${API}/scholarships`;
+    const method = isEdit ? "PUT" : "POST";
+
+    let updated: Scholarship[];
+    if (isEdit) {
+      updated = scholarships.map(s => s.id === data.id ? data : s);
+    } else {
+      updated = [...scholarships, { ...data, id: `sch-${Date.now()}`, applicationsCount: 0 }];
+    }
+
+    // Always persist to localStorage immediately
+    saveScholarships(updated as any);
+    setScholarships(updated);
 
     try {
-      const res = await fetch(
-        isEdit ? `${API}/scholarships/${data.id}` : `${API}/scholarships`,
-        {
-          method: isEdit ? "PUT" : "POST",
-          headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-          body: JSON.stringify(data),
-        }
-      );
-      const saved = res.ok ? await res.json().catch(() => data) : data;
-      const newItem: Scholarship = { ...data, id: saved.id || saved._id || data.id || `sch-${Date.now()}` };
-      const updated = isEdit
-        ? scholarships.map(s => s.id === data.id ? newItem : s)
-        : [...scholarships, newItem];
-      setScholarships(updated);
-      saveScholarships(updated as any);
-    } catch {
-      // still update local state
-      const updated = isEdit
-        ? scholarships.map(s => s.id === data.id ? data : s)
-        : [...scholarships, { ...data, id: `sch-${Date.now()}` }];
-      setScholarships(updated);
-      saveScholarships(updated as any);
-    } finally {
-      setSaving(false);
-      setShowModal(false);
-    }
+      await fetch(url, {
+        method,
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify(data),
+      });
+    } catch {}
+
+    setSaving(false);
+    setShowModal(false);
   };
 
   const totalApps    = scholarships.reduce((s, x) => s + (x.applicationsCount || 0), 0);
   const totalWinners = scholarships.reduce((s, x) => s + (x.winnersCount || 0), 0);
-  const locale = typeof window !== "undefined" ? window.location.pathname.split("/")[1] : "en";
 
   return (
     <div className="flex flex-col h-full">
@@ -164,17 +195,17 @@ export default function ScholarshipsPage() {
 
       <div className="flex-1 p-6 space-y-5 overflow-y-auto">
 
-        {/* Stats */}
+        {/* Summary cards */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {[
-            { label: "Programs",     value: scholarships.length,                                    color: "text-[#1E90FF]",  bg: "bg-[#1E90FF]/10" },
-            { label: "Applications", value: totalApps,                                              color: "text-[#F57C00]",  bg: "bg-[#F57C00]/10" },
-            { label: "Winners",      value: totalWinners,                                           color: "text-emerald-500", bg: "bg-emerald-50"   },
-            { label: "Active",       value: scholarships.filter(s => s.status === "active").length, color: "text-purple-500", bg: "bg-purple-50"    },
-          ].map(({ label, value, color, bg }) => (
+            { label: "Programs",     value: scholarships.length,                                    icon: Award,       color: "text-[#1E90FF]",    bg: "bg-[#1E90FF]/10" },
+            { label: "Applications", value: totalApps,                                              icon: Users,       color: "text-[#F57C00]",    bg: "bg-[#F57C00]/10" },
+            { label: "Winners",      value: totalWinners,                                           icon: CheckCircle, color: "text-emerald-500",  bg: "bg-emerald-50"   },
+            { label: "Active",       value: scholarships.filter(s => s.status === "active").length, icon: Award,       color: "text-purple-500",   bg: "bg-purple-50"    },
+          ].map(({ label, value, icon: Icon, color, bg }) => (
             <div key={label} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 flex items-center gap-3">
               <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center shrink-0", bg)}>
-                <Award className={cn("h-5 w-5", color)} />
+                <Icon className={cn("h-5 w-5", color)} />
               </div>
               <div>
                 <p className="text-2xl font-extrabold text-gray-900 leading-none">{value}</p>
@@ -195,59 +226,41 @@ export default function ScholarshipsPage() {
             ))}
           </div>
           <div className="flex gap-2">
-            <button onClick={fetchData} className="p-1.5 rounded-lg border border-gray-200 hover:bg-gray-50" title="Refresh">
+            <button onClick={fetchData}
+              className="p-1.5 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors" title="Refresh">
               <RefreshCw size={14} className={cn("text-gray-500", loading && "animate-spin")} />
             </button>
             {tab === "programs" && (
               <button
-                onClick={() => window.location.href = `/${locale}/admin/scholarships/add`}
-                className="flex items-center gap-1.5 px-3 py-1.5 bg-[#1E90FF] text-white text-xs font-semibold rounded-lg hover:bg-blue-500 transition-colors"
-              >
+                onClick={() => window.location.href = `/${typeof window !== "undefined" ? window.location.pathname.split("/")[1] : "en"}/admin/scholarships/add`}
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-[#1E90FF] text-white text-xs font-semibold rounded-lg hover:bg-blue-500 transition-colors">
                 <Plus size={14} /> Add Scholarship
               </button>
             )}
           </div>
         </div>
 
-        {/* Error */}
-        {error && (
-          <div className="px-4 py-3 bg-red-50 border border-red-200 text-red-600 rounded-xl text-sm flex items-center justify-between">
-            <span>{error}</span>
-            <button onClick={fetchData} className="text-xs underline ml-3">Retry</button>
-          </div>
-        )}
-
         {/* Loading */}
         {loading && (
-          <div className="flex items-center justify-center py-20 gap-2 text-gray-400 text-sm">
-            <Loader2 size={18} className="animate-spin" /> Loading from API...
+          <div className="flex items-center justify-center py-16 gap-2 text-gray-400 text-sm">
+            <Loader2 size={18} className="animate-spin" /> Loading scholarships...
           </div>
         )}
 
         {/* Programs tab */}
         {!loading && tab === "programs" && (
           scholarships.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-20 text-center">
-              <Award className="h-14 w-14 text-gray-200 mb-4" />
-              <p className="text-base font-semibold text-gray-500 mb-1">No scholarships yet</p>
-              <p className="text-sm text-gray-400 mb-6">Add your first scholarship program to get started</p>
-              <button
-                onClick={() => window.location.href = `/${locale}/admin/scholarships/add`}
-                className="flex items-center gap-1.5 px-5 py-2.5 bg-[#1E90FF] text-white text-sm font-semibold rounded-xl hover:bg-blue-500 transition-colors"
-              >
-                <Plus size={15} /> Add Scholarship
-              </button>
-            </div>
+            <div className="text-center py-16 text-gray-400 text-sm">No scholarship programs found</div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               {scholarships.map(s => (
                 <div key={s.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden hover:shadow-md transition-shadow">
-                  <div className="h-1.5" style={{ background: "linear-gradient(90deg,#1E90FF,#F57C00)" }} />
+                  <div className="h-1.5" style={{ background: "linear-gradient(90deg, #1E90FF, #F57C00)" }} />
                   <div className="p-5">
                     <div className="flex items-start justify-between mb-3">
                       <div>
                         <h3 className="font-bold text-gray-800 text-sm">{s.name}</h3>
-                        <p className="text-xs text-[#1E90FF] mt-0.5">{s.course || s.courseId}</p>
+                        <p className="text-xs text-[#1E90FF] mt-0.5">{s.course}</p>
                       </div>
                       <span className={cn("px-2 py-0.5 rounded-full text-[11px] font-semibold capitalize",
                         s.status === "active" ? "bg-emerald-100 text-emerald-700" : "bg-gray-100 text-gray-500"
@@ -258,34 +271,20 @@ export default function ScholarshipsPage() {
                       <p className="text-xs text-gray-500 mb-3 leading-relaxed">{s.eligibility}</p>
                     )}
 
-                    {/* Funding info */}
-                    {s.tuitionAmount && (
-                      <div className="mb-3 px-3 py-2 bg-[#1E90FF]/5 border border-[#1E90FF]/20 rounded-lg flex items-center gap-2 text-xs">
-                        <span className={cn("font-bold px-2 py-0.5 rounded-full text-[10px]",
-                          s.fundingType === "full" ? "bg-[#1E90FF]/10 text-[#1E90FF]" : "bg-[#F57C00]/10 text-[#F57C00]"
-                        )}>
-                          {s.fundingType === "full" ? "Fully Funded" : "Half Funded"}
-                        </span>
-                        <span className="text-gray-500">ETB {s.tuitionAmount}</span>
-                        <span className="text-gray-400">→</span>
-                        <span className={cn("font-bold", s.fundingType === "full" ? "text-[#1E90FF]" : "text-[#F57C00]")}>
-                          You Pay: ETB {s.fundingType === "full" ? 0 : Math.round(s.tuitionAmount * 0.5)}
-                        </span>
-                      </div>
-                    )}
-
                     {/* Application form URL */}
-                    {s.applicationFormUrl ? (
+                    {s.applicationFormUrl && (
                       <div className="mb-3 px-3 py-2 bg-[#1E90FF]/5 border border-[#1E90FF]/20 rounded-lg">
                         <p className="text-[10px] text-gray-400 uppercase tracking-wide mb-1">Application Form</p>
                         <a href={s.applicationFormUrl} target="_blank" rel="noopener noreferrer"
                           className="text-xs text-[#1E90FF] hover:underline break-all font-medium flex items-center gap-1">
-                          <Link2 size={11} /> {s.applicationFormUrl}
+                          🔗 {s.applicationFormUrl}
                         </a>
                       </div>
-                    ) : (
+                    )}
+
+                    {!s.applicationFormUrl && (
                       <div className="mb-3 px-3 py-2 bg-gray-50 border border-dashed border-gray-200 rounded-lg">
-                        <p className="text-[10px] text-gray-400 italic">No custom form URL — using default scholarship form</p>
+                        <p className="text-[10px] text-gray-400 italic">No custom form URL — using default course form</p>
                       </div>
                     )}
 
@@ -322,53 +321,52 @@ export default function ScholarshipsPage() {
 
         {/* Winners tab */}
         {!loading && tab === "winners" && (
-          winners.length === 0 ? (
-            <div className="text-center py-16 text-gray-400 text-sm">No winners data from API</div>
-          ) : (
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="bg-gray-50 text-xs text-gray-500 uppercase tracking-wide border-b border-gray-100">
-                    <th className="px-5 py-3 text-left font-semibold">Winner</th>
-                    <th className="px-5 py-3 text-left font-semibold">Scholarship</th>
-                    <th className="px-5 py-3 text-left font-semibold">Year</th>
-                    <th className="px-5 py-3 text-left font-semibold">Status</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-50">
-                  {winners.map(w => (
-                    <tr key={w.id} className="hover:bg-gray-50/50 transition-colors">
-                      <td className="px-5 py-3.5">
-                        <div className="flex items-center gap-2.5">
-                          <div className="w-7 h-7 rounded-full bg-gradient-to-br from-[#1E90FF] to-[#F57C00] flex items-center justify-center text-white text-xs font-bold shrink-0">
-                            {w.name[0]}
-                          </div>
-                          <span className="font-medium text-gray-800">{w.name}</span>
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="bg-gray-50 text-xs text-gray-500 uppercase tracking-wide border-b border-gray-100">
+                  <th className="px-5 py-3 text-left font-semibold">Winner</th>
+                  <th className="px-5 py-3 text-left font-semibold">Scholarship</th>
+                  <th className="px-5 py-3 text-left font-semibold">Year</th>
+                  <th className="px-5 py-3 text-left font-semibold">Status</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-50">
+                {winners.length === 0 ? (
+                  <tr><td colSpan={4} className="text-center py-12 text-gray-400 text-sm">No winners found</td></tr>
+                ) : winners.map(w => (
+                  <tr key={w.id} className="hover:bg-gray-50/50 transition-colors">
+                    <td className="px-5 py-3.5">
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-7 h-7 rounded-full bg-gradient-to-br from-[#1E90FF] to-[#F57C00] flex items-center justify-center text-white text-xs font-bold shrink-0">
+                          {w.name[0]}
                         </div>
-                      </td>
-                      <td className="px-5 py-3.5 text-xs text-gray-500">{w.scholarship}</td>
-                      <td className="px-5 py-3.5 text-xs text-gray-500">{w.year}</td>
-                      <td className="px-5 py-3.5">
-                        <span className={cn("px-2.5 py-1 rounded-full text-[11px] font-semibold capitalize",
-                          w.status === "active" ? "bg-emerald-100 text-emerald-700" : "bg-gray-100 text-gray-500"
-                        )}>{w.status}</span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )
+                        <span className="font-medium text-gray-800">{w.name}</span>
+                      </div>
+                    </td>
+                    <td className="px-5 py-3.5 text-xs text-gray-500">{w.scholarship}</td>
+                    <td className="px-5 py-3.5 text-xs text-gray-500">{w.year}</td>
+                    <td className="px-5 py-3.5">
+                      <span className={cn("px-2.5 py-1 rounded-full text-[11px] font-semibold capitalize",
+                        w.status === "active" ? "bg-emerald-100 text-emerald-700" : "bg-gray-100 text-gray-500"
+                      )}>{w.status}</span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
 
-      {/* Edit Modal */}
-      {showModal && editing && (
+      {/* Add/Edit Modal */}
+      {showModal && (
         <ScholarshipModal
           scholarship={editing}
           saving={saving}
-          onClose={() => setShowModal(false)}
+          onClose={() => { setShowModal(false); setError(""); }}
           onSave={handleSave}
+          error={error}
         />
       )}
 
@@ -389,43 +387,79 @@ export default function ScholarshipsPage() {
   );
 }
 
-function ScholarshipModal({ scholarship, saving, onClose, onSave }: {
-  scholarship: Scholarship;
+function ScholarshipModal({ scholarship, saving, onClose, onSave, error }: {
+  scholarship: Scholarship | null;
   saving: boolean;
   onClose: () => void;
   onSave: (d: Scholarship) => void;
+  error: string;
 }) {
-  const [form, setForm] = useState<Scholarship>({ ...scholarship });
+  const [form, setForm] = useState<Scholarship>({
+    id:                scholarship?.id                ?? "",
+    name:              scholarship?.name              ?? "",
+    course:            scholarship?.course            ?? "",
+    courseId:          scholarship?.courseId          ?? "",
+    eligibility:       scholarship?.eligibility       ?? "",
+    deadline:          scholarship?.deadline          ?? "",
+    winnersCount:      scholarship?.winnersCount      ?? 1,
+    applicationsCount: scholarship?.applicationsCount ?? 0,
+    status:            scholarship?.status            ?? "active",
+    applicationFormUrl: scholarship?.applicationFormUrl ?? "",
+  });
+
   const set = (field: keyof Scholarship, value: any) => setForm(p => ({ ...p, [field]: value }));
 
   return (
     <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl shadow-xl p-6 max-w-md w-full max-h-[90vh] overflow-y-auto">
-        <h3 className="font-bold text-gray-800 mb-5">Edit Scholarship</h3>
+        <h3 className="font-bold text-gray-800 mb-5">{scholarship ? "Edit Scholarship" : "Add Scholarship"}</h3>
+
         <div className="space-y-4">
+          {/* Scholarship Name */}
           <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">Scholarship Name</label>
-            <input value={form.name} onChange={e => set("name", e.target.value)}
-              className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1E90FF]/30" />
-          </div>
-          <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">Eligibility</label>
-            <input value={form.eligibility} onChange={e => set("eligibility", e.target.value)}
+            <label className="block text-xs font-medium text-gray-600 mb-1">Scholarship Name *</label>
+            <input type="text" value={form.name}
+              placeholder="e.g. Full-Stack Scholarship"
+              onChange={e => set("name", e.target.value)}
               className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1E90FF]/30" />
           </div>
 
+          {/* Course Name */}
+          <div>
+            <label className="block text-xs font-medium text-gray-600 mb-1">Course Name *</label>
+            <input type="text" value={form.course}
+              placeholder="e.g. Full-Stack Development"
+              onChange={e => set("course", e.target.value)}
+              className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1E90FF]/30" />
+          </div>
+
+          {/* Application Form URL — prominent */}
           <div className="bg-[#1E90FF]/5 border border-[#1E90FF]/20 rounded-xl p-3">
-            <label className="block text-xs font-semibold text-[#1E90FF] mb-1">🔗 Application Form URL</label>
-            <p className="text-[11px] text-gray-400 mb-2">Leave empty to use the default scholarship form</p>
+            <label className="block text-xs font-semibold text-[#1E90FF] mb-1">
+              🔗 Application Form URL
+            </label>
+            <p className="text-[11px] text-gray-400 mb-2">
+              Paste your Google Form, Typeform, or any external link. Leave empty to use the default course form.
+            </p>
             <input type="url" value={form.applicationFormUrl ?? ""}
               placeholder="https://forms.google.com/..."
               onChange={e => set("applicationFormUrl", e.target.value)}
               className="w-full px-3 py-2 text-sm border border-[#1E90FF]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1E90FF]/30 bg-white" />
           </div>
 
+          {/* Eligibility */}
+          <div>
+            <label className="block text-xs font-medium text-gray-600 mb-1">Eligibility Requirements</label>
+            <input type="text" value={form.eligibility}
+              placeholder="e.g. Top performer in Python courses"
+              onChange={e => set("eligibility", e.target.value)}
+              className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1E90FF]/30" />
+          </div>
+
+          {/* Deadline + Winners Count side by side */}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1">Deadline</label>
+              <label className="block text-xs font-medium text-gray-600 mb-1">Deadline *</label>
               <input type="date" value={form.deadline}
                 onChange={e => set("deadline", e.target.value)}
                 className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1E90FF]/30" />
@@ -433,11 +467,13 @@ function ScholarshipModal({ scholarship, saving, onClose, onSave }: {
             <div>
               <label className="block text-xs font-medium text-gray-600 mb-1">Winners Count</label>
               <input type="number" value={form.winnersCount}
+                min={1}
                 onChange={e => set("winnersCount", Number(e.target.value))}
                 className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1E90FF]/30" />
             </div>
           </div>
 
+          {/* Status */}
           <div>
             <label className="block text-xs font-medium text-gray-600 mb-1">Status</label>
             <select value={form.status} onChange={e => set("status", e.target.value)}
@@ -449,12 +485,16 @@ function ScholarshipModal({ scholarship, saving, onClose, onSave }: {
           </div>
         </div>
 
+        {error && (
+          <p className="mt-3 text-xs text-red-500 bg-red-50 rounded-lg px-3 py-2">{error}</p>
+        )}
+
         <div className="flex gap-3 justify-end mt-6">
           <button onClick={onClose} className="px-4 py-2 text-sm rounded-lg border border-gray-200 hover:bg-gray-50">Cancel</button>
           <button onClick={() => onSave(form)} disabled={saving}
             className="flex items-center gap-2 px-4 py-2 text-sm rounded-lg bg-[#1E90FF] text-white hover:bg-blue-500 disabled:opacity-60">
             {saving && <Loader2 size={13} className="animate-spin" />}
-            Save Changes
+            {scholarship ? "Save Changes" : "Add Scholarship"}
           </button>
         </div>
       </div>
