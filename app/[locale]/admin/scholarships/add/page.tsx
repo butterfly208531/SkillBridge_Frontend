@@ -372,80 +372,23 @@ export default function AddScholarshipPage() {
           <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 max-w-2xl space-y-5">
             <div>
               <h2 className="font-bold text-gray-800 mb-0.5">Application Form Link</h2>
-              <p className="text-xs text-gray-400">Set where students should apply — external form or default course form</p>
+              <p className="text-xs text-gray-400">Paste the external form link where students will apply</p>
             </div>
 
-            {/* Options */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <button
-                onClick={() => set("applicationFormUrl", "")}
-                className={cn(
-                  "flex flex-col items-start p-4 rounded-xl border-2 text-left transition-all",
-                  !form.applicationFormUrl
-                    ? "border-[#1E90FF] bg-[#1E90FF]/5"
-                    : "border-gray-200 hover:border-gray-300"
-                )}
-              >
-                <div className="flex items-center gap-2 mb-2">
-                  <div className={cn("w-4 h-4 rounded-full border-2 flex items-center justify-center",
-                    !form.applicationFormUrl ? "border-[#1E90FF]" : "border-gray-300"
-                  )}>
-                    {!form.applicationFormUrl && <div className="w-2 h-2 rounded-full bg-[#1E90FF]" />}
-                  </div>
-                  <span className={cn("text-sm font-bold", !form.applicationFormUrl ? "text-[#1E90FF]" : "text-gray-700")}>
-                    Default Course Form
-                  </span>
-                </div>
-                <p className="text-xs text-gray-500">Use the built-in application form for the course</p>
-              </button>
-
-              <button
-                onClick={() => { if (!form.applicationFormUrl) set("applicationFormUrl", "https://"); }}
-                className={cn(
-                  "flex flex-col items-start p-4 rounded-xl border-2 text-left transition-all",
-                  form.applicationFormUrl
-                    ? "border-[#F57C00] bg-[#F57C00]/5"
-                    : "border-gray-200 hover:border-gray-300"
-                )}
-              >
-                <div className="flex items-center gap-2 mb-2">
-                  <div className={cn("w-4 h-4 rounded-full border-2 flex items-center justify-center",
-                    form.applicationFormUrl ? "border-[#F57C00]" : "border-gray-300"
-                  )}>
-                    {form.applicationFormUrl && <div className="w-2 h-2 rounded-full bg-[#F57C00]" />}
-                  </div>
-                  <span className={cn("text-sm font-bold", form.applicationFormUrl ? "text-[#F57C00]" : "text-gray-700")}>
-                    Custom External Link
-                  </span>
-                </div>
-                <p className="text-xs text-gray-500">Google Forms, Typeform, or any custom URL</p>
-              </button>
-            </div>
-
-            {/* URL input — shown when external selected */}
-            {form.applicationFormUrl !== "" && (
-              <div className="bg-[#F57C00]/5 border border-[#F57C00]/20 rounded-xl p-4 space-y-2">
-                <label className="block text-xs font-semibold text-[#F57C00] mb-1">
-                  🔗 Application Form URL
-                </label>
-                <input
-                  type="url"
-                  value={form.applicationFormUrl}
-                  onChange={e => set("applicationFormUrl", e.target.value)}
-                  placeholder="https://forms.google.com/..."
-                  className="w-full px-3 py-2.5 text-sm border border-[#F57C00]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#F57C00]/30 bg-white"
-                />
-                <p className="text-[11px] text-gray-400">
-                  Students will be taken to this URL when they click "Apply Now"
-                </p>
-              </div>
-            )}
-
-            {/* Preview */}
-            <div className="bg-gray-50 rounded-xl p-4">
-              <p className="text-xs font-semibold text-gray-600 mb-2">Apply Now button will link to:</p>
-              <p className="text-sm font-mono text-[#1E90FF] break-all">
-                {form.applicationFormUrl || `/courses/${form.courseId || form.course.toLowerCase().replace(/\s+/g, "-")}/ApplicationForm`}
+            {/* URL input */}
+            <div className="bg-[#F57C00]/5 border border-[#F57C00]/20 rounded-xl p-4 space-y-2">
+              <label className="block text-xs font-semibold text-[#F57C00] mb-1">
+                🔗 Application Form URL
+              </label>
+              <input
+                type="url"
+                value={form.applicationFormUrl}
+                onChange={e => set("applicationFormUrl", e.target.value)}
+                placeholder="https://forms.google.com/..."
+                className="w-full px-3 py-2.5 text-sm border border-[#F57C00]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#F57C00]/30 bg-white"
+              />
+              <p className="text-[11px] text-gray-400">
+                Students will be redirected to this URL when they click "Apply Now". Leave empty to use the default course form.
               </p>
             </div>
 
