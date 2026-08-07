@@ -78,6 +78,11 @@
             "name": "ማስታወቂያዎች",
             "path": "/announcements",
             "type": "link"
+         },
+         {
+            "name": "የሥራ ማስታወቂያዎች",
+            "path": "/jobs",
+            "type": "link"
          }
       ],
       "searchPlaceholder": "ምን መማር ይፈልጋሉ ? ",
