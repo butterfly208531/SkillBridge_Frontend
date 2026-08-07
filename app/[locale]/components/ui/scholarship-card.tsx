@@ -85,12 +85,18 @@ export default function ScholarshipCard({
   const closingSoon = !closed && days <= 7;
   const pays = tuitionAmount !== undefined ? studentPays(tuitionAmount, fundingType) : null;
 
-  // Read apply URL from admin-managed store, fall back to prop, then to default course form
-  const [applyUrl, setApplyUrl] = useState(propUrl || `/courses/${courseId}/ApplicationForm`);
+  // Read apply URL from admin-managed store, fall back to prop, then to dedicated scholarship apply page
+  const [applyUrl, setApplyUrl] = useState(propUrl || `/scholarships/${id}/apply`);
   useEffect(() => {
     const stored = getApplicationFormUrl(id, courseId);
-    if (stored) setApplyUrl(stored);
-    else if (propUrl) setApplyUrl(propUrl);
+    // getApplicationFormUrl returns /courses/... as fallback — override with scholarship apply page
+    if (stored && !stored.startsWith("/courses/")) {
+      setApplyUrl(stored); // admin set a real custom URL
+    } else if (propUrl) {
+      setApplyUrl(propUrl);
+    } else {
+      setApplyUrl(`/scholarships/${id}/apply`);
+    }
   }, [id, courseId, propUrl]);
 
   const requirements = eligibility
