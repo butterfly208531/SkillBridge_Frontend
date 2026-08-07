@@ -20,66 +20,37 @@ const socials = [
 
 export function SocialSidebar() {
   return (
-    <div
-      style={{
-        position: "fixed",
-        right: 0,
-        top: "50%",
-        transform: "translateY(-50%)",
-        zIndex: 9999,
-        display: "flex",
-        flexDirection: "column",
-        gap: "4px",
-      }}
-      className="hidden md:flex"
-    >
-      {socials.map(({ Icon, url, label, color }, i) => (
-        <motion.div
-          key={label}
-          initial={{ x: 80, opacity: 0 }}
-          animate={{ x: 0, opacity: 1 }}
-          transition={{ duration: 0.4, delay: i * 0.07 }}
-        >
-          <Link
-            href={url}
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label={label}
-            className="group flex items-center h-10 rounded-l-xl shadow-md overflow-hidden transition-all duration-300"
-            style={{
-              backgroundColor: color,
-              width: "40px",
-              flexDirection: "row-reverse",
-            }}
-            onMouseEnter={e => {
-              (e.currentTarget as HTMLElement).style.width = "120px";
-            }}
-            onMouseLeave={e => {
-              (e.currentTarget as HTMLElement).style.width = "40px";
-            }}
+    <>
+      {/* Desktop only — hidden on mobile/tablet */}
+      <div className="hidden xl:flex flex-col gap-1 fixed right-0 top-1/2 -translate-y-1/2 z-40">
+        {socials.map(({ Icon, url, label, color }, i) => (
+          <motion.div
+            key={label}
+            initial={{ x: 80, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            transition={{ duration: 0.4, delay: i * 0.07 }}
+            className="flex justify-end"
           >
-            {/* Icon — always on the right edge */}
-            <span
-              style={{
-                width: "40px",
-                height: "40px",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                flexShrink: 0,
-              }}
+            <Link
+              href={url}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label={label}
+              className="group flex flex-row-reverse items-center h-9 w-9 hover:w-28 rounded-l-lg shadow-md overflow-hidden transition-[width] duration-300 ease-in-out"
+              style={{ backgroundColor: color }}
             >
-              <Icon size={17} color="#fff" />
-            </span>
-            {/* Label — appears to the left of icon on hover */}
-            <span
-              className="text-white text-xs font-semibold whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-300 pl-3"
-            >
-              {label}
-            </span>
-          </Link>
-        </motion.div>
-      ))}
-    </div>
+              {/* Icon — pinned to right */}
+              <span className="flex items-center justify-center w-9 h-9 shrink-0">
+                <Icon size={16} color="#fff" />
+              </span>
+              {/* Label — slides in from right */}
+              <span className="text-white text-[11px] font-semibold whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pl-2">
+                {label}
+              </span>
+            </Link>
+          </motion.div>
+        ))}
+      </div>
+    </>
   );
 }
