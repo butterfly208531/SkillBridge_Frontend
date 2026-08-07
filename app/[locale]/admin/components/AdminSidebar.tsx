@@ -4,8 +4,9 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import {
+import {
   LayoutDashboard, BookOpen, FileText, Award,
-  Users, LogOut, ChevronLeft, ChevronRight, Settings
+  Users, LogOut, ChevronLeft, ChevronRight, Settings, Mail
 } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
@@ -16,6 +17,7 @@ const navItems = [
   { label: "Applications", path: "applications",  icon: FileText },
   { label: "Scholarships", path: "scholarships",  icon: Award },
   { label: "Students",     path: "students",      icon: Users },
+  { label: "Contact",      path: "contact",       icon: Mail },
   { label: "Settings",     path: "settings",      icon: Settings },
 ];
 
