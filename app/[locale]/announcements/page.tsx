@@ -162,7 +162,7 @@ export default function AnnouncementsPage() {
   );
 }
 
-function AnnouncementCard({ ann, index }: { ann: ReturnType<typeof announcementsConfig[0]["category"] extends string ? typeof announcementsConfig[0] : never>; index: number }) {
+function AnnouncementCard({ ann, index }: { ann: typeof announcementsConfig[0]; index: number }) {
   const meta = categoryMeta[ann.category];
   const [expanded, setExpanded] = useState(false);
   const isLong = ann.body.length > 160;

@@ -4,7 +4,6 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import {
-import {
   LayoutDashboard, BookOpen, FileText, Award,
   Users, LogOut, ChevronLeft, ChevronRight, Settings, Mail
 } from "lucide-react";
