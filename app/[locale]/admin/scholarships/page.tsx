@@ -1,10 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Plus, Pencil, Trash2, Award, Users, Calendar, CheckCircle, RefreshCw, Loader2 } from "lucide-react";
+import { Plus, Pencil, Trash2, Award, Users, Calendar, CheckCircle, RefreshCw, Loader2, Save } from "lucide-react";
 import AdminHeader from "../components/AdminHeader";
 import { cn } from "@/lib/utils";
 import { scholarshipsConfig, scholarshipWinnersConfig } from "@/lib/scholarships-config";
+import { getStoredScholarships, saveScholarships, type StoredScholarship } from "@/lib/scholarship-store";
 
 const API = process.env.NEXT_PUBLIC_API_BASE_URL || "https://skillbridge-backend2-h1u9.onrender.com/api";
 
@@ -35,30 +36,26 @@ function formatDate(iso: string) {
   return isNaN(d.getTime()) ? iso : d.toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" });
 }
 
-// Map lib config to page shape — uses real display names
+// Map lib config to page shape
 const FALLBACK_SCHOLARSHIPS: Scholarship[] = scholarshipsConfig.map(s => ({
   id: s.id,
-  name: s.displayName,
+  name: s.nameKey.replace(/([A-Z])/g, " $1").trim() + " Scholarship",
   courseId: s.courseId,
-  course: s.courseName,
+  course: s.courseId.replace(/-/g, " ").replace(/\b\w/g, l => l.toUpperCase()),
   applicationsCount: s.applicationsCount,
   winnersCount: s.winnersCount,
   deadline: s.deadline,
-  eligibility: s.eligibility,
+  eligibility: s.eligibilityKey.replace(/([A-Z])/g, " $1").trim(),
   status: "active",
-  applicationFormUrl: s.applicationFormUrl,
 }));
 
-const FALLBACK_WINNERS: Winner[] = scholarshipWinnersConfig.map(w => {
-  const sch = scholarshipsConfig.find(s => s.nameKey === w.scholarshipKey);
-  return {
-    id: w.id,
-    name: w.name,
-    scholarship: sch?.displayName ?? w.scholarshipKey,
-    year: w.year,
-    status: "active",
-  };
-});
+const FALLBACK_WINNERS: Winner[] = scholarshipWinnersConfig.map(w => ({
+  id: w.id,
+  name: w.name,
+  scholarship: w.scholarshipKey.replace(/([A-Z])/g, " $1").trim() + " Scholarship",
+  year: w.year,
+  status: "active",
+}));
 
 export default function ScholarshipsPage() {
   const [scholarships, setScholarships] = useState<Scholarship[]>([]);
@@ -76,6 +73,9 @@ export default function ScholarshipsPage() {
     const token = sessionStorage.getItem("adminToken");
     const headers = { Authorization: `Bearer ${token}` };
 
+    // Load from localStorage first (admin-saved data)
+    const localData = getStoredScholarships();
+
     try {
       const [schRes, winRes] = await Promise.all([
         fetch(`${API}/scholarships`, { headers }),
@@ -85,17 +85,28 @@ export default function ScholarshipsPage() {
       if (schRes.ok) {
         const d = await schRes.json();
         const data = Array.isArray(d) ? d : d.data ?? [];
-        setScholarships(data.length > 0 ? data.map((s: any) => ({
-          id: s.id || s._id,
-          name: s.name || s.title || "",
-          courseId: s.courseId || s.course?.id || "",
-          course: s.course?.title || s.courseName || s.courseId || "",
-          applicationsCount: s.applicationsCount || s.applications || 0,
-          winnersCount: s.winnersCount || s.winners || 0,
-          deadline: s.deadline || s.endDate || "",
-          eligibility: s.eligibility || s.requirements || "",
-          status: (s.status || "active").toLowerCase(),
-        })) : FALLBACK_SCHOLARSHIPS);
+        if (data.length > 0) {
+          const mapped = data.map((s: any) => ({
+            id: s.id || s._id,
+            name: s.name || s.title || "",
+            courseId: s.courseId || s.course?.id || "",
+            course: s.course?.title || s.courseName || s.courseId || "",
+            applicationsCount: s.applicationsCount || 0,
+            winnersCount: s.winnersCount || 0,
+            deadline: s.deadline || s.endDate || "",
+            eligibility: s.eligibility || s.requirements || "",
+            status: (s.status || "active").toLowerCase(),
+            applicationFormUrl: s.applicationFormUrl || "",
+          }));
+          setScholarships(mapped);
+          saveScholarships(mapped);
+        } else if (localData.length > 0) {
+          setScholarships(localData);
+        } else {
+          setScholarships(FALLBACK_SCHOLARSHIPS);
+        }
+      } else if (localData.length > 0) {
+        setScholarships(localData);
       } else {
         setScholarships(FALLBACK_SCHOLARSHIPS);
       }
@@ -114,14 +125,21 @@ export default function ScholarshipsPage() {
         setWinners(FALLBACK_WINNERS);
       }
     } catch {
-      setScholarships(FALLBACK_SCHOLARSHIPS);
+      setScholarships(localData.length > 0 ? localData : FALLBACK_SCHOLARSHIPS);
       setWinners(FALLBACK_WINNERS);
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => { fetchData(); }, []);
+  useEffect(() => { 
+    // Initialize store with fallback data if empty
+    const local = getStoredScholarships();
+    if (local.length === 0) {
+      saveScholarships(FALLBACK_SCHOLARSHIPS as any);
+    }
+    fetchData(); 
+  }, []);
 
   const handleDelete = async (id: string) => {
     const token = sessionStorage.getItem("adminToken");
@@ -130,10 +148,10 @@ export default function ScholarshipsPage() {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },
       });
-      setScholarships(prev => prev.filter(s => s.id !== id));
-    } catch {
-      setScholarships(prev => prev.filter(s => s.id !== id));
-    }
+    } catch {}
+    const updated = scholarships.filter(s => s.id !== id);
+    setScholarships(updated);
+    saveScholarships(updated as any);
     setDeleteId(null);
   };
 
@@ -145,37 +163,27 @@ export default function ScholarshipsPage() {
     const url = isEdit ? `${API}/scholarships/${data.id}` : `${API}/scholarships`;
     const method = isEdit ? "PUT" : "POST";
 
+    let updated: Scholarship[];
+    if (isEdit) {
+      updated = scholarships.map(s => s.id === data.id ? data : s);
+    } else {
+      updated = [...scholarships, { ...data, id: `sch-${Date.now()}`, applicationsCount: 0 }];
+    }
+
+    // Always persist to localStorage immediately
+    saveScholarships(updated as any);
+    setScholarships(updated);
+
     try {
-      const res = await fetch(url, {
+      await fetch(url, {
         method,
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify(data),
       });
-      if (res.ok) {
-        const saved = await res.json().catch(() => data);
-        if (isEdit) {
-          setScholarships(prev => prev.map(s => s.id === data.id ? { ...data, ...saved } : s));
-        } else {
-          setScholarships(prev => [...prev, { ...data, id: saved.id || `sch-${Date.now()}`, applicationsCount: 0 }]);
-        }
-      } else {
-        // Optimistic update if API fails
-        if (isEdit) {
-          setScholarships(prev => prev.map(s => s.id === data.id ? data : s));
-        } else {
-          setScholarships(prev => [...prev, { ...data, id: `sch-${Date.now()}`, applicationsCount: 0 }]);
-        }
-      }
-    } catch {
-      if (isEdit) {
-        setScholarships(prev => prev.map(s => s.id === data.id ? data : s));
-      } else {
-        setScholarships(prev => [...prev, { ...data, id: `sch-${Date.now()}`, applicationsCount: 0 }]);
-      }
-    } finally {
-      setSaving(false);
-      setShowModal(false);
-    }
+    } catch {}
+
+    setSaving(false);
+    setShowModal(false);
   };
 
   const totalApps    = scholarships.reduce((s, x) => s + (x.applicationsCount || 0), 0);
@@ -295,10 +303,7 @@ export default function ScholarshipsPage() {
                     </div>
 
                     <div className="flex gap-2 pt-3 border-t border-gray-100">
-                      <button onClick={() => {
-                        const locale = window.location.pathname.split("/")[1] || "en";
-                        window.location.href = `/${locale}/admin/scholarships/edit/${s.id}`;
-                      }}
+                      <button onClick={() => { setEditing(s); setShowModal(true); }}
                         className="flex items-center gap-1.5 flex-1 justify-center py-1.5 text-xs text-[#1E90FF] border border-[#1E90FF]/30 rounded-lg hover:bg-[#1E90FF]/5 transition-colors">
                         <Pencil size={12} /> Edit
                       </button>

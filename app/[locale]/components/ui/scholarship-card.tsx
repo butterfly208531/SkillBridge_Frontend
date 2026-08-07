@@ -1,11 +1,13 @@
 "use client";
 
 import * as React from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { CheckCircle2, CalendarDays, Users, MapPin, Mail, Clock, Star } from "lucide-react";
 import Image from "next/image";
 import { Button } from "@/app/[locale]/components/ui/button";
 import { type FundingType, daysRemaining, studentPays, coverageLabel } from "@/lib/scholarships-config";
+import { getApplicationFormUrl } from "@/lib/scholarship-store";
 import { cn } from "@/lib/utils";
 
 interface ScholarshipCardProps {
@@ -65,6 +67,7 @@ function CountdownBadge({ deadline }: { deadline: string }) {
 }
 
 export default function ScholarshipCard({
+  id,
   name,
   applicationsCount,
   deadline,
@@ -74,13 +77,21 @@ export default function ScholarshipCard({
   fundingType = "full",
   tuitionAmount,
   archived = false,
-  applicationFormUrl,
+  applicationFormUrl: propUrl,
 }: ScholarshipCardProps) {
   const year = getYear(deadline);
   const days = daysRemaining(deadline);
   const closed = days < 0;
-  const closingSoon = days >= 0 && days <= 7;
+  const closingSoon = !closed && days <= 7;
   const pays = tuitionAmount !== undefined ? studentPays(tuitionAmount, fundingType) : null;
+
+  // Read apply URL from admin-managed store, fall back to prop, then to default course form
+  const [applyUrl, setApplyUrl] = useState(propUrl || `/courses/${courseId}/ApplicationForm`);
+  useEffect(() => {
+    const stored = getApplicationFormUrl(id, courseId);
+    if (stored) setApplyUrl(stored);
+    else if (propUrl) setApplyUrl(propUrl);
+  }, [id, courseId, propUrl]);
 
   const requirements = eligibility
     .split(/[.,;]/)
@@ -241,10 +252,10 @@ export default function ScholarshipCard({
             style={{ background: fundingType === "full" ? "linear-gradient(90deg,#1565C0,#2196F3)" : "linear-gradient(90deg,#b45309,#F57C00)" }}
             asChild
           >
-            {applicationFormUrl ? (
-              <a href={applicationFormUrl} target="_blank" rel="noopener noreferrer">Apply Now</a>
+            {applyUrl.startsWith("http") ? (
+              <a href={applyUrl} target="_blank" rel="noopener noreferrer">Apply Now</a>
             ) : (
-              <Link href={`/courses/${courseId}/ApplicationForm`}>Apply Now</Link>
+              <Link href={applyUrl}>Apply Now</Link>
             )}
           </Button>
         ) : (
