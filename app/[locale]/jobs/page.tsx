@@ -19,89 +19,131 @@ function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
 }
 
-function DeadlineBadge({ deadline }: { deadline?: string }) {
-  if (!deadline) return null;
-  const days = daysUntilDeadline(deadline);
-  if (days < 0)  return <span className="flex items-center gap-1 text-[11px] font-semibold text-gray-400"><Clock size={11}/>Closed</span>;
-  if (days === 0) return <span className="flex items-center gap-1 text-[11px] font-bold text-red-500 animate-pulse"><Clock size={11}/>Closes Today!</span>;
-  if (days <= 7)  return <span className="flex items-center gap-1 text-[11px] font-bold text-red-500"><Clock size={11}/>{days}d left</span>;
-  return <span className="flex items-center gap-1 text-[11px] text-gray-400"><Clock size={11}/>{days} days left</span>;
-}
-
 function JobCard({ job, index }: { job: Job; index: number }) {
   const [expanded, setExpanded] = useState(false);
   const closed = isJobClosed(job);
+  const days   = job.deadline ? daysUntilDeadline(job.deadline) : null;
+  const closingSoon = days !== null && days >= 0 && days <= 7;
+
+  // Initials avatar from company name
+  const initials = job.company.split(" ").map(w => w[0]).slice(0, 2).join("").toUpperCase();
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
+      initial={{ opacity: 0, y: 24 }}
       whileInView={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.35, delay: (index % 6) * 0.05 }}
+      transition={{ duration: 0.35, delay: (index % 6) * 0.06 }}
       viewport={{ once: true }}
       className={cn(
-        "bg-white dark:bg-gray-900 rounded-2xl border shadow-sm hover:shadow-lg transition-all duration-300",
-        closed ? "border-gray-200 opacity-75" : "border-gray-100 hover:-translate-y-0.5"
+        "flex flex-col bg-white dark:bg-gray-900 rounded-2xl border shadow-sm transition-all duration-300 overflow-hidden",
+        closed
+          ? "border-gray-200 dark:border-gray-800 opacity-70"
+          : closingSoon
+          ? "border-red-200 dark:border-red-900 hover:shadow-xl hover:-translate-y-1"
+          : "border-gray-100 dark:border-gray-800 hover:shadow-xl hover:-translate-y-1"
       )}
     >
-      {/* Color top bar */}
-      <div className="h-1 rounded-t-2xl" style={{
+      {/* Top gradient bar */}
+      <div className="h-1.5 w-full shrink-0" style={{
         background: closed
-          ? "#d1d5db"
-          : "linear-gradient(90deg, #1E90FF, #F57C00)"
+          ? "#e5e7eb"
+          : closingSoon
+          ? "linear-gradient(90deg,#ef4444,#f97316)"
+          : "linear-gradient(90deg,#1E90FF,#F57C00)"
       }} />
 
-      <div className="p-5">
-        {/* Header */}
-        <div className="flex items-start justify-between gap-3 mb-3">
-          <div className="flex-1 min-w-0">
-            <div className="flex flex-wrap items-center gap-2 mb-1.5">
-              <span className={cn("px-2.5 py-0.5 rounded-full text-[11px] font-semibold",
-                categoryColor[job.category] ?? "bg-gray-100 text-gray-500"
-              )}>{job.category}</span>
-              <span className={cn("px-2.5 py-0.5 rounded-full text-[11px] font-semibold",
-                typeColor[job.type]
-              )}>{job.type}</span>
-              {closed && (
-                <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-gray-100 text-gray-500">
-                  Closed
-                </span>
-              )}
-            </div>
-            <h3 className="text-base font-bold text-gray-900 dark:text-gray-50 leading-snug">
-              {job.title}
-            </h3>
-            <p className="text-sm text-[#1E90FF] font-medium mt-0.5">{job.company}</p>
+      <div className="flex flex-col flex-1 p-5">
+        {/* ── Card header ── */}
+        <div className="flex items-start gap-3 mb-4">
+          {/* Company avatar */}
+          <div
+            className="w-12 h-12 rounded-xl flex items-center justify-center text-white font-black text-sm shrink-0 shadow-sm"
+            style={{ background: closed ? "#9ca3af" : "linear-gradient(135deg,#1E90FF,#42A5F5)" }}
+          >
+            {initials}
           </div>
 
-          {/* Level badge */}
-          <span className="shrink-0 px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-gray-50 text-gray-500 border border-gray-100 dark:bg-gray-800 dark:border-gray-700">
+          <div className="flex-1 min-w-0">
+            <h3 className={cn(
+              "text-base font-bold leading-snug truncate",
+              closed ? "text-gray-500 dark:text-gray-400" : "text-gray-900 dark:text-gray-50"
+            )}>
+              {job.title}
+            </h3>
+            <p className="text-sm font-semibold text-[#1E90FF] mt-0.5 truncate">{job.company}</p>
+          </div>
+
+          {/* Closing soon / closed badge */}
+          {closed ? (
+            <span className="shrink-0 px-2 py-1 rounded-lg text-[10px] font-bold bg-gray-100 text-gray-400 dark:bg-gray-800">
+              Closed
+            </span>
+          ) : closingSoon ? (
+            <span className="shrink-0 px-2 py-1 rounded-lg text-[10px] font-bold bg-red-100 text-red-600 animate-pulse">
+              ⚠ {days}d left
+            </span>
+          ) : null}
+        </div>
+
+        {/* ── Badges row ── */}
+        <div className="flex flex-wrap gap-1.5 mb-4">
+          <span className={cn("px-2.5 py-0.5 rounded-full text-[11px] font-semibold", categoryColor[job.category] ?? "bg-gray-100 text-gray-500")}>
+            {job.category}
+          </span>
+          <span className={cn("px-2.5 py-0.5 rounded-full text-[11px] font-semibold", typeColor[job.type])}>
+            {job.type}
+          </span>
+          <span className="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400">
             {job.level}
           </span>
         </div>
 
-        {/* Meta info */}
-        <div className="flex flex-wrap gap-x-4 gap-y-1.5 text-xs text-gray-500 dark:text-gray-400 mb-3">
-          <span className="flex items-center gap-1"><MapPin size={12}/>{job.location}</span>
-          {job.salary && <span className="flex items-center gap-1"><DollarSign size={12}/>{job.salary}</span>}
-          {job.deadline && <span className="flex items-center gap-1"><Calendar size={12}/>{formatDate(job.deadline)}</span>}
+        {/* ── Info pills ── */}
+        <div className="grid grid-cols-2 gap-2 mb-4">
+          <div className="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-800 rounded-lg px-2.5 py-1.5">
+            <MapPin size={12} className="text-[#1E90FF] shrink-0" />
+            <span className="truncate">{job.location}</span>
+          </div>
+          {job.salary ? (
+            <div className="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-800 rounded-lg px-2.5 py-1.5">
+              <DollarSign size={12} className="text-emerald-500 shrink-0" />
+              <span className="truncate">{job.salary}</span>
+            </div>
+          ) : (
+            <div className="flex items-center gap-1.5 text-xs text-gray-400 bg-gray-50 dark:bg-gray-800 rounded-lg px-2.5 py-1.5">
+              <DollarSign size={12} className="text-gray-300 shrink-0" />
+              <span>Negotiable</span>
+            </div>
+          )}
+          {job.deadline && (
+            <div className={cn(
+              "col-span-2 flex items-center gap-1.5 text-xs rounded-lg px-2.5 py-1.5",
+              closingSoon
+                ? "bg-red-50 text-red-500 dark:bg-red-900/20"
+                : "bg-gray-50 text-gray-500 dark:bg-gray-800 dark:text-gray-400"
+            )}>
+              <Calendar size={12} className={closingSoon ? "text-red-400 shrink-0" : "text-[#1E90FF] shrink-0"} />
+              <span>Deadline: <strong>{formatDate(job.deadline)}</strong></span>
+              {closingSoon && <span className="ml-auto font-bold text-red-500">Closing Soon!</span>}
+            </div>
+          )}
         </div>
 
-        {/* Description */}
+        {/* ── Description ── */}
         <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed line-clamp-2 mb-3">
           {job.description}
         </p>
 
-        {/* Deadline countdown */}
-        <DeadlineBadge deadline={job.deadline} />
-
-        {/* Expand / Collapse */}
+        {/* ── Expandable details ── */}
         {expanded && (
-          <div className="mt-4 space-y-4">
+          <div className="mt-2 mb-4 space-y-4 border-t border-gray-100 dark:border-gray-800 pt-4">
             <div>
-              <p className="text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wide mb-2">Requirements</p>
+              <p className="text-[11px] font-black uppercase tracking-widest text-[#1E90FF] mb-2 border-b border-[#F57C00] pb-0.5 w-fit">
+                Requirements
+              </p>
               <ul className="space-y-1.5">
                 {job.requirements.map((r, i) => (
-                  <li key={i} className="flex items-start gap-2 text-sm text-gray-600 dark:text-gray-400">
+                  <li key={i} className="flex items-start gap-2 text-xs text-gray-600 dark:text-gray-400">
                     <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-[#1E90FF] shrink-0" />
                     {r}
                   </li>
@@ -109,10 +151,12 @@ function JobCard({ job, index }: { job: Job; index: number }) {
               </ul>
             </div>
             <div>
-              <p className="text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wide mb-2">Responsibilities</p>
+              <p className="text-[11px] font-black uppercase tracking-widest text-[#F57C00] mb-2 border-b border-[#1E90FF] pb-0.5 w-fit">
+                Responsibilities
+              </p>
               <ul className="space-y-1.5">
                 {job.responsibilities.map((r, i) => (
-                  <li key={i} className="flex items-start gap-2 text-sm text-gray-600 dark:text-gray-400">
+                  <li key={i} className="flex items-start gap-2 text-xs text-gray-600 dark:text-gray-400">
                     <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-[#F57C00] shrink-0" />
                     {r}
                   </li>
@@ -122,27 +166,31 @@ function JobCard({ job, index }: { job: Job; index: number }) {
           </div>
         )}
 
-        {/* Actions */}
-        <div className="flex items-center gap-2 mt-4 pt-3 border-t border-gray-100 dark:border-gray-800">
+        {/* Spacer */}
+        <div className="flex-1" />
+
+        {/* ── Actions ── */}
+        <div className="flex gap-2 pt-3 border-t border-gray-100 dark:border-gray-800 mt-3">
           {!closed ? (
             <a
               href={job.applyUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-1.5 px-4 py-2 bg-[#1E90FF] text-white text-xs font-bold rounded-lg hover:bg-blue-500 transition-colors flex-1 justify-center"
+              className="flex items-center justify-center gap-1.5 flex-1 py-2 text-xs font-bold text-white rounded-xl transition-all hover:opacity-90 hover:scale-[1.02]"
+              style={{ background: "linear-gradient(90deg,#1E90FF,#42A5F5)" }}
             >
-              <ExternalLink size={13}/> Apply Now
+              <ExternalLink size={13} /> Apply Now
             </a>
           ) : (
-            <button disabled className="flex-1 py-2 bg-gray-100 text-gray-400 text-xs font-bold rounded-lg cursor-not-allowed">
-              Closed
+            <button disabled className="flex-1 py-2 text-xs font-bold bg-gray-100 text-gray-400 rounded-xl cursor-not-allowed dark:bg-gray-800">
+              Applications Closed
             </button>
           )}
           <button
             onClick={() => setExpanded(!expanded)}
-            className="flex items-center gap-1 px-3 py-2 border border-gray-200 dark:border-gray-700 text-xs text-gray-500 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+            className="flex items-center gap-1 px-3 py-2 border border-gray-200 dark:border-gray-700 text-xs font-semibold text-gray-500 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
           >
-            {expanded ? <><ChevronUp size={13}/> Less</> : <><ChevronDown size={13}/> Details</>}
+            {expanded ? <><ChevronUp size={13} /> Less</> : <><ChevronDown size={13} /> Details</>}
           </button>
         </div>
       </div>
