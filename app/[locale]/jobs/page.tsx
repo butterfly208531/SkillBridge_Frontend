@@ -39,7 +39,7 @@ function JobCard({ job, index }: { job: Job; index: number }) {
         closed
           ? "border-gray-200 dark:border-gray-800 opacity-70"
           : closingSoon
-          ? "border-red-200 dark:border-red-900 hover:shadow-xl hover:-translate-y-1"
+          ? "border-[#F57C00]/40 dark:border-[#F57C00]/30 hover:shadow-xl hover:-translate-y-1"
           : "border-gray-100 dark:border-gray-800 hover:shadow-xl hover:-translate-y-1"
       )}
     >
@@ -47,8 +47,6 @@ function JobCard({ job, index }: { job: Job; index: number }) {
       <div className="h-1.5 w-full shrink-0" style={{
         background: closed
           ? "#e5e7eb"
-          : closingSoon
-          ? "linear-gradient(90deg,#ef4444,#f97316)"
           : "linear-gradient(90deg,#1E90FF,#F57C00)"
       }} />
 
@@ -106,7 +104,7 @@ function JobCard({ job, index }: { job: Job; index: number }) {
           </div>
           {job.salary ? (
             <div className="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-800 rounded-lg px-2.5 py-1.5">
-              <DollarSign size={12} className="text-emerald-500 shrink-0" />
+              <DollarSign size={12} className="text-[#F57C00] shrink-0" />
               <span className="truncate">{job.salary}</span>
             </div>
           ) : (
@@ -124,7 +122,7 @@ function JobCard({ job, index }: { job: Job; index: number }) {
             )}>
               <Calendar size={12} className={closingSoon ? "text-red-400 shrink-0" : "text-[#1E90FF] shrink-0"} />
               <span>Deadline: <strong>{formatDate(job.deadline)}</strong></span>
-              {closingSoon && <span className="ml-auto font-bold text-red-500">Closing Soon!</span>}
+              {closingSoon && <span className="ml-auto font-bold text-[#F57C00]">Closing Soon!</span>}
             </div>
           )}
         </div>
