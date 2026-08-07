@@ -73,16 +73,6 @@
             "name": "Contact Us",
             "path": "/contact",
             "type": "link"
-         },
-         {
-            "name": "Announcements",
-            "path": "/announcements",
-            "type": "link"
-         },
-         {
-            "name": "Jobs",
-            "path": "/jobs",
-            "type": "link"
          }
       ],
       "searchPlaceholder": "What do you want to learn?",
