@@ -271,9 +271,7 @@ export default function ApplicationsPage() {
                   <tr className="bg-gray-50 text-xs text-gray-500 uppercase tracking-wide border-b border-gray-100">
                     <th className="px-5 py-3 text-left font-semibold">Student</th>
                     <th className="px-5 py-3 text-left font-semibold">Course</th>
-                    <th className="px-5 py-3 text-left font-semibold">Payment</th>
                     <th className="px-5 py-3 text-left font-semibold">Date</th>
-                    <th className="px-5 py-3 text-left font-semibold">Status</th>
                     <th className="px-5 py-3 text-left font-semibold">Actions</th>
                   </tr>
                 </thead>
@@ -296,20 +294,7 @@ export default function ApplicationsPage() {
                           <p className="text-[11px] text-gray-400">{email}</p>
                         </td>
                         <td className="px-5 py-3.5 text-xs text-gray-600 max-w-[160px] truncate">{course}</td>
-                        <td className="px-5 py-3.5">
-                          <span className="px-2 py-0.5 bg-gray-100 text-gray-600 text-[11px] rounded-full font-medium">
-                            {payment}
-                          </span>
-                        </td>
                         <td className="px-5 py-3.5 text-xs text-gray-400">{date}</td>
-                        <td className="px-5 py-3.5">
-                          <span className={cn(
-                            "flex items-center gap-1 w-fit px-2.5 py-1 rounded-full text-[11px] font-semibold capitalize",
-                            statusStyle[status] ?? "bg-gray-100 text-gray-500"
-                          )}>
-                            {statusIcon[status]}{status}
-                          </span>
-                        </td>
                         <td className="px-5 py-3.5">
                           <div className="flex items-center gap-1.5">
                             <button 
