@@ -5,9 +5,9 @@ export interface Announcement {
   title: string;
   body: string;
   category: AnnouncementCategory;
-  date: string;       // ISO date string
+  date: string;
   pinned?: boolean;
-  courseId?: string;  // optional link to a course/scholarship
+  courseId?: string;
 }
 
 export const announcementsConfig: Announcement[] = [
@@ -23,7 +23,7 @@ export const announcementsConfig: Announcement[] = [
   {
     id: "ann-2",
     title: "Spotlight: Top 5 Fully-Funded Courses This Month",
-    body: "This month's top fully-funded scholarship opportunities include Full-Stack Development ($500 covered) and Python Programming ($350 covered). Don't miss your chance to apply — seats are limited!",
+    body: "This month's top fully-funded scholarship opportunities include Full-Stack Development (ETB 25,000 covered) and Python Programming (ETB 18,000 covered). Don't miss your chance to apply — seats are limited!",
     category: "spotlight",
     date: "2026-08-05",
     pinned: true,
@@ -39,7 +39,7 @@ export const announcementsConfig: Announcement[] = [
   {
     id: "ann-4",
     title: "AI & Machine Learning Scholarship Closing Soon!",
-    body: "Only a few days remaining to apply for the AI & Machine Learning half-funded scholarship. Deadline is August 14, 2026. This covers 50% of the $600 tuition — you pay only $300.",
+    body: "Only a few days remaining to apply for the AI & Machine Learning half-funded scholarship. Deadline is August 14, 2026. This covers 50% of the ETB 30,000 tuition — you pay only ETB 15,000.",
     category: "deadline",
     date: "2026-08-06",
     courseId: "ai-machine-learning",
@@ -54,7 +54,7 @@ export const announcementsConfig: Announcement[] = [
   {
     id: "ann-6",
     title: "Data Science Scholarship — Applications Now Closed",
-    body: "The Data Science fully-funded scholarship application period has ended. Congratulations to all applicants! Winners will be announced shortly. Stay tuned for the next cohort.",
+    body: "The Data Science fully-funded scholarship application period has ended. Congratulations to all applicants! Winners will be announced shortly.",
     category: "scholarship",
     date: "2026-07-31",
     courseId: "data-science",
@@ -69,7 +69,7 @@ export const announcementsConfig: Announcement[] = [
   {
     id: "ann-8",
     title: "Python Scholarship Applications Now Open",
-    body: "Applications are now open for the Python Programming fully-funded scholarship. This program covers 100% of the $350 tuition. Deadline: October 15, 2026.",
+    body: "Applications are now open for the Python Programming fully-funded scholarship. This program covers 100% of the ETB 18,000 tuition. Deadline: October 15, 2026.",
     category: "scholarship",
     date: "2026-07-10",
     courseId: "python-programming",
@@ -77,9 +77,9 @@ export const announcementsConfig: Announcement[] = [
 ];
 
 export const categoryMeta: Record<AnnouncementCategory, { label: string; color: string; bg: string; icon: string }> = {
-  scholarship: { label: "Scholarship",  color: "text-[#1E90FF]",   bg: "bg-[#1E90FF]/10",  icon: "🎓" },
-  course:      { label: "New Course",   color: "text-purple-600",  bg: "bg-purple-50",     icon: "📚" },
-  deadline:    { label: "Deadline",     color: "text-red-600",     bg: "bg-red-50",        icon: "⏰" },
-  spotlight:   { label: "Spotlight",    color: "text-[#F57C00]",   bg: "bg-[#F57C00]/10",  icon: "⭐" },
-  general:     { label: "General",      color: "text-gray-600",    bg: "bg-gray-100",      icon: "📢" },
+  scholarship: { label: "Scholarship", color: "text-[#1E90FF]",  bg: "bg-[#1E90FF]/10", icon: "🎓" },
+  course:      { label: "New Course",  color: "text-[#F57C00]",  bg: "bg-[#F57C00]/10", icon: "📚" },
+  deadline:    { label: "Deadline",    color: "text-[#F57C00]",  bg: "bg-[#F57C00]/10", icon: "⏰" },
+  spotlight:   { label: "Spotlight",   color: "text-[#1E90FF]",  bg: "bg-[#1E90FF]/10", icon: "⭐" },
+  general:     { label: "General",     color: "text-gray-600",   bg: "bg-gray-100",      icon: "📢" },
 };

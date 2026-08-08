@@ -73,6 +73,14 @@ export interface CoursesConfig {
   key: number;
   image: string;
   instructorImage: string;
+  title?: string;
+  category?: string;
+  level?: string;
+  duration?: string;
+  rating?: number;
+  students?: number;
+  status?: string;
+  slug?: string;
 }
 
 export interface InstructorsConfig {
