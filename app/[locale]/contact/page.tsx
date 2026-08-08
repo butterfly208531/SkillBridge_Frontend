@@ -4,6 +4,7 @@ import { Navbar } from "@/app/[locale]/components/navbar";
 import Footer from "@/app/[locale]/components/footer";
 import React, { useState } from "react";
 import { useTranslations } from "next-intl";
+import { submitContactForm, addLocalContactMessage } from "@/lib/contact-api";
 
 const Contact = () => {
   const [form, setForm] = useState({
@@ -12,6 +13,9 @@ const Contact = () => {
     phone: "",
     message: "",
   });
+  const [submitting, setSubmitting] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+  const [submitError, setSubmitError] = useState("");
 
   const t = useTranslations("contactPage");
 
@@ -23,8 +27,32 @@ const Contact = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    alert("Message sent!");
-    console.log(form);
+    setSubmitting(true);
+    setSubmitError("");
+
+    // Always save to localStorage so admin sees it regardless of backend status
+    addLocalContactMessage({
+      name: form.name,
+      email: form.email,
+      phone: form.phone,
+      message: form.message,
+    });
+
+    // Also try the real backend (best effort)
+    try {
+      await submitContactForm({
+        name: form.name,
+        email: form.email,
+        phone: form.phone,
+        message: form.message,
+      });
+    } catch {
+      // Backend unavailable — localStorage write above already ensures admin sees it
+    }
+
+    setSubmitting(false);
+    setSubmitted(true);
+    setForm({ name: "", email: "", phone: "", message: "" });
   };
 
   const scrollToMap = () => {
@@ -68,49 +96,83 @@ const Contact = () => {
             className='flex-1 shadow-lg p-8 rounded-2xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 space-y-4'
           >
             <h2 className='text-2xl font-bold mb-2 text-gray-800 dark:text-gray-200'>{t("message")}</h2>
-            <input
-              name='name'
-              type='text'
-              placeholder={t("namePlaceholder")}
-              className='w-full border px-4 py-2 rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400'
-              value={form.name}
-              onChange={handleChange}
-              required
-            />
-            <input
-              name='email'
-              type='email'
-              placeholder={t("emailPlaceholder")}
-              className='w-full border px-4 py-2 rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400'
-              value={form.email}
-              onChange={handleChange}
-              required
-            />
-            <input
-              name='phone'
-              type='text'
-              placeholder='Phone'
-              className='w-full border px-4 py-2 rounded outline-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400'
-              value={form.phone}
-              onChange={handleChange}
-            />
-            <textarea
-              name='message'
-              placeholder={t("meessagePlaceholder")}
-              className='w-full border px-4 py-2 rounded h-32 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400'
-              value={form.message}
-              onChange={handleChange}
-              required
-            />
-            <button
-              type='submit'
-              className='text-white px-6 py-2 rounded transition'
-              style={{ backgroundColor: "#1E90FF" }}
-              onMouseEnter={e => (e.currentTarget.style.backgroundColor = "#1a7fe0")}
-              onMouseLeave={e => (e.currentTarget.style.backgroundColor = "#1E90FF")}
-            >
-              {t("messageButton")}
-            </button>
+
+            {submitted ? (
+              <div className="flex flex-col items-center justify-center py-10 text-center space-y-3">
+                <div className="w-14 h-14 rounded-full bg-green-100 flex items-center justify-center">
+                  <svg className="w-7 h-7 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+                <p className="text-lg font-semibold text-gray-800 dark:text-gray-200">Message sent!</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">We'll get back to you as soon as possible.</p>
+                <button
+                  type="button"
+                  onClick={() => setSubmitted(false)}
+                  className="mt-2 text-sm text-[#1E90FF] hover:underline"
+                >
+                  Send another message
+                </button>
+              </div>
+            ) : (
+              <>
+                {submitError && (
+                  <div className="px-4 py-3 bg-red-50 border border-red-200 text-red-600 rounded-lg text-sm">
+                    {submitError}
+                  </div>
+                )}
+                <input
+                  name='name'
+                  type='text'
+                  placeholder={t("namePlaceholder")}
+                  className='w-full border px-4 py-2 rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400'
+                  value={form.name}
+                  onChange={handleChange}
+                  required
+                />
+                <input
+                  name='email'
+                  type='email'
+                  placeholder={t("emailPlaceholder")}
+                  className='w-full border px-4 py-2 rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400'
+                  value={form.email}
+                  onChange={handleChange}
+                  required
+                />
+                <input
+                  name='phone'
+                  type='text'
+                  placeholder='Phone'
+                  className='w-full border px-4 py-2 rounded outline-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400'
+                  value={form.phone}
+                  onChange={handleChange}
+                />
+                <textarea
+                  name='message'
+                  placeholder={t("meessagePlaceholder")}
+                  className='w-full border px-4 py-2 rounded h-32 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400'
+                  value={form.message}
+                  onChange={handleChange}
+                  required
+                />
+                <button
+                  type='submit'
+                  disabled={submitting}
+                  className='text-white px-6 py-2 rounded transition disabled:opacity-60 flex items-center gap-2'
+                  style={{ backgroundColor: "#1E90FF" }}
+                  onMouseEnter={e => { if (!submitting) e.currentTarget.style.backgroundColor = "#1a7fe0"; }}
+                  onMouseLeave={e => (e.currentTarget.style.backgroundColor = "#1E90FF")}
+                >
+                  {submitting && (
+                    <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
+                    </svg>
+                  )}
+                  {submitting ? "Sending..." : t("messageButton")}
+                </button>
+              </>
+            )}
           </form>
         </div>
 

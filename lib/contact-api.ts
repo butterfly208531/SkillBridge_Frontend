@@ -161,3 +161,69 @@ export async function submitContactFormWithRetry(
     statusCode: 500
   }
 }
+
+// ─── localStorage contact message store ─────────────────────────────────────
+
+export const CONTACT_MESSAGES_KEY = "adminContactMessages";
+
+export interface LocalContactMessage {
+  id: string;
+  name: string;
+  email: string;
+  phone?: string;
+  message: string;
+  status: "new" | "read" | "replied";
+  createdAt: string;
+  read: boolean; // mirrors status === "new" — used by the bell badge
+}
+
+export function getLocalContactMessages(): LocalContactMessage[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw: any[] = JSON.parse(localStorage.getItem(CONTACT_MESSAGES_KEY) || "[]");
+    return raw.filter(
+      (m) => m && typeof m === "object" && m.id && m.name && m.createdAt
+    ) as LocalContactMessage[];
+  } catch {
+    return [];
+  }
+}
+
+export function saveLocalContactMessages(list: LocalContactMessage[]) {
+  localStorage.setItem(CONTACT_MESSAGES_KEY, JSON.stringify(list));
+}
+
+export function addLocalContactMessage(
+  data: Pick<LocalContactMessage, "name" | "email" | "phone" | "message">
+): LocalContactMessage {
+  const msg: LocalContactMessage = {
+    id: `contact-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+    name: data.name,
+    email: data.email,
+    phone: data.phone,
+    message: data.message,
+    status: "new",
+    createdAt: new Date().toISOString(),
+    read: false,
+  };
+  const existing = getLocalContactMessages();
+  saveLocalContactMessages([msg, ...existing]);
+  return msg;
+}
+
+export function markLocalContactMessageRead(id: string) {
+  const msgs = getLocalContactMessages().map((m) =>
+    m.id === id ? { ...m, status: "read" as const, read: true } : m
+  );
+  saveLocalContactMessages(msgs);
+}
+
+export function updateLocalContactMessageStatus(
+  id: string,
+  status: LocalContactMessage["status"]
+) {
+  const msgs = getLocalContactMessages().map((m) =>
+    m.id === id ? { ...m, status, read: status !== "new" } : m
+  );
+  saveLocalContactMessages(msgs);
+}

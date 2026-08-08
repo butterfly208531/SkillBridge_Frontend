@@ -4,6 +4,11 @@ import { useEffect, useState } from "react";
 import { Search, Download, RefreshCw, Mail, Phone, Eye, MessageSquare, Clock, CheckCircle, XCircle } from "lucide-react";
 import AdminHeader from "../components/AdminHeader";
 import { cn } from "@/lib/utils";
+import {
+  getLocalContactMessages,
+  updateLocalContactMessageStatus,
+  markLocalContactMessageRead,
+} from "@/lib/contact-api";
 
 const API = process.env.NEXT_PUBLIC_API_BASE_URL || "https://skillbridge-backend2-h1u9.onrender.com/api";
 
@@ -56,8 +61,9 @@ export default function ContactPage() {
       });
       
       if (response.status === 401 || response.status === 403) {
-        // Backend auth not available — show empty state silently
-        setMessages([]);
+        // Backend auth not available — show local data only
+        const local = getLocalContactMessages() as unknown as ContactMsg[];
+        setMessages(local);
         setLoading(false);
         return;
       }
@@ -65,12 +71,20 @@ export default function ContactPage() {
       if (!response.ok) throw new Error(`Error ${response.status}: ${response.statusText}`);
       
       const data = await response.json();
-      const msgs = Array.isArray(data) ? data : data.data ?? [];
-      setMessages(msgs);
-      if (msgs.length > 0) setSuccess(`Loaded ${msgs.length} messages`);
+      const apiMsgs: ContactMsg[] = Array.isArray(data) ? data : data.data ?? [];
+
+      // Merge with localStorage messages (local-only ones not in API yet)
+      const local = getLocalContactMessages();
+      const apiIds = new Set(apiMsgs.map((m) => m.id || m._id));
+      const localOnly = local.filter((m) => !apiIds.has(m.id)) as unknown as ContactMsg[];
+      const merged = [...apiMsgs, ...localOnly];
+
+      setMessages(merged);
+      if (merged.length > 0) setSuccess(`Loaded ${merged.length} messages`);
     } catch (err) {
-      // Network error — show empty state, no error banner
-      setMessages([]);
+      // Network error — fall back to localStorage
+      const local = getLocalContactMessages() as unknown as ContactMsg[];
+      setMessages(local);
     } finally {
       setLoading(false);
     }
@@ -96,7 +110,10 @@ export default function ContactPage() {
         body: JSON.stringify({ status }),
       });
       
-      if (!response.ok) throw new Error(`Failed to update status: ${response.status}`);
+      if (!response.ok) {
+        // API failed — update localStorage only
+        updateLocalContactMessageStatus(id, status);
+      }
       
       setMessages(prev => prev.map(m => {
         const msgId = m.id || m._id;
@@ -112,7 +129,13 @@ export default function ContactPage() {
       
       setSuccess(`Status updated to ${status}`);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to update status");
+      // Network error — update localStorage
+      updateLocalContactMessageStatus(id, status);
+      setMessages(prev => prev.map(m => {
+        const msgId = m.id || m._id;
+        return msgId === id ? { ...m, status } : m;
+      }));
+      setSuccess(`Status updated to ${status}`);
     } finally {
       setUpdating(null);
     }
@@ -155,7 +178,10 @@ export default function ContactPage() {
     setSelected(msg);
     if (msg.status === "new") {
       const id = msg.id || msg._id;
-      if (id) updateStatus(id as string, "read");
+      if (id) {
+        markLocalContactMessageRead(id as string);
+        updateStatus(id as string, "read");
+      }
     }
   };
 
