@@ -17,7 +17,23 @@ interface Module {
   lessons: { title: string; duration: string }[];
 }
 
-export default function AddCoursePage() {
+const FALLBACK_CATEGORIES = [
+  { id: "cat-1", name: "ERP" },
+  { id: "cat-2", name: "Development" },
+  { id: "cat-3", name: "AI" },
+  { id: "cat-4", name: "Data Science" },
+  { id: "cat-5", name: "Automation" },
+  { id: "cat-6", name: "Language" },
+  { id: "cat-7", name: "Design" },
+  { id: "cat-8", name: "Mobile" },
+  { id: "cat-9", name: "Software & Programming" },
+  { id: "cat-10", name: "Business" },
+];
+
+const FALLBACK_INSTRUCTORS = [
+  { id: "inst-1", name: "Gedion", email: "gedion@sbit.com" },
+  { id: "inst-2", name: "Admin", email: "admin@skillbridge.com" },
+];
   const router = useRouter();
   const pathname = usePathname();
   const locale = pathname.split("/")[1] || "en";
@@ -57,8 +73,20 @@ export default function AddCoursePage() {
   useEffect(() => {
     const token = sessionStorage.getItem("adminToken");
     const headers = { Authorization: `Bearer ${token}` };
-    fetch(`${API}/categories`, { headers }).then(r => r.ok ? r.json() : []).then(d => setCategories(Array.isArray(d) ? d : d.data ?? [])).catch(() => {});
-    fetch(`${API}/instructors`, { headers }).then(r => r.ok ? r.json() : []).then(d => setInstructors(Array.isArray(d) ? d : d.data ?? [])).catch(() => {});
+    fetch(`${API}/categories`, { headers })
+      .then(r => r.ok ? r.json() : Promise.reject())
+      .then(d => {
+        const data = Array.isArray(d) ? d : d.data ?? [];
+        setCategories(data.length > 0 ? data : FALLBACK_CATEGORIES);
+      })
+      .catch(() => setCategories(FALLBACK_CATEGORIES));
+    fetch(`${API}/instructors`, { headers })
+      .then(r => r.ok ? r.json() : Promise.reject())
+      .then(d => {
+        const data = Array.isArray(d) ? d : d.data ?? [];
+        setInstructors(data.length > 0 ? data : FALLBACK_INSTRUCTORS);
+      })
+      .catch(() => setInstructors(FALLBACK_INSTRUCTORS));
   }, []);
 
   // ── Helpers ──────────────────────────────────────────
