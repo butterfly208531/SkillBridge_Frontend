@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Search, Download, RefreshCw, Mail, Phone, Eye, MessageSquare, Clock, CheckCircle, XCircle } from "lucide-react";
+import { Search, Download, RefreshCw, Mail, Phone, Eye, MessageSquare, Clock, XCircle } from "lucide-react";
 import AdminHeader from "../components/AdminHeader";
 import { cn } from "@/lib/utils";
 import {
@@ -211,12 +211,11 @@ export default function ContactPage() {
         )}
 
         {/* Stat cards */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
           {[
             { label: "Total Messages",   value: counts.total,   icon: MessageSquare, color: "text-gray-600",    bg: "bg-gray-100"     },
             { label: "New Messages",     value: counts.new,     icon: Clock,         color: "text-yellow-600",  bg: "bg-yellow-50"    },
             { label: "Read Messages",    value: counts.read,    icon: Eye,           color: "text-[#1E90FF]",   bg: "bg-[#1E90FF]/10" },
-            { label: "Replied Messages", value: counts.replied, icon: CheckCircle,   color: "text-emerald-600", bg: "bg-emerald-50"   },
           ].map(({ label, value, icon: Icon, color, bg }) => (
             <div key={label} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 flex items-center justify-between">
               <div>
