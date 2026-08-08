@@ -679,7 +679,7 @@
       "title": "የመመዝገቢያ ፎርም",
       "step": "ደረጃ {current} ከ {total}",
       "userInfo": "የተጠቃሚ መረጃ",
-      "billingInfo": "የክፍያ / አገልግሎት ዝርዝሮች",
+      "billingInfo": "የማመልከቻ ዝርዝሮች",
       "next": "ቀጣይ",
       "submit": "መመዝገቢያ አስገባ",
       "submitting": "በማስገባት ላይ...",

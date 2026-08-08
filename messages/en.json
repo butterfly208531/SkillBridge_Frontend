@@ -4791,7 +4791,7 @@
       "title": "Application Form",
       "step": "Step {current} of {total}",
       "userInfo": "User Information",
-      "billingInfo": "Billing / Service Details",
+      "billingInfo": "Application Details",
       "next": "Next",
       "submit": "Submit Application",
       "submitting": "Submitting...",

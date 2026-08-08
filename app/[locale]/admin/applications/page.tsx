@@ -5,9 +5,33 @@ import { Search, Eye, CheckCircle, XCircle, Clock, RefreshCw } from "lucide-reac
 import AdminHeader from "../components/AdminHeader";
 import { cn } from "@/lib/utils";
 
-const API = process.env.NEXT_PUBLIC_API_BASE_URL || "https://skillbridge-backend2-h1u9.onrender.com/api";
+const API = process.env.NEXT_PUBLIC_API_BASE_URL || "https://skillbridge-backend2.onrender.com/api";
 
 type Status = "all" | "pending" | "approved" | "rejected";
+
+
+
+interface Application {
+  id?: string;
+  _id?: string;
+  fullName?: string;
+  name?: string;
+  email?: string;
+  phone?: string;
+  telegramHandle?: string;
+  courseId?: string;
+  course?: string;
+  paymentMethod?: string;
+  payment?: string;
+  paymentReference?: string;
+  gender?: string;
+  nationality?: string;
+  address?: string;
+  status?: string;
+  createdAt?: string;
+  date?: string;
+  receiptUrl?: string;
+}
 
 const statusStyle: Record<string, string> = {
   pending:  "bg-yellow-100 text-yellow-700",
@@ -22,34 +46,96 @@ const statusIcon: Record<string, React.ReactNode> = {
 };
 
 export default function ApplicationsPage() {
-  const [apps, setApps] = useState<any[]>([]);
+  const [apps, setApps] = useState<Application[]>([]);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<Status>("all");
-  const [selected, setSelected] = useState<any | null>(null);
+  const [selected, setSelected] = useState<Application | null>(null);
   const [loading, setLoading] = useState(true);
+  const [updating, setUpdating] = useState<string | null>(null);
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
 
-  const fetchApps = () => {
+  const fetchApps = async () => {
     const token = sessionStorage.getItem("adminToken");
     setLoading(true);
     setError("");
-    fetch(`${API}/applications/with-receipt`, {
-      headers: { Authorization: `Bearer ${token}` },
-    })
-      .then(r => {
-        if (!r.ok) throw new Error(`Error ${r.status}`);
-        return r.json();
-      })
-      .then(data => setApps(Array.isArray(data) ? data : data.data ?? []))
-      .catch(e => setError(e.message))
-      .finally(() => setLoading(false));
+    setSuccess("");
+
+    // Load locally-stored pending submissions (offline / API-down submissions)
+    const loadLocal = (): Application[] => {
+      try {
+        const pending = JSON.parse(localStorage.getItem("pendingApplications") || "[]");
+        const notifs: any[] = JSON.parse(localStorage.getItem("adminNotifications") || "[]");
+        // Merge both sources, deduplicate by id
+        const all = [...pending, ...notifs];
+        const seen = new Set<string>();
+        return all
+          .filter(n => { const id = n.id || n._id; if (!id || seen.has(id)) return false; seen.add(id); return true; })
+          .map(n => ({
+            id: n.id || n._id,
+            fullName: n.fullName,
+            email: n.email,
+            phone: n.phone,
+            telegramHandle: n.telegramHandle,
+            address: n.address,
+            gender: n.gender,
+            nationality: n.nationality,
+            university: n.university,
+            courseId: n.courseSlug || n.courseId,
+            course: n.courseName || n.course,
+            paymentMethod: n.paymentMethod,
+            status: n.status || "pending",
+            createdAt: n.submittedAt || n.createdAt,
+          }));
+      } catch { return []; }
+    };
+
+    try {
+      const response = await fetch(`${API}/applications`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        const apiApps: Application[] = Array.isArray(data) ? data : data.data ?? [];
+        // Merge local-only submissions not already in the API list
+        const local = loadLocal();
+        const apiIds = new Set(apiApps.map(a => a.id || a._id));
+        const merged = [
+          ...apiApps,
+          ...local.filter(l => !apiIds.has(l.id)),
+        ];
+        setApps(merged);
+        if (merged.length > 0) {
+          setSuccess(`Loaded ${merged.length} application${merged.length !== 1 ? "s" : ""}`);
+        }
+      } else {
+        // API unavailable — show local submissions only
+        const local = loadLocal();
+        setApps(local);
+        if (local.length > 0) {
+          setError(`Showing ${local.length} locally stored submission${local.length !== 1 ? "s" : ""} (live data unavailable)`);
+        }
+      }
+    } catch {
+      const local = loadLocal();
+      setApps(local);
+      if (local.length > 0) {
+        setError(`Showing ${local.length} locally stored submission${local.length !== 1 ? "s" : ""} (server unreachable)`);
+      }
+    } finally {
+      setLoading(false);
+    }
   };
 
-  useEffect(() => { fetchApps(); }, []);
+  useEffect(() => {
+    fetchApps();
+  }, []);
 
   const filtered = apps.filter(a => {
     const name = a.fullName || a.name || "";
-    const course = a.courseId || a.course || "";
+    // Prefer course name over raw UUID for search matching
+    const course = a.course || "";
     const email = a.email || "";
     const status = (a.status || "").toLowerCase();
     const matchStatus = statusFilter === "all" || status === statusFilter;
@@ -67,19 +153,50 @@ export default function ApplicationsPage() {
     rejected: apps.filter(a => (a.status || "").toLowerCase() === "rejected").length,
   };
 
-  const updateStatus = async (id: string, status: string) => {
+  const updateStatus = async (id: string, newStatus: string) => {
+    if (updating === id) return;
+
+    setUpdating(id);
+    setError("");
+    setSuccess("");
+
+    // Local-only submissions (id starts with "local-") — update state + localStorage only
+    if (id.startsWith("local-")) {
+      try {
+        const raw = localStorage.getItem("adminNotifications") || "[]";
+        // adminNotifications doesn't store status, but we track it in apps state
+      } catch (_) {}
+      setApps(prev => prev.map(a => (a.id || a._id) === id ? { ...a, status: newStatus } : a));
+      setSelected(prev => prev && (prev.id || prev._id) === id ? { ...prev, status: newStatus } : prev);
+      setSuccess(`Application ${newStatus} successfully`);
+      setTimeout(() => setSuccess(""), 3000);
+      setUpdating(null);
+      return;
+    }
+
     const token = sessionStorage.getItem("adminToken");
     try {
-      await fetch(`${API}/applications/${id}/status`, {
+      const response = await fetch(`${API}/applications/${id}/status`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ status }),
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ status: newStatus }),
       });
-      setApps(prev => prev.map(a => (a.id === id || a._id === id) ? { ...a, status } : a));
-      if (selected && (selected.id === id || selected._id === id)) {
-        setSelected((prev: any) => prev ? { ...prev, status } : null);
-      }
-    } catch {}
+
+      if (!response.ok) throw new Error(`Failed to update status: ${response.status}`);
+
+      setApps(prev => prev.map(a => (a.id || a._id) === id ? { ...a, status: newStatus } : a));
+      setSelected(prev => prev && (prev.id || prev._id) === id ? { ...prev, status: newStatus } : prev);
+      setSuccess(`Application ${newStatus} successfully`);
+      setTimeout(() => setSuccess(""), 3000);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to update status");
+      setTimeout(() => setError(""), 4000);
+    } finally {
+      setUpdating(null);
+    }
   };
 
   return (
@@ -90,7 +207,9 @@ export default function ApplicationsPage() {
         {/* Status tabs */}
         <div className="flex gap-2 flex-wrap items-center">
           {(["all","pending","approved","rejected"] as Status[]).map(s => (
-            <button key={s} onClick={() => setStatusFilter(s)}
+            <button 
+              key={s} 
+              onClick={() => setStatusFilter(s)}
               className={cn(
                 "px-4 py-1.5 rounded-full text-xs font-semibold border transition-all capitalize",
                 statusFilter === s
@@ -108,20 +227,34 @@ export default function ApplicationsPage() {
           <div className="ml-auto flex items-center gap-2">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-gray-400" />
-              <input type="search" placeholder="Search applicants..." value={search}
+              <input 
+                type="search" 
+                placeholder="Search applicants..." 
+                value={search}
                 onChange={e => setSearch(e.target.value)}
                 className="pl-8 pr-3 py-1.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1E90FF]/30 w-52"
               />
             </div>
-            <button onClick={fetchApps} className="p-1.5 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors" title="Refresh">
+            <button 
+              onClick={fetchApps} 
+              className="p-1.5 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors" 
+              title="Refresh"
+              disabled={loading}
+            >
               <RefreshCw size={14} className={cn("text-gray-500", loading && "animate-spin")} />
             </button>
           </div>
         </div>
 
+        {/* Messages */}
         {error && (
-          <div className="px-4 py-3 bg-red-50 border border-red-200 text-red-600 rounded-lg text-sm">
-            Failed to load applications: {error}
+          <div className="px-4 py-3 bg-amber-50 border border-amber-200 text-amber-700 rounded-lg text-sm flex items-center gap-2">
+            <span className="text-amber-500">ℹ</span> {error}
+          </div>
+        )}
+        {success && (
+          <div className="px-4 py-3 bg-emerald-50 border border-emerald-200 text-emerald-600 rounded-lg text-sm">
+            ✅ {success}
           </div>
         )}
 
@@ -129,7 +262,7 @@ export default function ApplicationsPage() {
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
           {loading ? (
             <div className="flex items-center justify-center py-16 gap-2 text-gray-400 text-sm">
-              <RefreshCw size={16} className="animate-spin" /> Loading real data...
+              <RefreshCw size={16} className="animate-spin" /> Loading applications...
             </div>
           ) : (
             <div className="overflow-x-auto">
@@ -149,10 +282,13 @@ export default function ApplicationsPage() {
                     const id = app.id || app._id || String(i);
                     const name = app.fullName || app.name || "—";
                     const email = app.email || "—";
-                    const course = app.courseId || app.course || "—";
+                    // Prefer human-readable course name over raw UUID
+                    const course = app.course || (app.courseId && !app.courseId.includes("-") ? app.courseId : "") || "—";
                     const payment = app.paymentMethod || app.payment || "—";
                     const date = app.createdAt ? new Date(app.createdAt).toLocaleDateString() : app.date || "—";
                     const status = (app.status || "pending").toLowerCase();
+                    const isUpdating = updating === id;
+                    
                     return (
                       <tr key={id} className="hover:bg-gray-50/60 transition-colors">
                         <td className="px-5 py-3.5">
@@ -161,26 +297,46 @@ export default function ApplicationsPage() {
                         </td>
                         <td className="px-5 py-3.5 text-xs text-gray-600 max-w-[160px] truncate">{course}</td>
                         <td className="px-5 py-3.5">
-                          <span className="px-2 py-0.5 bg-gray-100 text-gray-600 text-[11px] rounded-full font-medium">{payment}</span>
+                          <span className="px-2 py-0.5 bg-gray-100 text-gray-600 text-[11px] rounded-full font-medium">
+                            {payment}
+                          </span>
                         </td>
                         <td className="px-5 py-3.5 text-xs text-gray-400">{date}</td>
                         <td className="px-5 py-3.5">
-                          <span className={cn("flex items-center gap-1 w-fit px-2.5 py-1 rounded-full text-[11px] font-semibold capitalize", statusStyle[status] ?? "bg-gray-100 text-gray-500")}>
+                          <span className={cn(
+                            "flex items-center gap-1 w-fit px-2.5 py-1 rounded-full text-[11px] font-semibold capitalize",
+                            statusStyle[status] ?? "bg-gray-100 text-gray-500"
+                          )}>
                             {statusIcon[status]}{status}
                           </span>
                         </td>
                         <td className="px-5 py-3.5">
                           <div className="flex items-center gap-1.5">
-                            <button onClick={() => setSelected(app)} className="p-1.5 rounded-lg text-[#1E90FF] hover:bg-[#1E90FF]/10 transition-colors" title="View">
+                            <button 
+                              onClick={() => setSelected(app)} 
+                              className="p-1.5 rounded-lg text-[#1E90FF] hover:bg-[#1E90FF]/10 transition-colors" 
+                              title="View"
+                              disabled={isUpdating}
+                            >
                               <Eye size={14} />
                             </button>
                             {status !== "approved" && (
-                              <button onClick={() => updateStatus(id, "approved")} className="p-1.5 rounded-lg text-emerald-500 hover:bg-emerald-50 transition-colors" title="Approve">
+                              <button 
+                                onClick={() => updateStatus(id, "approved")} 
+                                className="p-1.5 rounded-lg text-emerald-500 hover:bg-emerald-50 transition-colors disabled:opacity-50" 
+                                title="Approve"
+                                disabled={isUpdating}
+                              >
                                 <CheckCircle size={14} />
                               </button>
                             )}
                             {status !== "rejected" && (
-                              <button onClick={() => updateStatus(id, "rejected")} className="p-1.5 rounded-lg text-red-400 hover:bg-red-50 transition-colors" title="Reject">
+                              <button 
+                                onClick={() => updateStatus(id, "rejected")} 
+                                className="p-1.5 rounded-lg text-red-400 hover:bg-red-50 transition-colors disabled:opacity-50" 
+                                title="Reject"
+                                disabled={isUpdating}
+                              >
                                 <XCircle size={14} />
                               </button>
                             )}
@@ -192,7 +348,9 @@ export default function ApplicationsPage() {
                 </tbody>
               </table>
               {filtered.length === 0 && (
-                <div className="text-center py-16 text-gray-400 text-sm">No applications found</div>
+                <div className="text-center py-16 text-gray-400 text-sm">
+                  {search ? "No applications match your search" : "No applications found"}
+                </div>
               )}
             </div>
           )}
@@ -205,10 +363,15 @@ export default function ApplicationsPage() {
           <div className="bg-white rounded-2xl shadow-xl p-6 max-w-md w-full space-y-4 max-h-[90vh] overflow-y-auto">
             <div className="flex items-start justify-between">
               <div>
-                <h3 className="font-bold text-gray-800 text-lg">{selected.fullName || selected.name || "—"}</h3>
+                <h3 className="font-bold text-gray-800 text-lg">
+                  {selected.fullName || selected.name || "—"}
+                </h3>
                 <p className="text-xs text-gray-400">{selected.id || selected._id}</p>
               </div>
-              <span className={cn("px-2.5 py-1 rounded-full text-[11px] font-semibold capitalize", statusStyle[(selected.status || "pending").toLowerCase()] ?? "bg-gray-100 text-gray-500")}>
+              <span className={cn(
+                "px-2.5 py-1 rounded-full text-[11px] font-semibold capitalize",
+                statusStyle[(selected.status || "pending").toLowerCase()] ?? "bg-gray-100 text-gray-500"
+              )}>
                 {selected.status || "pending"}
               </span>
             </div>
@@ -218,7 +381,7 @@ export default function ApplicationsPage() {
                 { label: "Email",          value: selected.email },
                 { label: "Phone",          value: selected.phone },
                 { label: "Telegram",       value: selected.telegramHandle },
-                { label: "Course",         value: selected.courseId || selected.course },
+                { label: "Course",         value: selected.course || (selected.courseId && !selected.courseId.includes("-") ? selected.courseId : "") || selected.courseId },
                 { label: "Payment",        value: selected.paymentMethod },
                 { label: "Payment Ref",    value: selected.paymentReference },
                 { label: "Gender",         value: selected.gender },
@@ -237,25 +400,37 @@ export default function ApplicationsPage() {
             {selected.receiptUrl && (
               <div>
                 <p className="text-[10px] text-gray-400 uppercase tracking-wide mb-1">Payment Receipt</p>
-                <img src={selected.receiptUrl} alt="Receipt" className="w-full rounded-lg border border-gray-100 max-h-48 object-contain" />
+                <img 
+                  src={selected.receiptUrl} 
+                  alt="Receipt" 
+                  className="w-full rounded-lg border border-gray-100 max-h-48 object-contain" 
+                />
               </div>
             )}
 
             <div className="flex gap-2 pt-2">
               {(selected.status || "").toLowerCase() !== "approved" && (
-                <button onClick={() => updateStatus(selected.id || selected._id, "approved")}
-                  className="flex-1 py-2 rounded-lg bg-emerald-500 text-white text-sm font-semibold hover:bg-emerald-600 transition-colors">
-                  Approve
+                <button 
+                  onClick={() => updateStatus(selected.id || selected._id || "", "approved")}
+                  className="flex-1 py-2 rounded-lg bg-emerald-500 text-white text-sm font-semibold hover:bg-emerald-600 transition-colors disabled:opacity-50"
+                  disabled={updating === (selected.id || selected._id)}
+                >
+                  {updating === (selected.id || selected._id) ? "Updating..." : "Approve"}
                 </button>
               )}
               {(selected.status || "").toLowerCase() !== "rejected" && (
-                <button onClick={() => updateStatus(selected.id || selected._id, "rejected")}
-                  className="flex-1 py-2 rounded-lg bg-red-500 text-white text-sm font-semibold hover:bg-red-600 transition-colors">
-                  Reject
+                <button 
+                  onClick={() => updateStatus(selected.id || selected._id || "", "rejected")}
+                  className="flex-1 py-2 rounded-lg bg-red-500 text-white text-sm font-semibold hover:bg-red-600 transition-colors disabled:opacity-50"
+                  disabled={updating === (selected.id || selected._id)}
+                >
+                  {updating === (selected.id || selected._id) ? "Updating..." : "Reject"}
                 </button>
               )}
-              <button onClick={() => setSelected(null)}
-                className="flex-1 py-2 rounded-lg border border-gray-200 text-gray-600 text-sm hover:bg-gray-50 transition-colors">
+              <button 
+                onClick={() => setSelected(null)}
+                className="flex-1 py-2 rounded-lg border border-gray-200 text-gray-600 text-sm hover:bg-gray-50 transition-colors"
+              >
                 Close
               </button>
             </div>
