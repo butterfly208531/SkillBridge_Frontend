@@ -19,7 +19,7 @@ export default function AddCoursePage() {
   const [uploadProgress, setUploadProgress] = useState(0);
   // Pre-populate with local categories so the dropdown is never empty
   const [categories, setCategories] = useState<{ id: string; name: string }[]>(
-    () => getAllCategories().map(name => ({ id: name, name }))
+    () => (getAllCategories().filter((name): name is string => name !== undefined)).map(name => ({ id: name, name }))
   );
 
   const [basic, setBasic] = useState({

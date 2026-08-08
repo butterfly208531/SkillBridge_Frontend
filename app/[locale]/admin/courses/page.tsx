@@ -264,7 +264,7 @@ function CourseModal({ course, onClose, onSaved }: {
   });
 
   const [categories] = useState<{ id: string; name: string }[]>(
-    () => getAllCategories().map(name => ({ id: name, name }))
+    () => (getAllCategories().filter((name): name is string => name !== undefined)).map(name => ({ id: name, name }))
   );
   const [saving, setSaving]       = useState(false);
   const [error, setError]         = useState("");

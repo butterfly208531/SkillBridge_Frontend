@@ -5,6 +5,7 @@ const DEFAULT_COURSE_IMAGE = '/images/courses/default.jpg';
 
 export const courseDetailsConfig: Record<string, { 
   image: string;
+  instructorImage?: string;
   title: string;
   description: string;
   duration: string;
