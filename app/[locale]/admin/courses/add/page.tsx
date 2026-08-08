@@ -34,6 +34,8 @@ const FALLBACK_INSTRUCTORS = [
   { id: "inst-1", name: "Gedion", email: "gedion@sbit.com" },
   { id: "inst-2", name: "Admin", email: "admin@skillbridge.com" },
 ];
+
+export default function AddCoursePage() {
   const router = useRouter();
   const pathname = usePathname();
   const locale = pathname.split("/")[1] || "en";
