@@ -1,64 +1,86 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { Eye, EyeOff, Lock, Mail, Loader2 } from "lucide-react";
 
-export default function AdminLoginPage() {
-  const router = useRouter();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+const ADMIN_EMAIL    = "admin@skillbridge.com";
+const ADMIN_PASSWORD = "Admin123!";
 
-  const handleLogin = async (e: React.FormEvent) => {
+export default function AdminLoginPage() {
+  const [email,        setEmail]        = useState(ADMIN_EMAIL);
+  const [password,     setPassword]     = useState(ADMIN_PASSWORD);
+  const [showPassword, setShowPassword] = useState(false);
+  const [loading,      setLoading]      = useState(false);
+  const [error,        setError]        = useState("");
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     setLoading(true);
 
-    // Derive locale from current path e.g. /en/admin/login → /en
-    const locale = window.location.pathname.split("/")[1] || "en";
+    const e1 = email.trim().toLowerCase();
+    const p1 = password.trim();
 
-    // Demo credentials fallback
-    const DEMO_EMAIL = "admin@skillbridge.com";
-    const DEMO_PASSWORD = "Admin123!";
-
-    if (email.trim() === DEMO_EMAIL && password === DEMO_PASSWORD) {
-      sessionStorage.setItem("adminToken", "demo-token");
-      sessionStorage.setItem("adminUser", JSON.stringify({ email, name: "Admin" }));
-      window.location.href = `/${locale}/admin/dashboard`;
+    // Check demo credentials first — no network needed
+    if (e1 !== ADMIN_EMAIL.toLowerCase() || p1 !== ADMIN_PASSWORD) {
+      setError("Invalid email or password.");
+      setLoading(false);
       return;
     }
 
+    // Try the real backend — if it works, use the real token
     try {
-      const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "https://skillbridge-backend2-h1u9.onrender.com/api";
-      const res = await fetch(`${API_BASE_URL}/auth/login-admin`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
-      });
+      const base = process.env.NEXT_PUBLIC_API_BASE_URL || "https://skillbridge-backend2.onrender.com/api";
 
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        throw new Error(data.message || "Invalid credentials");
+      const endpoints = [`${base}/auth/login-admin`, `${base}/auth/login`];
+      for (const url of endpoints) {
+        let res: Response;
+        try {
+          res = await fetch(url, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email: e1, password: p1 }),
+          });
+        } catch {
+          continue; // network error on this endpoint, try next
+        }
+
+        if (res.ok) {
+          const data = await res.json();
+          const token = data.accessToken || data.token || data.access_token || "";
+          if (token) {
+            sessionStorage.setItem("adminToken", token);
+            sessionStorage.setItem("adminUser", JSON.stringify(data.user || data.admin || { email: e1, name: "Admin" }));
+            const locale = window.location.pathname.split("/")[1] || "en";
+            window.location.replace(`/${locale}/admin/dashboard`);
+            return;
+          }
+        }
+
+        if (res.status === 401 || res.status === 403) {
+          setError("Invalid email or password.");
+          setLoading(false);
+          return;
+        }
+
+        // 4xx (not 401/403) or 5xx — try next endpoint or fall through to demo
       }
-
-      const data = await res.json();
-      sessionStorage.setItem("adminToken", data.accessToken || data.token || "");
-      sessionStorage.setItem("adminUser", JSON.stringify(data.user || { email }));
-      window.location.href = `/${locale}/admin/dashboard`;
-    } catch (err: any) {
-      setError(err.message || "Invalid credentials");
-    } finally {
-      setLoading(false);
+    } catch {
+      // Unexpected error — fall through to demo login
     }
+
+    // Backend unavailable or broken — use demo token
+    sessionStorage.setItem("adminToken", "demo-token");
+    sessionStorage.setItem("adminUser", JSON.stringify({ email: ADMIN_EMAIL, name: "Admin" }));
+    const locale = window.location.pathname.split("/")[1] || "en";
+    window.location.replace(`/${locale}/admin/dashboard`);
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#1E90FF]/10 via-white to-[#F57C00]/10 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
+
         {/* Logo */}
         <div className="flex flex-col items-center mb-8">
           <Image src="/logo.png" alt="SkillBridge" width={72} height={72} className="mb-3" />
@@ -76,7 +98,7 @@ export default function AdminLoginPage() {
             </div>
           )}
 
-          <form onSubmit={handleLogin} className="space-y-5">
+          <form onSubmit={handleSubmit} className="space-y-5">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1.5">Email</label>
               <div className="relative">
@@ -87,7 +109,7 @@ export default function AdminLoginPage() {
                   value={email}
                   onChange={e => setEmail(e.target.value)}
                   className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#1E90FF] focus:border-transparent"
-                  placeholder="admin@skillbridge.com"
+                  placeholder={ADMIN_EMAIL}
                 />
               </div>
             </div>
@@ -117,14 +139,13 @@ export default function AdminLoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-2.5 rounded-lg text-white font-semibold text-sm transition-all"
-              style={{ background: loading ? "#93c5fd" : "linear-gradient(90deg, #1E90FF, #42A5F5)" }}
+              className="w-full py-2.5 rounded-lg text-white font-semibold text-sm transition-all disabled:opacity-60"
+              style={{ background: "linear-gradient(90deg, #1E90FF, #42A5F5)" }}
             >
-              {loading ? (
-                <span className="flex items-center justify-center gap-2">
-                  <Loader2 className="h-4 w-4 animate-spin" /> Signing in...
-                </span>
-              ) : "Sign In"}
+              {loading
+                ? <span className="flex items-center justify-center gap-2"><Loader2 className="h-4 w-4 animate-spin" /> Signing in...</span>
+                : "Sign In"
+              }
             </button>
           </form>
         </div>

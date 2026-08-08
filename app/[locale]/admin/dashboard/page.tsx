@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { BookOpen, FileText, Award, Users, TrendingUp, Clock, CheckCircle, XCircle } from "lucide-react";
 import AdminHeader from "../components/AdminHeader";
 import StatCard from "../components/StatCard";
-import { fetchCourses, type Course } from "@/lib/apI";
+import { fetchCourses, type Course } from "@/lib/api";
 
 const API = process.env.NEXT_PUBLIC_API_BASE_URL || "https://skillbridge-backend2-h1u9.onrender.com/api";
 
@@ -62,6 +62,7 @@ export default function DashboardPage() {
           const apps = Array.isArray(data) ? data : data.data ?? [];
           setApplications(apps);
         } else {
+          // Don't redirect on 401 — demo token is expected to fail API calls
           setApplications([]);
         }
       } catch (err) {

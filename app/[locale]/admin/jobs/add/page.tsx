@@ -6,6 +6,7 @@ import { ArrowLeft, Plus, Trash2, CheckCircle, Loader2, Briefcase, MapPin, Link2
 import AdminHeader from "../../components/AdminHeader";
 import { cn } from "@/lib/utils";
 import { JOB_CATEGORIES, JOB_TYPES, JOB_LEVELS, type JobType, type JobLevel } from "@/lib/jobs-config";
+import { getStoredJobs, saveJobs } from "@/lib/jobs-store";
 
 const API = process.env.NEXT_PUBLIC_API_BASE_URL || "https://skillbridge-backend2-h1u9.onrender.com/api";
 
@@ -45,12 +46,27 @@ export default function AddJobPage() {
     setSaving(true);
     setError("");
     const token = sessionStorage.getItem("adminToken");
+    const isDemoToken = !token || token === "demo-token";
+
     const payload = {
       ...form,
+      id:               `job-${Date.now()}`,
       requirements:     requirements.filter(Boolean),
       responsibilities: responsibilities.filter(Boolean),
       postedAt:         new Date().toISOString(),
     };
+
+    // ── Demo / no-token: save locally only ──
+    if (isDemoToken) {
+      const existing = getStoredJobs();
+      saveJobs([payload as any, ...existing]);
+      setSuccess(true);
+      setTimeout(() => { window.location.href = `/${locale}/admin/jobs`; }, 1500);
+      setSaving(false);
+      return;
+    }
+
+    // ── Real API call ──
     try {
       const res = await fetch(`${API}/jobs`, {
         method: "POST",
@@ -61,7 +77,17 @@ export default function AddJobPage() {
         const d = await res.json().catch(() => ({}));
         throw new Error(d.message || `Error ${res.status}`);
       }
-    } catch {}
+      // Persist to localStorage so the public page picks it up immediately
+      const saved = await res.json().catch(() => payload);
+      const newJob = saved?.data ?? saved ?? payload;
+      const existing = getStoredJobs();
+      saveJobs([newJob as any, ...existing]);
+    } catch (e: any) {
+      // On API failure, still save locally so the admin list reflects the new job
+      const existing = getStoredJobs();
+      saveJobs([payload as any, ...existing]);
+      setError(e.message || "Saved locally — could not reach server.");
+    }
     setSuccess(true);
     setTimeout(() => { window.location.href = `/${locale}/admin/jobs`; }, 1500);
     setSaving(false);

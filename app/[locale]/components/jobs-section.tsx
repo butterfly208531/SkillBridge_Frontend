@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { MapPin, DollarSign, Calendar, ExternalLink, ChevronDown, ChevronUp, Briefcase, ArrowRight } from "lucide-react";
 import { Link } from "@/i18n/navigation";
@@ -10,7 +10,10 @@ import {
   jobsConfig, categoryColor, typeColor,
   daysUntilDeadline, isJobClosed, type Job,
 } from "@/lib/jobs-config";
+import { getStoredJobs, saveJobs } from "@/lib/jobs-store";
 import { cn } from "@/lib/utils";
+
+const API = process.env.NEXT_PUBLIC_API_BASE_URL || "https://skillbridge-backend2-h1u9.onrender.com/api";
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
@@ -170,7 +173,40 @@ function JobCard({ job, index }: { job: Job; index: number }) {
 }
 
 export function JobsSection() {
-  const openJobs = jobsConfig.filter(j => !isJobClosed(j)).slice(0, 3);
+  const [allJobs, setAllJobs] = useState<Job[]>(() => {
+    // Initialise synchronously from localStorage so first render isn't empty
+    const stored = getStoredJobs();
+    return stored.length > 0 ? stored : jobsConfig;
+  });
+
+  useEffect(() => {
+    // Try the public jobs API endpoint.
+    // Only persist to localStorage (and update state) when the API returns data
+    // that is at least as large as what admin already saved locally — this prevents
+    // a stale API response from silently wiping admin edits made in the same browser.
+    fetch(`${API}/jobs`)
+      .then(r => r.ok ? r.json() : Promise.reject())
+      .then(d => {
+        const list: Job[] = Array.isArray(d) ? d : d.data ?? [];
+        if (list.length === 0) return;
+
+        const local = getStoredJobs();
+        // If the API list is no smaller than what admin saved locally, treat
+        // the API as authoritative and update both state and localStorage.
+        // If admin has more records (i.e. they added something offline), keep
+        // the local version so those new records aren't lost.
+        if (list.length >= local.length) {
+          saveJobs(list);
+          setAllJobs(list);
+        }
+        // Otherwise leave localStorage (and state) untouched — admin data wins.
+      })
+      .catch(() => {
+        // API unavailable — localStorage initialisation above already covers this
+      });
+  }, []);
+
+  const openJobs = allJobs.filter(j => !isJobClosed(j)).slice(0, 3);
 
   return (
     <section className="py-16 bg-gray-50 dark:bg-gray-950">
@@ -184,9 +220,9 @@ export function JobsSection() {
         {/* Stats bar */}
         <div className="flex flex-wrap justify-center gap-6 mb-10">
           {[
-            { label: "Open Positions", value: jobsConfig.filter(j => !isJobClosed(j)).length, color: "text-[#1E90FF]" },
-            { label: "Partner Companies", value: new Set(jobsConfig.map(j => j.company)).size, color: "text-[#F57C00]" },
-            { label: "Job Categories",   value: new Set(jobsConfig.map(j => j.category)).size, color: "text-[#1E90FF]" },
+            { label: "Open Positions", value: allJobs.filter(j => !isJobClosed(j)).length, color: "text-[#1E90FF]" },
+            { label: "Partner Companies", value: new Set(allJobs.map(j => j.company)).size, color: "text-[#F57C00]" },
+            { label: "Job Categories",   value: new Set(allJobs.map(j => j.category)).size, color: "text-[#1E90FF]" },
           ].map(({ label, value, color }) => (
             <div key={label} className="flex items-center gap-2 bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-800 px-5 py-3 shadow-sm">
               <Briefcase className={cn("h-4 w-4", color)} />

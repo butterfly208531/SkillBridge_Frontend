@@ -163,15 +163,31 @@ export default function ScholarshipsPage() {
     const url = isEdit ? `${API}/scholarships/${data.id}` : `${API}/scholarships`;
     const method = isEdit ? "PUT" : "POST";
 
-    let updated: Scholarship[];
-    if (isEdit) {
-      updated = scholarships.map(s => s.id === data.id ? data : s);
-    } else {
-      updated = [...scholarships, { ...data, id: `sch-${Date.now()}`, applicationsCount: 0 }];
-    }
+    const newEntry: Scholarship = isEdit
+      ? data
+      : { ...data, id: `sch-${Date.now()}`, applicationsCount: 0 };
 
-    // Always persist to localStorage immediately
-    saveScholarships(updated as any);
+    const updated: Scholarship[] = isEdit
+      ? scholarships.map(s => s.id === data.id ? newEntry : s)
+      : [...scholarships, newEntry];
+
+    // Persist to localStorage with the full StoredScholarship shape so the
+    // public page can read every field without missing fundingType / tuitionAmount.
+    const toStore: StoredScholarship[] = updated.map(s => ({
+      id:                 s.id,
+      name:               s.name,
+      courseId:           s.courseId || s.course.toLowerCase().replace(/\s+/g, "-"),
+      course:             s.course,
+      applicationsCount:  s.applicationsCount,
+      winnersCount:       s.winnersCount,
+      deadline:           s.deadline,
+      eligibility:        s.eligibility,
+      status:             s.status,
+      fundingType:        (s as any).fundingType  ?? "full",
+      tuitionAmount:      (s as any).tuitionAmount ?? 0,
+      applicationFormUrl: s.applicationFormUrl    ?? "",
+    }));
+    saveScholarships(toStore);
     setScholarships(updated);
 
     try {

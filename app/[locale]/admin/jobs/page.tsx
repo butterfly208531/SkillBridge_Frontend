@@ -5,6 +5,7 @@ import { Plus, Pencil, Trash2, Briefcase, MapPin, Clock, RefreshCw, Eye, EyeOff 
 import AdminHeader from "../components/AdminHeader";
 import { cn } from "@/lib/utils";
 import { jobsConfig, categoryColor, typeColor, isJobClosed, type Job } from "@/lib/jobs-config";
+import { getStoredJobs, saveJobs } from "@/lib/jobs-store";
 
 const API = process.env.NEXT_PUBLIC_API_BASE_URL || "https://skillbridge-backend2-h1u9.onrender.com/api";
 
@@ -14,7 +15,11 @@ function formatDate(iso: string) {
 }
 
 export default function AdminJobsPage() {
-  const [jobs,      setJobs]      = useState<Job[]>(jobsConfig);
+  const [jobs,      setJobs]      = useState<Job[]>(() => {
+    // Pre-populate from localStorage so the table isn't empty before the API responds
+    const stored = getStoredJobs();
+    return stored.length > 0 ? stored : jobsConfig;
+  });
   const [loading,   setLoading]   = useState(false);
   const [deleteId,  setDeleteId]  = useState<string | null>(null);
   const [search,    setSearch]    = useState("");
@@ -25,8 +30,21 @@ export default function AdminJobsPage() {
     setLoading(true);
     fetch(`${API}/jobs`, { headers: { Authorization: `Bearer ${token}` } })
       .then(r => r.ok ? r.json() : Promise.reject())
-      .then(d => setJobs(Array.isArray(d) ? d : d.data ?? jobsConfig))
-      .catch(() => setJobs(jobsConfig))
+      .then(d => {
+        const list: Job[] = Array.isArray(d) ? d : d.data ?? [];
+        if (list.length > 0) {
+          setJobs(list);
+          saveJobs(list); // persist so public page stays in sync
+        } else {
+          // API returned empty — keep localStorage / static
+          const stored = getStoredJobs();
+          setJobs(stored.length > 0 ? stored : jobsConfig);
+        }
+      })
+      .catch(() => {
+        const stored = getStoredJobs();
+        setJobs(stored.length > 0 ? stored : jobsConfig);
+      })
       .finally(() => setLoading(false));
   };
 
@@ -42,7 +60,11 @@ export default function AdminJobsPage() {
         body: JSON.stringify({ status: newStatus }),
       });
     } catch {}
-    setJobs(prev => prev.map(j => j.id === job.id ? { ...j, status: newStatus as any } : j));
+    setJobs(prev => {
+      const updated = prev.map(j => j.id === job.id ? { ...j, status: newStatus as any } : j);
+      saveJobs(updated);
+      return updated;
+    });
   };
 
   const handleDelete = async (id: string) => {
@@ -53,7 +75,11 @@ export default function AdminJobsPage() {
         headers: { Authorization: `Bearer ${token}` },
       });
     } catch {}
-    setJobs(prev => prev.filter(j => j.id !== id));
+    setJobs(prev => {
+      const updated = prev.filter(j => j.id !== id);
+      saveJobs(updated);
+      return updated;
+    });
     setDeleteId(null);
   };
 

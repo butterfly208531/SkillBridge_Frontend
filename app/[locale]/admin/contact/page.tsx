@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Search, Download, RefreshCw, Mail, Phone, Eye, MessageSquare, Clock, CheckCircle } from "lucide-react";
+import { Search, Download, RefreshCw, Mail, Phone, Eye, MessageSquare, Clock, CheckCircle, XCircle } from "lucide-react";
 import AdminHeader from "../components/AdminHeader";
 import { cn } from "@/lib/utils";
 
@@ -10,7 +10,8 @@ const API = process.env.NEXT_PUBLIC_API_BASE_URL || "https://skillbridge-backend
 type MsgStatus = "new" | "read" | "replied";
 
 interface ContactMsg {
-  id: string;
+  id?: string;
+  _id?: string;
   name: string;
   email: string;
   phone?: string;
@@ -34,65 +35,139 @@ const statusIcon: Record<MsgStatus, React.ReactNode> = {
 export default function ContactPage() {
   const [messages, setMessages] = useState<ContactMsg[]>([]);
   const [loading, setLoading] = useState(true);
+  const [updating, setUpdating] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | MsgStatus>("all");
   const [selected, setSelected] = useState<ContactMsg | null>(null);
   const [replyText, setReplyText] = useState("");
   const [replying, setReplying] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
 
-  const fetchMessages = () => {
+  const fetchMessages = async () => {
     const token = sessionStorage.getItem("adminToken");
     setLoading(true);
-    fetch(`${API}/contact`, { headers: { Authorization: `Bearer ${token}` } })
-      .then(r => r.ok ? r.json() : Promise.reject())
-      .then(data => setMessages(Array.isArray(data) ? data : data.data ?? []))
-      .catch(() => setMessages([]))
-      .finally(() => setLoading(false));
+    setError("");
+    setSuccess("");
+    
+    try {
+      const response = await fetch(`${API}/contact`, { 
+        headers: { Authorization: `Bearer ${token}` } 
+      });
+      
+      if (!response.ok) throw new Error(`Error ${response.status}: ${response.statusText}`);
+      
+      const data = await response.json();
+      const msgs = Array.isArray(data) ? data : data.data ?? [];
+      setMessages(msgs);
+      setSuccess(`Loaded ${msgs.length} messages`);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to load messages");
+      setMessages([]);
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => { fetchMessages(); }, []);
 
   const updateStatus = async (id: string, status: MsgStatus) => {
+    if (updating === id) return;
+    
     const token = sessionStorage.getItem("adminToken");
+    setUpdating(id);
+    setError("");
+    setSuccess("");
+    
     try {
-      await fetch(`${API}/contact/${id}/status`, {
+      const response = await fetch(`${API}/contact/${id}/status`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        headers: { 
+          "Content-Type": "application/json", 
+          Authorization: `Bearer ${token}` 
+        },
         body: JSON.stringify({ status }),
       });
-      setMessages(prev => prev.map(m => m.id === id ? { ...m, status } : m));
-      if (selected?.id === id) setSelected(prev => prev ? { ...prev, status } : null);
-    } catch {}
+      
+      if (!response.ok) throw new Error(`Failed to update status: ${response.status}`);
+      
+      setMessages(prev => prev.map(m => {
+        const msgId = m.id || m._id;
+        return msgId === id ? { ...m, status } : m;
+      }));
+      
+      if (selected) {
+        const selectedId = selected.id || selected._id;
+        if (selectedId === id) {
+          setSelected(prev => prev ? { ...prev, status } : null);
+        }
+      }
+      
+      setSuccess(`Status updated to ${status}`);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to update status");
+    } finally {
+      setUpdating(null);
+    }
   };
 
   const handleReply = async () => {
     if (!selected || !replyText.trim()) return;
+    
     setReplying(true);
+    setError("");
+    setSuccess("");
+    
     const token = sessionStorage.getItem("adminToken");
+    const id = selected.id || selected._id;
+    
     try {
-      await fetch(`${API}/contact/${selected.id}/reply`, {
+      const response = await fetch(`${API}/contact/${id}/reply`, {
         method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        headers: { 
+          "Content-Type": "application/json", 
+          Authorization: `Bearer ${token}` 
+        },
         body: JSON.stringify({ reply: replyText }),
       });
-      await updateStatus(selected.id, "replied");
+      
+      if (!response.ok) throw new Error(`Failed to send reply: ${response.status}`);
+      
+      await updateStatus(id as string, "replied");
       setReplyText("");
-      setSelected(null);
-    } catch {} finally { setReplying(false); }
+      setSuccess("Reply sent successfully");
+      setTimeout(() => setSelected(null), 1500);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to send reply");
+    } finally {
+      setReplying(false);
+    }
   };
 
   const handleOpen = (msg: ContactMsg) => {
     setSelected(msg);
-    if (msg.status === "new") updateStatus(msg.id, "read");
+    if (msg.status === "new") {
+      const id = msg.id || msg._id;
+      if (id) updateStatus(id as string, "read");
+    }
   };
 
   const exportCSV = () => {
-    const rows = [["Name","Email","Phone","Message","Status","Date"],
-      ...filtered.map(m => [m.name, m.email, m.phone || "", `"${m.message.replace(/"/g,'""')}"`, m.status, new Date(m.createdAt).toLocaleDateString()])];
+    const rows = [
+      ["Name", "Email", "Phone", "Message", "Status", "Date"],
+      ...filtered.map(m => [
+        m.name, 
+        m.email, 
+        m.phone || "", 
+        `"${m.message.replace(/"/g, '""')}"`, 
+        m.status, 
+        new Date(m.createdAt).toLocaleDateString()
+      ])
+    ];
     const csv = rows.map(r => r.join(",")).join("\n");
     const a = document.createElement("a");
     a.href = "data:text/csv," + encodeURIComponent(csv);
-    a.download = "contact-messages.csv";
+    a.download = `contact-messages-${new Date().toISOString().split('T')[0]}.csv`;
     a.click();
   };
 
@@ -125,16 +200,34 @@ export default function ContactPage() {
             <p className="text-xs text-gray-400 mt-0.5">Manage contact messages from clients</p>
           </div>
           <div className="flex gap-2">
-            <button onClick={exportCSV}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-[#1E90FF] text-white text-xs font-semibold rounded-lg hover:bg-blue-500 transition-colors">
+            <button 
+              onClick={exportCSV}
+              disabled={filtered.length === 0}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-[#1E90FF] text-white text-xs font-semibold rounded-lg hover:bg-blue-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
               <Download size={13} /> Export CSV
             </button>
-            <button onClick={fetchMessages}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-[#F57C00] text-white text-xs font-semibold rounded-lg hover:bg-orange-500 transition-colors">
+            <button 
+              onClick={fetchMessages}
+              disabled={loading}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-[#F57C00] text-white text-xs font-semibold rounded-lg hover:bg-orange-500 transition-colors disabled:opacity-50"
+            >
               <RefreshCw size={13} className={loading ? "animate-spin" : ""} /> Refresh
             </button>
           </div>
         </div>
+
+        {/* Messages */}
+        {error && (
+          <div className="px-4 py-3 bg-red-50 border border-red-200 text-red-600 rounded-lg text-sm flex items-center gap-2">
+            <XCircle size={16} /> {error}
+          </div>
+        )}
+        {success && (
+          <div className="px-4 py-3 bg-emerald-50 border border-emerald-200 text-emerald-600 rounded-lg text-sm flex items-center gap-2">
+            <CheckCircle size={16} /> {success}
+          </div>
+        )}
 
         {/* Stat cards */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -164,20 +257,30 @@ export default function ContactPage() {
           </div>
 
           {/* Filters */}
-          <div className="px-5 py-3 flex items-center gap-3 border-b border-gray-50">
-            <div className="relative flex-1 max-w-xs">
+          <div className="px-5 py-3 flex items-center gap-3 border-b border-gray-50 flex-wrap">
+            <div className="relative flex-1 min-w-[200px] max-w-xs">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-gray-400" />
-              <input type="search" placeholder="Search messages..."
-                value={search} onChange={e => setSearch(e.target.value)}
-                className="pl-8 pr-3 py-1.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1E90FF]/30 w-full" />
+              <input 
+                type="search" 
+                placeholder="Search messages..."
+                value={search} 
+                onChange={e => setSearch(e.target.value)}
+                className="pl-8 pr-3 py-1.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1E90FF]/30 w-full" 
+              />
             </div>
-            <select value={statusFilter} onChange={e => setStatusFilter(e.target.value as any)}
-              className="px-3 py-1.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1E90FF]/30">
+            <select 
+              value={statusFilter} 
+              onChange={e => setStatusFilter(e.target.value as any)}
+              className="px-3 py-1.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1E90FF]/30"
+            >
               <option value="all">All Status</option>
               <option value="new">New</option>
               <option value="read">Read</option>
               <option value="replied">Replied</option>
             </select>
+            <span className="text-xs text-gray-400 ml-auto">
+              Showing {filtered.length} of {messages.length}
+            </span>
           </div>
 
           {/* Table */}
@@ -199,38 +302,50 @@ export default function ContactPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-50">
-                  {filtered.map(msg => (
-                    <tr key={msg.id} className={cn("hover:bg-gray-50/60 transition-colors", msg.status === "new" && "bg-blue-50/30")}>
-                      <td className="px-5 py-3.5">
-                        <p className={cn("font-semibold", msg.status === "new" ? "text-gray-900" : "text-gray-700")}>{msg.name}</p>
-                        <p className="text-[11px] text-gray-400 flex items-center gap-1 mt-0.5"><Mail size={10}/>{msg.email}</p>
-                      </td>
-                      <td className="px-5 py-3.5 text-xs text-gray-500">
-                        {msg.phone ? <span className="flex items-center gap-1"><Phone size={10}/>{msg.phone}</span> : "—"}
-                      </td>
-                      <td className="px-5 py-3.5 text-xs text-gray-500 max-w-[220px]">
-                        <p className="truncate">{msg.message}</p>
-                      </td>
-                      <td className="px-5 py-3.5">
-                        <span className={cn("flex items-center gap-1 w-fit px-2.5 py-1 rounded-full text-[11px] font-semibold capitalize", statusStyle[msg.status])}>
-                          {statusIcon[msg.status]}{msg.status}
-                        </span>
-                      </td>
-                      <td className="px-5 py-3.5 text-xs text-gray-400">
-                        {new Date(msg.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
-                      </td>
-                      <td className="px-5 py-3.5">
-                        <button onClick={() => handleOpen(msg)}
-                          className="px-3 py-1 bg-[#1E90FF] text-white text-[11px] font-semibold rounded-lg hover:bg-blue-500 transition-colors">
-                          View & Reply
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
+                  {filtered.map(msg => {
+                    const id = msg.id || msg._id || '';
+                    return (
+                      <tr key={id} className={cn("hover:bg-gray-50/60 transition-colors", msg.status === "new" && "bg-blue-50/30")}>
+                        <td className="px-5 py-3.5">
+                          <p className={cn("font-semibold", msg.status === "new" ? "text-gray-900" : "text-gray-700")}>
+                            {msg.name}
+                          </p>
+                          <p className="text-[11px] text-gray-400 flex items-center gap-1 mt-0.5">
+                            <Mail size={10}/>{msg.email}
+                          </p>
+                        </td>
+                        <td className="px-5 py-3.5 text-xs text-gray-500">
+                          {msg.phone ? <span className="flex items-center gap-1"><Phone size={10}/>{msg.phone}</span> : "—"}
+                        </td>
+                        <td className="px-5 py-3.5 text-xs text-gray-500 max-w-[220px]">
+                          <p className="truncate">{msg.message}</p>
+                        </td>
+                        <td className="px-5 py-3.5">
+                          <span className={cn("flex items-center gap-1 w-fit px-2.5 py-1 rounded-full text-[11px] font-semibold capitalize", statusStyle[msg.status])}>
+                            {statusIcon[msg.status]}{msg.status}
+                          </span>
+                        </td>
+                        <td className="px-5 py-3.5 text-xs text-gray-400">
+                          {new Date(msg.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                        </td>
+                        <td className="px-5 py-3.5">
+                          <button 
+                            onClick={() => handleOpen(msg)}
+                            disabled={updating === id}
+                            className="px-3 py-1 bg-[#1E90FF] text-white text-[11px] font-semibold rounded-lg hover:bg-blue-500 transition-colors disabled:opacity-50"
+                          >
+                            {updating === id ? "Updating..." : "View & Reply"}
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
               {filtered.length === 0 && (
-                <div className="text-center py-16 text-gray-400 text-sm">No contact messages found</div>
+                <div className="text-center py-16 text-gray-400 text-sm">
+                  {search ? "No messages match your search" : "No contact messages found"}
+                </div>
               )}
             </div>
           )}
@@ -244,7 +359,9 @@ export default function ContactPage() {
             <div className="px-6 py-5 border-b border-gray-100 flex items-start justify-between">
               <div>
                 <h3 className="font-bold text-gray-800 text-base">{selected.name}</h3>
-                <p className="text-xs text-gray-400 mt-0.5">{selected.email}{selected.phone ? ` · ${selected.phone}` : ""}</p>
+                <p className="text-xs text-gray-400 mt-0.5">
+                  {selected.email}{selected.phone ? ` · ${selected.phone}` : ""}
+                </p>
               </div>
               <span className={cn("px-2.5 py-1 rounded-full text-[11px] font-semibold capitalize", statusStyle[selected.status])}>
                 {selected.status}
@@ -255,7 +372,7 @@ export default function ContactPage() {
               {/* Message */}
               <div>
                 <p className="text-[10px] text-gray-400 uppercase tracking-wide mb-1.5">Message</p>
-                <div className="bg-gray-50 rounded-xl p-4 text-sm text-gray-700 leading-relaxed">
+                <div className="bg-gray-50 rounded-xl p-4 text-sm text-gray-700 leading-relaxed max-h-48 overflow-y-auto">
                   {selected.message}
                 </div>
               </div>
@@ -267,22 +384,36 @@ export default function ContactPage() {
               {/* Reply box */}
               {selected.status !== "replied" && (
                 <div>
-                  <p className="text-[10px] text-gray-400 uppercase tracking-wide mb-1.5">Reply to {selected.email}</p>
-                  <textarea rows={4} value={replyText} onChange={e => setReplyText(e.target.value)}
+                  <p className="text-[10px] text-gray-400 uppercase tracking-wide mb-1.5">
+                    Reply to {selected.email}
+                  </p>
+                  <textarea 
+                    rows={4} 
+                    value={replyText} 
+                    onChange={e => setReplyText(e.target.value)}
                     placeholder="Type your reply..."
-                    className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#1E90FF]/30 resize-none" />
+                    className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#1E90FF]/30 resize-none"
+                  />
+                  <p className="text-[10px] text-gray-400 mt-1">
+                    {replyText.length} characters
+                  </p>
                 </div>
               )}
             </div>
 
             <div className="px-6 py-4 border-t border-gray-100 flex justify-end gap-3">
-              <button onClick={() => { setSelected(null); setReplyText(""); }}
-                className="px-4 py-2 text-sm border border-gray-200 rounded-lg text-gray-600 hover:bg-gray-50 transition-colors">
+              <button 
+                onClick={() => { setSelected(null); setReplyText(""); }}
+                className="px-4 py-2 text-sm border border-gray-200 rounded-lg text-gray-600 hover:bg-gray-50 transition-colors"
+              >
                 Close
               </button>
               {selected.status !== "replied" && (
-                <button onClick={handleReply} disabled={!replyText.trim() || replying}
-                  className="flex items-center gap-2 px-5 py-2 bg-[#1E90FF] text-white text-sm font-semibold rounded-lg hover:bg-blue-500 transition-colors disabled:opacity-50">
+                <button 
+                  onClick={handleReply} 
+                  disabled={!replyText.trim() || replying}
+                  className="flex items-center gap-2 px-5 py-2 bg-[#1E90FF] text-white text-sm font-semibold rounded-lg hover:bg-blue-500 transition-colors disabled:opacity-50"
+                >
                   {replying && <RefreshCw size={13} className="animate-spin" />}
                   Send Reply
                 </button>

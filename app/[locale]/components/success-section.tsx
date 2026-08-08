@@ -5,7 +5,7 @@ import { CountUp } from "@/app/[locale]/components/ui/count-up";
 import { SectionHeading } from "./ui/section-heading";
 import React from "react";
 import { useTranslations } from "next-intl";
-import { SuccessMetricsConfig } from "@/lib/sucess-config";
+import { SuccessMetricsConfig } from "@/lib/success-config";
 
 export function SuccessSection() {
   const t = useTranslations();

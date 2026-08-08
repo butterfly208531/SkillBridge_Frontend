@@ -17,17 +17,6 @@ export const imagePaths = {
      machineLearning: "/images/courses/machine-learning.png",
    },
  
-   // Instructor images
-   instructors: {
-     instructor1: "/images/instructors/avatar1.png",
-     instructor2: "/images/instructors/avatar2.png",
-     instructor3: "/images/instructors/avatar3.png",
-     tafaraMakaza: "/images/instructors/avatar4.png",
-     angeMannah: "/images/instructors/avatar5.png",
-     ekeAgulu: "/images/instructors/avatar6.png",
-     mikeMahlangu: "/images/instructors/avatar7.png",
-   },
- 
    // Testimonial images
    testimonials: {
      danielSemagn: "/images/testimonials/pp1.png",

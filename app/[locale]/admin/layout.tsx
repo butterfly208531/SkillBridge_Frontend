@@ -1,32 +1,43 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter, usePathname } from "next/navigation";
+import { usePathname } from "next/navigation";
 import AdminSidebar from "./components/AdminSidebar";
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
-  const router = useRouter();
   const pathname = usePathname();
-  const [checked, setChecked] = useState(false);
+  const isLoginPage = pathname.includes("/admin/login");
 
-  useEffect(() => {
-    const isLoginPage = pathname.includes("/admin/login");
-    const token = sessionStorage.getItem("adminToken");
-
-    if (!token && !isLoginPage) {
-      const locale = window.location.pathname.split("/")[1] || "en";
-      window.location.href = `/${locale}/admin/login`;
-    } else {
-      setChecked(true);
-    }
-  }, [pathname, router]);
-
-  // On login page always render
-  if (pathname.includes("/admin/login")) {
+  // Always render the login page without any auth check
+  if (isLoginPage) {
     return <>{children}</>;
   }
 
-  if (!checked) {
+  return <AuthenticatedLayout>{children}</AuthenticatedLayout>;
+}
+
+function AuthenticatedLayout({ children }: { children: React.ReactNode }) {
+  // Start as null = "not yet checked" (avoids reading sessionStorage on server)
+  const [authState, setAuthState] = useState<"loading" | "ok" | "redirect">("loading");
+
+  useEffect(() => {
+    // This only runs in the browser, never on the server
+    const token = sessionStorage.getItem("adminToken");
+    if (token) {
+      setAuthState("ok");
+    } else {
+      setAuthState("redirect");
+    }
+  }, []);
+
+  useEffect(() => {
+    if (authState === "redirect") {
+      const locale = window.location.pathname.split("/")[1] || "en";
+      window.location.replace(`/${locale}/admin/login`);
+    }
+  }, [authState]);
+
+  if (authState === "loading" || authState === "redirect") {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="w-8 h-8 border-4 border-[#1E90FF] border-t-transparent rounded-full animate-spin" />

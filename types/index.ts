@@ -19,7 +19,7 @@ export interface CourseBase {
   id: number;
   key: string;
   image: string;
-  instructorImage: string;
+  instructorImage?: string;
   category: string;
   level: string;
   rating: number;
@@ -37,8 +37,6 @@ export interface CourseBase {
 export interface CourseTranslation {
   title: string;
   description: string;
-  instructor: string;
-  instructorTitle?: string;
   learningOutcomes: string[];
   prerequisites: string[];
   curriculum: Array<{
@@ -51,20 +49,6 @@ export interface CourseTranslation {
   }>;
 }
 
-export interface InstructorTranslation {
-  name: string;
-  title: string;
-  description: string;
-  socialLinks: Array<{
-    twitter?: string;
-    linkedin?: string;
-  }>
-}
-
-export interface Instructor {
-  translations: Record<string, InstructorTranslation>
-}
-
 export interface Course extends CourseBase {
   translations: Record<string, CourseTranslation>; // Key is locale (en, am, etc.)
 }
@@ -72,7 +56,7 @@ export interface Course extends CourseBase {
 export interface CoursesConfig {
   key: number;
   image: string;
-  instructorImage: string;
+  instructorImage?: string;
   title?: string;
   category?: string;
   level?: string;
@@ -81,23 +65,6 @@ export interface CoursesConfig {
   students?: number;
   status?: string;
   slug?: string;
-}
-
-export interface InstructorsConfig {
-  key: string;
-  image: string;
-}
-
-export interface SocialLinks {
-  twitter: string;
-  linkedin: string;
-}
-
-export interface MeetHeroes extends InstructorsConfig {
-  name: string;
-  title: string;
-  description: string;
-  socialLinks: SocialLinks[];
 }
 
 

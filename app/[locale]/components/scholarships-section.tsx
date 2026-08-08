@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { useTranslations } from "next-intl";
 import { motion } from "framer-motion";
 import Image from "next/image";
@@ -7,14 +8,78 @@ import { Link } from "@/i18n/navigation";
 import { Button } from "@/app/[locale]/components/ui/button";
 import { SectionHeading } from "@/app/[locale]/components/ui/section-heading";
 import ScholarshipCard from "@/app/[locale]/components/ui/scholarship-card";
-import { scholarshipsConfig, scholarshipWinnersConfig, isClosed } from "@/lib/scholarships-config";
+import { scholarshipsConfig, scholarshipWinnersConfig, isClosed, type ScholarshipConfig } from "@/lib/scholarships-config";
+import { getStoredScholarships, saveScholarships, type StoredScholarship } from "@/lib/scholarship-store";
 import { Archive } from "lucide-react";
+
+// Merge stored scholarship data with static config defaults
+function mergeWithConfig(stored: StoredScholarship): ScholarshipConfig & { nameOverride: string; eligibilityOverride: string } {
+  const base = scholarshipsConfig.find(s => s.id === stored.id);
+  return {
+    id:                 stored.id,
+    nameKey:            base?.nameKey            ?? stored.id,
+    eligibilityKey:     base?.eligibilityKey     ?? stored.id,
+    courseId:           stored.courseId          || base?.courseId || stored.id,
+    applicationsCount:  stored.applicationsCount ?? base?.applicationsCount ?? 0,
+    deadline:           stored.deadline          || base?.deadline || "",
+    winnersCount:       stored.winnersCount      ?? base?.winnersCount ?? 0,
+    fundingType:        stored.fundingType       || base?.fundingType || "full",
+    tuitionAmount:      stored.tuitionAmount     ?? base?.tuitionAmount ?? 0,
+    applicationFormUrl: stored.applicationFormUrl || base?.applicationFormUrl,
+    nameOverride:       stored.name,
+    eligibilityOverride: stored.eligibility,
+  };
+}
 
 export function ScholarshipsSection({ showAll = false }: { showAll?: boolean }) {
   const t = useTranslations("scholarshipsSection");
 
-  const active   = scholarshipsConfig.filter(s => !isClosed(s.deadline));
-  const archived = scholarshipsConfig.filter(s => isClosed(s.deadline));
+  // Always initialise from static config so server and client render the same HTML.
+  // localStorage is loaded in useEffect (client-only) to avoid hydration mismatches.
+  const [scholarships, setScholarships] = useState<ReturnType<typeof mergeWithConfig>[]>(
+    () => scholarshipsConfig.map(s => ({ ...s, nameOverride: "", eligibilityOverride: "" }))
+  );
+
+  useEffect(() => {
+    const API = process.env.NEXT_PUBLIC_API_BASE_URL || "https://skillbridge-backend2-h1u9.onrender.com/api";
+
+    // Re-read localStorage first (covers same-browser admin edits)
+    const stored = getStoredScholarships();
+    if (stored.length > 0) {
+      setScholarships(stored.map(mergeWithConfig));
+    }
+
+    // Then try the backend — if it has data, it is authoritative
+    fetch(`${API}/scholarships`)
+      .then(r => r.ok ? r.json() : Promise.reject())
+      .then(d => {
+        const list: any[] = Array.isArray(d) ? d : d.data ?? [];
+        if (list.length === 0) return;
+        const mapped: StoredScholarship[] = list.map((s: any) => ({
+          id:                 s.id || s._id || "",
+          name:               s.name || s.title || "",
+          courseId:           s.courseId || s.course?.id || "",
+          course:             s.course?.title || s.courseName || s.courseId || "",
+          applicationsCount:  s.applicationsCount || 0,
+          winnersCount:       s.winnersCount || 0,
+          deadline:           s.deadline || s.endDate || "",
+          eligibility:        s.eligibility || s.requirements || "",
+          status:             (s.status || "active").toLowerCase(),
+          fundingType:        s.fundingType || "full",
+          tuitionAmount:      s.tuitionAmount || 0,
+          applicationFormUrl: s.applicationFormUrl || "",
+        }));
+        // Persist so the next page load is instant
+        saveScholarships(mapped);
+        setScholarships(mapped.map(mergeWithConfig));
+      })
+      .catch(() => {
+        // API unavailable — localStorage/static config already applied above
+      });
+  }, []);
+
+  const active  = scholarships.filter(s => !isClosed(s.deadline));
+  const archived = scholarships.filter(s => isClosed(s.deadline));
   const visible  = showAll ? active : active.slice(0, 3);
 
   return (
@@ -35,11 +100,11 @@ export function ScholarshipsSection({ showAll = false }: { showAll?: boolean }) 
             >
               <ScholarshipCard
                 id={scholarship.id}
-                name={t(`scholarships.${scholarship.nameKey}.name`)}
+                name={scholarship.nameOverride || t(`scholarships.${scholarship.nameKey}.name`)}
                 applicationsCount={scholarship.applicationsCount}
                 deadline={scholarship.deadline}
                 winnersCount={scholarship.winnersCount}
-                eligibility={t(`scholarships.${scholarship.eligibilityKey}.eligibility`)}
+                eligibility={scholarship.eligibilityOverride || t(`scholarships.${scholarship.eligibilityKey}.eligibility`)}
                 courseId={scholarship.courseId}
                 fundingType={scholarship.fundingType}
                 tuitionAmount={scholarship.tuitionAmount}
@@ -78,11 +143,11 @@ export function ScholarshipsSection({ showAll = false }: { showAll?: boolean }) 
                 >
                   <ScholarshipCard
                     id={scholarship.id}
-                    name={t(`scholarships.${scholarship.nameKey}.name`)}
+                    name={scholarship.nameOverride || t(`scholarships.${scholarship.nameKey}.name`)}
                     applicationsCount={scholarship.applicationsCount}
                     deadline={scholarship.deadline}
                     winnersCount={scholarship.winnersCount}
-                    eligibility={t(`scholarships.${scholarship.eligibilityKey}.eligibility`)}
+                    eligibility={scholarship.eligibilityOverride || t(`scholarships.${scholarship.eligibilityKey}.eligibility`)}
                     courseId={scholarship.courseId}
                     fundingType={scholarship.fundingType}
                     tuitionAmount={scholarship.tuitionAmount}

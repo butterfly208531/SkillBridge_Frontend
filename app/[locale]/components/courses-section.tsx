@@ -15,7 +15,10 @@ import { useTranslations } from "next-intl";
 import { coursesConfig } from "@/lib/courses-config";
 import { Button } from "./ui/button";
 import { useEffect, useState } from "react";
-import { fetchCourses } from "@/lib/apI";
+import { fetchCourses } from "@/lib/api";
+import { getStoredCourses, getEffectiveImage } from "@/lib/courses-store";
+
+// Remove old per-component lookup — getEffectiveImage handles all matching in courses-store
 
 export function CoursesSection() {
   const t = useTranslations();
@@ -25,20 +28,37 @@ export function CoursesSection() {
   useEffect(() => {
     const loadCourses = async () => {
       try {
+        // Build a map of stored courses so adminImageUrl survives the API merge
+        const storedMap = Object.fromEntries(
+          getStoredCourses().map(s => [s.id, s])
+        );
+
         const data = await fetchCourses();
-        const transformedCourses = data.map((course: any) => ({
-          ...course,
-          ...coursesConfig[course.id], // Merging with coursesConfig for images
-          categoryName: course.category.name,
-          description: course.shortDescription,
-          rating: course.rating || 0,
-          reviews: course.reviews || 0,
-          instructor: course.instructor?.name,
-          image: course.imageUrl || coursesConfig[course.id]?.image,
-          instructorImage:
-            course.instructor.imageUrl ||
-            coursesConfig[course.id]?.instructorImage,
-        }));
+        const transformedCourses = data.map((course: any) => {
+          // Match stored course by slug or title to pick up adminImageUrl
+          const storedMatch = storedMap[course.slug || course.id]
+            || Object.values(storedMap).find(s =>
+                s.title.toLowerCase() === (course.title || "").toLowerCase()
+              );
+          const adminImageUrl = storedMatch?.adminImageUrl;
+          const image = getEffectiveImage({
+            id:           course.id,
+            slug:         course.slug || course.id,
+            title:        course.title,
+            imageUrl:     course.imageUrl,
+            adminImageUrl,
+          });
+          return {
+            ...course,
+            categoryName:  course.category.name,
+            description:   course.shortDescription,
+            rating:        course.rating || 0,
+            reviews:       course.reviews || 0,
+            instructor:    course.instructor?.name,
+            image,
+            instructorImage: course.instructor?.imageUrl || "",
+          };
+        });
         setCourses(transformedCourses);
       } catch (error) {
         console.error("Error fetching courses:", error);

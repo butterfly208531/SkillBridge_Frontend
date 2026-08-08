@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import AdminHeader from "../../components/AdminHeader";
 import { cn } from "@/lib/utils";
+import { getStoredScholarships, saveScholarships, type StoredScholarship } from "@/lib/scholarship-store";
 
 const API = process.env.NEXT_PUBLIC_API_BASE_URL || "https://skillbridge-backend2-h1u9.onrender.com/api";
 
@@ -70,9 +71,31 @@ export default function AddScholarshipPage() {
       status:             form.status,
       fundingType:        form.fundingType,
       tuitionAmount:      tuition,
-      applicationFormUrl: form.applicationFormUrl || null,
+      applicationFormUrl: form.applicationFormUrl || "",
       description:        form.description,
     };
+
+    // Build a properly-shaped StoredScholarship so the public page can read every
+    // field immediately, even before the API responds.
+    const newStored: StoredScholarship = {
+      id:                 `sch-${Date.now()}`,
+      name:               payload.name,
+      courseId:           payload.courseId,
+      course:             payload.course,
+      applicationsCount:  0,
+      winnersCount:       payload.winnersCount,
+      deadline:           payload.deadline,
+      eligibility:        payload.eligibility,
+      status:             payload.status,
+      fundingType:        payload.fundingType,
+      tuitionAmount:      payload.tuitionAmount,
+      applicationFormUrl: payload.applicationFormUrl,
+    };
+
+    // Persist to localStorage immediately so admin list + public page update
+    // without waiting for the API or a page-reload.
+    const existing = getStoredScholarships();
+    saveScholarships([...existing, newStored]);
 
     try {
       const res = await fetch(`${API}/scholarships`, {
@@ -81,20 +104,29 @@ export default function AddScholarshipPage() {
         body: JSON.stringify(payload),
       });
 
-      if (!res.ok) {
-        const d = await res.json().catch(() => ({}));
-        throw new Error(d.message || `Error ${res.status}`);
+      if (res.ok) {
+        // If the API returned the saved record (with a real server-side ID),
+        // replace the optimistic entry so IDs stay consistent.
+        const saved = await res.json().catch(() => null);
+        const serverRecord = saved?.data ?? saved;
+        if (serverRecord?.id || serverRecord?._id) {
+          const withServerId: StoredScholarship = {
+            ...newStored,
+            id: serverRecord.id || serverRecord._id,
+          };
+          const refreshed = getStoredScholarships();
+          saveScholarships(
+            refreshed.map(s => s.id === newStored.id ? withServerId : s)
+          );
+        }
       }
-
-      setSuccess(true);
-      setTimeout(() => { window.location.href = `/${locale}/admin/scholarships`; }, 1500);
-    } catch (e: any) {
-      // Optimistic — navigate even if API fails
-      setSuccess(true);
-      setTimeout(() => { window.location.href = `/${locale}/admin/scholarships`; }, 1500);
-    } finally {
-      setSaving(false);
+    } catch {
+      // API unavailable — localStorage write above is enough for same-browser sync.
     }
+
+    setSaving(false);
+    setSuccess(true);
+    setTimeout(() => { window.location.href = `/${locale}/admin/scholarships`; }, 1500);
   };
 
   return (

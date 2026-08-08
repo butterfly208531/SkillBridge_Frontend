@@ -8,13 +8,20 @@ import Footer from "@/app/[locale]/components/footer";
 import BootcampCard from "@/app/[locale]/components/ui/bootcamp-card";
 import { Button } from "@/app/[locale]/components/ui/button";
 import { Input } from "@/app/[locale]/components/ui/input";
-import { fetchCourses } from "@/lib/apI";
+import { fetchCourses } from "@/lib/api";
+import { getStoredCourses, getEffectiveImage } from "@/lib/courses-store";
 import { cn } from "@/lib/utils";
 
 function courseToCardProps(c: any) {
   return {
     id: c.id || c._id || "",
-    image: c.imageUrl || c.image || "",
+    image: getEffectiveImage({
+      id:           c.id,
+      slug:         c.slug || c.id,
+      title:        c.title,
+      imageUrl:     c.imageUrl,
+      adminImageUrl: c.adminImageUrl,
+    }),
     title: c.title || "",
     description: c.shortDescription || c.description || "",
     duration: c.duration || "",
@@ -39,22 +46,53 @@ export default function CoursesPage() {
   const [sortBy, setSortBy] = useState("popular");
 
   useEffect(() => {
+    // Always show local store data first (admin-managed courses)
+    const stored = getStoredCourses();
+    setCourses(stored.map(c => ({
+      id:               c.id,
+      slug:             c.id,
+      title:            c.title,
+      shortDescription: c.shortDescription || "",
+      duration:         c.duration,
+      category:         { name: c.category },
+      rating:           c.rating,
+      imageUrl:         c.imageUrl,
+      adminImageUrl:    c.adminImageUrl,   // carry through so getEffectiveImage works
+      startDate:        c.startDate || undefined,
+      status:           c.status,
+    })));
+    setLoading(false);
+
+    // Refresh from API in background — merge adminImageUrl from store
     fetchCourses()
-      .then(data => setCourses(Array.isArray(data) ? data : []))
-      .catch(() => setCourses([]))
-      .finally(() => setLoading(false));
+      .then(data => {
+        if (Array.isArray(data) && data.length > 0) {
+          const storedMap = Object.fromEntries(getStoredCourses().map(s => [s.id, s]));
+          const merged = data.map((apiCourse: any) => {
+            const storedMatch = storedMap[apiCourse.slug || apiCourse.id]
+              || Object.values(storedMap).find(s =>
+                  s.title.toLowerCase() === (apiCourse.title || "").toLowerCase()
+                );
+            return { ...apiCourse, adminImageUrl: storedMatch?.adminImageUrl || undefined };
+          });
+          setCourses(merged);
+        }
+      })
+      .catch(() => {/* keep stored data */});
   }, []);
 
   // Build dynamic categories from real data
   const categories = ["All", ...Array.from(new Set(courses.map(c => c.category?.name || c.category || "Other")))];
 
   const filtered = courses.filter(c => {
+    // Only show active/published courses on the public page
+    const isActive = !c.status || c.status === "active" || c.status === "Active" || c.status === "PUBLISHED";
     const cat = c.category?.name || c.category || "";
     const matchCat = activeCategory === "All" || cat === activeCategory;
     const matchSearch = !searchQuery ||
       (c.title || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
       (c.shortDescription || c.description || "").toLowerCase().includes(searchQuery.toLowerCase());
-    return matchCat && matchSearch;
+    return isActive && matchCat && matchSearch;
   });
 
   const sorted = [...filtered].sort((a, b) =>

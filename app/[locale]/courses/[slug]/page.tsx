@@ -28,7 +28,7 @@ import { Badge } from "../../components/ui/badge";
 import { courseDetailsConfig } from "@/lib/course-details-config";
 import { Navbar } from "../../components/navbar";
 import { useEffect, useState } from "react";
-import { fetchCourses } from "@/lib/apI";
+import { fetchCourses } from "@/lib/api";
 
 export default function CourseDetailPage() {
   const t = useTranslations();
@@ -547,7 +547,7 @@ if (loading) {
                     </RadioGroup>
                   </div>
                   <Button asChild className='w-full mb-4' size='lg'>
-                    <Link href={`/courses/${id}/ApplicationForm`}>
+                    <Link href={`/courses/${course?.id || id}/ApplicationForm`}>
                       {courseMessages.tabContent.enroll}
                     </Link>
                   </Button>
