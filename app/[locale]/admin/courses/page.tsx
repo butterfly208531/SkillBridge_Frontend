@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Search, Plus, Pencil, Trash2, Star, Users, Clock, RefreshCw, Eye, EyeOff } from "lucide-react";
+import { Search, Plus, Pencil, Trash2, Star, Clock, RefreshCw } from "lucide-react";
 import AdminHeader from "../components/AdminHeader";
 import { cn } from "@/lib/utils";
 
@@ -177,11 +177,8 @@ export default function CoursesAdminPage() {
                   <tr className="bg-gray-50 text-xs text-gray-500 uppercase tracking-wide border-b border-gray-100">
                     <th className="px-5 py-3 text-left font-semibold">Course</th>
                     <th className="px-5 py-3 text-left font-semibold">Category</th>
-                    <th className="px-5 py-3 text-left font-semibold">Level</th>
                     <th className="px-5 py-3 text-left font-semibold">Duration</th>
-                    <th className="px-5 py-3 text-left font-semibold">Mode</th>
                     <th className="px-5 py-3 text-left font-semibold">Rating</th>
-                    <th className="px-5 py-3 text-left font-semibold">Students</th>
                     <th className="px-5 py-3 text-left font-semibold">Status</th>
                     <th className="px-5 py-3 text-left font-semibold">Actions</th>
                   </tr>
@@ -201,20 +198,10 @@ export default function CoursesAdminPage() {
                             {course.category?.name ?? "—"}
                           </span>
                         </td>
-                        <td className="px-5 py-3.5 text-xs text-gray-500 capitalize">
-                          {(course.level || "—").replace("_", " ").toLowerCase().replace(/\b\w/g, l => l.toUpperCase())}
-                        </td>
                         <td className="px-5 py-3.5">
                           <span className="flex items-center gap-1 text-xs text-gray-500">
                             <Clock size={12} />{course.duration || "—"}
                           </span>
-                        </td>
-                        <td className="px-5 py-3.5">
-                          {course.mode ? (
-                            <span className={cn("px-2 py-0.5 rounded-full text-[11px] font-semibold", modeColor[course.mode] ?? "bg-gray-100 text-gray-500")}>
-                              {course.mode}
-                            </span>
-                          ) : <span className="text-xs text-gray-400">—</span>}
                         </td>
                         <td className="px-5 py-3.5">
                           {course.rating ? (
@@ -222,11 +209,6 @@ export default function CoursesAdminPage() {
                               <Star size={12} className="fill-amber-400 text-amber-400" />{course.rating}
                             </span>
                           ) : <span className="text-xs text-gray-400">—</span>}
-                        </td>
-                        <td className="px-5 py-3.5">
-                          <span className="flex items-center gap-1 text-xs text-gray-500">
-                            <Users size={12} />{course.studentsEnrolled ?? 0}
-                          </span>
                         </td>
                         <td className="px-5 py-3.5">
                           <button onClick={() => toggleStatus(course)}
