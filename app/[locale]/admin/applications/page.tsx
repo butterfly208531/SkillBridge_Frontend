@@ -109,8 +109,12 @@ export default function ApplicationsPage() {
         if (merged.length > 0) {
           setSuccess(`Loaded ${merged.length} application${merged.length !== 1 ? "s" : ""}`);
         }
+      } else if (response.status === 401 || response.status === 403) {
+        // Backend auth not available — show local data only, no error banner
+        const local = loadLocal();
+        setApps(local);
       } else {
-        // API unavailable — show local submissions only
+        // Other API error — show local submissions with info banner
         const local = loadLocal();
         setApps(local);
         if (local.length > 0) {
@@ -120,9 +124,7 @@ export default function ApplicationsPage() {
     } catch {
       const local = loadLocal();
       setApps(local);
-      if (local.length > 0) {
-        setError(`Showing ${local.length} locally stored submission${local.length !== 1 ? "s" : ""} (server unreachable)`);
-      }
+      // No error banner — just show what we have locally
     } finally {
       setLoading(false);
     }

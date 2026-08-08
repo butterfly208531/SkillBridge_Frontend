@@ -55,14 +55,21 @@ export default function ContactPage() {
         headers: { Authorization: `Bearer ${token}` } 
       });
       
+      if (response.status === 401 || response.status === 403) {
+        // Backend auth not available — show empty state silently
+        setMessages([]);
+        setLoading(false);
+        return;
+      }
+
       if (!response.ok) throw new Error(`Error ${response.status}: ${response.statusText}`);
       
       const data = await response.json();
       const msgs = Array.isArray(data) ? data : data.data ?? [];
       setMessages(msgs);
-      setSuccess(`Loaded ${msgs.length} messages`);
+      if (msgs.length > 0) setSuccess(`Loaded ${msgs.length} messages`);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load messages");
+      // Network error — show empty state, no error banner
       setMessages([]);
     } finally {
       setLoading(false);
