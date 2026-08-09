@@ -44,40 +44,13 @@ const statusIcon: Record<string, React.ReactNode> = {
   rejected: <XCircle size={12} />,
 };
 
-function inferCategory(courseName: string): string {
-  const n = courseName.toLowerCase();
-  if (n.includes("odoo") || n.includes("erp") || n.includes("sap"))                                        return "ERP";
-  if (n.includes("ai") || n.includes("machine learning") || n.includes("ml") || n.includes("data science")) return "AI";
-  if (n.includes("python") || n.includes("java") || n.includes("react") || n.includes("node") ||
-      n.includes("web") || n.includes("flutter") || n.includes("android") || n.includes("dev"))             return "Development";
-  if (n.includes("network") || n.includes("cyber") || n.includes("linux") || n.includes("cisco") ||
-      n.includes("cloud") || n.includes("aws") || n.includes("it ") || n.startsWith("it"))                 return "IT";
-  if (n.includes("excel") || n.includes("accountin") || n.includes("finance") ||
-      n.includes("business") || n.includes("market") || n.includes("manag"))                                return "Business";
-  if (n.includes("arabic") || n.includes("english") || n.includes("french") ||
-      n.includes("language") || n.includes("ielts") || n.includes("toefl"))                                return "Language";
-  if (n.includes("automat") || n.includes("robot") || n.includes("rpa"))                                   return "Automation";
-  if (n.includes("computer") || n.includes("basic"))                                                       return "IT";
-  return "Other";
-}
-
-const categoryColor: Record<string, string> = {
-  Development: "bg-[#F57C00]/10 text-[#F57C00]",
-  AI:          "bg-purple-100 text-purple-600",
-  ERP:         "bg-[#1E90FF]/10 text-[#1E90FF]",
-  IT:          "bg-cyan-100 text-cyan-600",
-  Business:    "bg-emerald-100 text-emerald-600",
-  Language:    "bg-pink-100 text-pink-600",
-  Automation:  "bg-teal-100 text-teal-600",
-  Other:       "bg-gray-100 text-gray-500",
-};
 
 export default function ApplicationsPage() {
-  const [apps, setApps]                     = useState<Application[]>([]);
-  const [search, setSearch]                 = useState("");
-  const [statusFilter, setStatusFilter]     = useState<Status>("all");
-  const [categoryFilter, setCategoryFilter] = useState("All");
-  const [categories, setCategories]         = useState<string[]>(["All"]);
+  const [apps, setApps]                 = useState<Application[]>([]);
+  const [search, setSearch]             = useState("");
+  const [statusFilter, setStatusFilter] = useState<Status>("all");
+  const [courseFilter, setCourseFilter] = useState("All");
+  const [courses, setCourses]           = useState<string[]>(["All"]);
   const [selected, setSelected]             = useState<Application | null>(null);
   const [loading, setLoading]               = useState(true);
   const [updating, setUpdating]             = useState<string | null>(null);
@@ -85,11 +58,8 @@ export default function ApplicationsPage() {
   const [error, setError]                   = useState("");
   const [success, setSuccess]               = useState("");
 
-  const getAppCategory = (a: Application): string => {
-    if (a.category) return a.category;
-    const courseName = a.course || (a.courseId && !a.courseId.includes("-") ? a.courseId : "") || "";
-    return courseName ? inferCategory(courseName) : "Other";
-  };
+  const getAppCourse = (a: Application): string =>
+    a.course || (a.courseId && !a.courseId.includes("-") ? a.courseId : "") || "Unknown";
 
   const fetchApps = async () => {
     const token = sessionStorage.getItem("adminToken");
@@ -126,8 +96,8 @@ export default function ApplicationsPage() {
 
     const applyAndSetApps = (list: Application[]) => {
       setApps(list);
-      const cats = ["All", ...Array.from(new Set(list.map(a => getAppCategory(a)))).sort()];
-      setCategories(cats);
+      const courseList = ["All", ...Array.from(new Set(list.map(a => getAppCourse(a)))).sort()];
+      setCourses(courseList);
     };
 
     try {
@@ -168,14 +138,14 @@ export default function ApplicationsPage() {
     const course = a.course || "";
     const email  = a.email || "";
     const status = (a.status || "").toLowerCase();
-    const cat    = getAppCategory(a);
-    const matchStatus   = statusFilter === "all" || status === statusFilter;
-    const matchCategory = categoryFilter === "All" || cat === categoryFilter;
-    const matchSearch   = !search ||
+    const appCourse = getAppCourse(a);
+    const matchStatus = statusFilter === "all" || status === statusFilter;
+    const matchCourse = courseFilter === "All" || appCourse === courseFilter;
+    const matchSearch = !search ||
       name.toLowerCase().includes(search.toLowerCase()) ||
       course.toLowerCase().includes(search.toLowerCase()) ||
       email.toLowerCase().includes(search.toLowerCase());
-    return matchStatus && matchCategory && matchSearch;
+    return matchStatus && matchCourse && matchSearch;
   });
 
   const counts = {
@@ -224,8 +194,8 @@ export default function ApplicationsPage() {
     setDeleteId(null);
     setApps(prev => {
       const next = prev.filter(a => (a.id || a._id) !== id);
-      const cats = ["All", ...Array.from(new Set(next.map(a => getAppCategory(a)))).sort()];
-      setCategories(cats);
+      const courseList = ["All", ...Array.from(new Set(next.map(a => getAppCourse(a)))).sort()];
+      setCourses(courseList);
       return next;
     });
     if (selected && (selected.id || selected._id) === id) setSelected(null);
@@ -243,29 +213,29 @@ export default function ApplicationsPage() {
       <AdminHeader title="Applications" />
       <div className="flex-1 p-6 space-y-5 overflow-y-auto">
 
-        {/* Category filter pills */}
-        {categories.length > 1 && (
+        {/* Course filter pills */}
+        {courses.length > 1 && (
           <div className="flex gap-2 flex-wrap items-center">
-            <span className="text-xs font-semibold text-gray-400 uppercase tracking-wide mr-1">Category</span>
-            {categories.map(cat => {
-              const count = cat === "All"
+            <span className="text-xs font-semibold text-gray-400 uppercase tracking-wide mr-1">Course</span>
+            {courses.map(c => {
+              const count = c === "All"
                 ? apps.length
-                : apps.filter(a => getAppCategory(a) === cat).length;
+                : apps.filter(a => getAppCourse(a) === c).length;
               return (
                 <button
-                  key={cat}
-                  onClick={() => setCategoryFilter(cat)}
+                  key={c}
+                  onClick={() => setCourseFilter(c)}
                   className={cn(
                     "px-3 py-1.5 rounded-full text-xs font-semibold border transition-all flex items-center gap-1.5",
-                    categoryFilter === cat
+                    courseFilter === c
                       ? "bg-[#1E90FF] text-white border-[#1E90FF] shadow-sm"
                       : "bg-white text-gray-500 border-gray-200 hover:border-[#1E90FF] hover:text-[#1E90FF]"
                   )}
                 >
-                  {cat}
+                  {c}
                   <span className={cn(
                     "px-1.5 py-0.5 rounded-full text-[10px] font-bold",
-                    categoryFilter === cat
+                    courseFilter === c
                       ? "bg-white/20 text-white"
                       : "bg-gray-100 text-gray-400"
                   )}>
@@ -366,7 +336,7 @@ export default function ApplicationsPage() {
                     const course = app.course || (app.courseId && !app.courseId.includes("-") ? app.courseId : "") || "—";
                     const date   = app.createdAt ? new Date(app.createdAt).toLocaleDateString() : app.date || "—";
                     const status = (app.status || "pending").toLowerCase();
-                    const cat    = getAppCategory(app);
+                    const cat    = getAppCourse(app);
 
                     return (
                       <tr key={id} className="hover:bg-gray-50/60 transition-colors">
@@ -376,10 +346,7 @@ export default function ApplicationsPage() {
                         </td>
                         <td className="px-5 py-3.5 text-xs text-gray-600 max-w-[160px] truncate">{course}</td>
                         <td className="px-5 py-3.5">
-                          <span className={cn(
-                            "px-2 py-0.5 rounded-full text-[11px] font-semibold",
-                            categoryColor[cat] ?? "bg-gray-100 text-gray-500"
-                          )}>
+                          <span className="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-[#1E90FF]/10 text-[#1E90FF]">
                             {cat}
                           </span>
                         </td>
@@ -445,10 +412,9 @@ export default function ApplicationsPage() {
                   {selected.status || "pending"}
                 </span>
                 <span className={cn(
-                  "px-2 py-0.5 rounded-full text-[11px] font-semibold",
-                  categoryColor[getAppCategory(selected)] ?? "bg-gray-100 text-gray-500"
+                  "px-2 py-0.5 rounded-full text-[11px] font-semibold bg-[#1E90FF]/10 text-[#1E90FF]"
                 )}>
-                  {getAppCategory(selected)}
+                  {getAppCourse(selected)}
                 </span>
               </div>
             </div>
