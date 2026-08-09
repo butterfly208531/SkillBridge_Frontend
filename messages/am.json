@@ -70,6 +70,11 @@
             "type": "link"
          },
          {
+            "name": "ስራዎች",
+            "path": "/jobs",
+            "type": "link"
+         },
+         {
             "name": "ያግኙን",
             "path": "/contact",
             "type": "link"
