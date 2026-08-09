@@ -5,8 +5,10 @@ import { BookOpen, FileText, Award, Users, TrendingUp, Clock, CheckCircle, XCirc
 import AdminHeader from "../components/AdminHeader";
 import StatCard from "../components/StatCard";
 import { fetchCourses, type Course } from "@/lib/api";
+import { getStoredCourses, saveCourses } from "@/lib/courses-store";
+import { getStoredScholarships } from "@/lib/scholarship-store";
 
-const API = process.env.NEXT_PUBLIC_API_BASE_URL || "https://skillbridge-backend2-h1u9.onrender.com/api";
+const API = process.env.NEXT_PUBLIC_API_BASE_URL || "https://skillbridge-backend2.onrender.com/api";
 
 const statusStyle: Record<string, string> = {
   pending:  "bg-yellow-100 text-yellow-700",
@@ -38,31 +40,80 @@ export default function DashboardPage() {
     try {
       setLoading(true);
       setError(null);
-      
-      const token = sessionStorage.getItem("adminToken");
-      
-      // Load courses using the imported function
+
+      // Token stored under "adminToken" by login page
+      const token = sessionStorage.getItem("adminToken") || localStorage.getItem("adminToken");
+
+      // ── Courses ──────────────────────────────────────────────────────
+      // Try live API first; if it returns nothing (cold start / empty DB),
+      // fall back to what admin has saved in localStorage.
       try {
         const coursesData = await fetchCourses();
-        setCourses(coursesData);
+        if (coursesData.length > 0) {
+          // Persist fresh data so public pages are up-to-date
+          saveCourses(coursesData.map((c: Course) => ({
+            id:               c.id,
+            title:            c.title,
+            duration:         c.duration || "—",
+            category:         c.category?.name || "",
+            categoryId:       c.categoryId || "",
+            status:           (c.status?.toLowerCase() === "active" ? "active" : "draft") as "active" | "draft",
+            imageUrl:         c.imageUrl || "",
+            adminImageUrl:    undefined,
+            rating:           c.rating ?? 0,
+            shortDescription: c.shortDescription || "",
+            priceOriginal:    c.priceOriginal || 0,
+            priceDiscounted:  c.priceDiscounted || 0,
+            startDate:        c.startDate || "",
+            createdAt:        c.createdAt || new Date().toISOString(),
+          })));
+          setCourses(coursesData);
+        } else {
+          // API returned empty — show localStorage data in the dashboard
+          const stored = getStoredCourses();
+          // Cast stored courses to Course shape for the dashboard stats
+          setCourses(stored.map(s => ({
+            id: s.id, title: s.title, duration: s.duration,
+            shortDescription: s.shortDescription, detailedDescription: "",
+            priceOriginal: s.priceOriginal, priceDiscounted: s.priceDiscounted,
+            status: s.status === "active" ? "Active" : "Draft",
+            level: "Beginner", imageUrl: s.imageUrl, reviews: 0,
+            rating: s.rating, studentsEnrolled: 0,
+            categoryId: s.categoryId, instructorId: "",
+            createdAt: s.createdAt, updatedAt: s.createdAt,
+            category: { id: s.categoryId, name: s.category, description: "", status: "active" },
+            instructor: { id: "", name: "", email: "", imageUrl: "", role: "", status: "" },
+            modules: [], learningOutcomes: [], prerequisites: [], enrollementYear: "",
+          } as Course)));
+        }
       } catch (err) {
         console.error("Error loading courses:", err);
-        setCourses([]);
+        const stored = getStoredCourses();
+        setCourses(stored.map(s => ({
+          id: s.id, title: s.title, duration: s.duration,
+          shortDescription: s.shortDescription, detailedDescription: "",
+          priceOriginal: s.priceOriginal, priceDiscounted: s.priceDiscounted,
+          status: s.status === "active" ? "Active" : "Draft",
+          level: "Beginner", imageUrl: s.imageUrl, reviews: 0,
+          rating: s.rating, studentsEnrolled: 0,
+          categoryId: s.categoryId, instructorId: "",
+          createdAt: s.createdAt, updatedAt: s.createdAt,
+          category: { id: s.categoryId, name: s.category, description: "", status: "active" },
+          instructor: { id: "", name: "", email: "", imageUrl: "", role: "", status: "" },
+          modules: [], learningOutcomes: [], prerequisites: [], enrollementYear: "",
+        } as Course)));
       }
-      
-      // Load applications
+
+      // ── Applications ──────────────────────────────────────────────────
       try {
         setLoadingApps(true);
-        const response = await fetch(`${API}/applications/with-receipt`, { 
-          headers: { Authorization: `Bearer ${token}` } 
+        const response = await fetch(`${API}/applications/with-receipt`, {
+          headers: { Authorization: `Bearer ${token}` }
         });
-        
         if (response.ok) {
           const data = await response.json();
-          const apps = Array.isArray(data) ? data : data.data ?? [];
-          setApplications(apps);
+          setApplications(Array.isArray(data) ? data : data.data ?? []);
         } else {
-          // Don't redirect on 401 — demo token is expected to fail API calls
           setApplications([]);
         }
       } catch (err) {
@@ -71,25 +122,25 @@ export default function DashboardPage() {
       } finally {
         setLoadingApps(false);
       }
-      
-      // Load scholarships count
+
+      // ── Scholarships count ────────────────────────────────────────────
       try {
-        const response = await fetch(`${API}/scholarships/active`, { 
-          headers: { Authorization: `Bearer ${token}` } 
+        const response = await fetch(`${API}/scholarships`, {
+          headers: { Authorization: `Bearer ${token}` }
         });
-        
         if (response.ok) {
           const data = await response.json();
-          const count = Array.isArray(data) ? data.length : data.data?.length ?? 0;
-          setScholarships(count);
+          const list = Array.isArray(data) ? data : data.data ?? [];
+          setScholarships(list.length);
         } else {
-          setScholarships(0);
+          // Fall back to localStorage count
+          setScholarships(getStoredScholarships().filter(s => s.status === "active").length);
         }
       } catch (err) {
         console.error("Error loading scholarships:", err);
-        setScholarships(0);
+        setScholarships(getStoredScholarships().filter(s => s.status === "active").length);
       }
-      
+
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load dashboard data");
     } finally {

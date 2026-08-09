@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 import { JOB_CATEGORIES, JOB_TYPES, JOB_LEVELS, type JobType, type JobLevel } from "@/lib/jobs-config";
 import { getStoredJobs, saveJobs } from "@/lib/jobs-store";
 
-const API = process.env.NEXT_PUBLIC_API_BASE_URL || "https://skillbridge-backend2-h1u9.onrender.com/api";
+const API = process.env.NEXT_PUBLIC_API_BASE_URL || "https://skillbridge-backend2.onrender.com/api";
 
 const TABS = ["Basic Info", "Details", "Requirements", "Review"] as const;
 type Tab = typeof TABS[number];

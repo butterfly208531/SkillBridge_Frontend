@@ -4,17 +4,21 @@ import { useState, useEffect, useRef } from "react";
 import { Search, Plus, Pencil, Trash2, Star, Clock, Upload, X, Loader2, RefreshCw } from "lucide-react";
 import { uploadImage } from "@/lib/uploadImage";
 import { getAllCategories } from "@/lib/courses-config";
+import { adminApi } from "@/lib/api";
 import {
   getStoredCourses,
   deleteCourse,
   toggleCourseStatus,
   updateCourse,
   addCourse,
+  saveCourses,
   getEffectiveImage,
   type StoredCourse,
 } from "@/lib/courses-store";
 import AdminHeader from "../components/AdminHeader";
 import { cn } from "@/lib/utils";
+
+const API = process.env.NEXT_PUBLIC_API_BASE_URL || "https://skillbridge-backend2.onrender.com/api";
 
 const categoryColor: Record<string, string> = {
   Development:  "bg-[#F57C00]/10 text-[#F57C00]",
@@ -37,12 +41,54 @@ export default function CoursesAdminPage() {
   const [editing, setEditing]     = useState<StoredCourse | null>(null);
   const [deleteId, setDeleteId]   = useState<string | null>(null);
 
-  // ── load from store ──
-  const loadCourses = () => {
-    const data = getStoredCourses();
-    setCourses(data);
-    const cats = ["All", ...Array.from(new Set(data.map(c => c.category)))];
+  // ── load from store + API ──
+  const loadCourses = async () => {
+    // Always show localStorage data immediately for instant paint
+    const local = getStoredCourses();
+    setCourses(local);
+    const cats = ["All", ...Array.from(new Set(local.map(c => c.category)))];
     setCategories(cats);
+
+    // Then try to refresh from the live API
+    try {
+      const token = sessionStorage.getItem("adminToken") || localStorage.getItem("adminToken") || "";
+      const res = await fetch(`${API}/courses`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+      if (res.ok) {
+        const d = await res.json();
+        const list: any[] = Array.isArray(d) ? d : d.data ?? [];
+        if (list.length > 0) {
+          // Merge: keep adminImageUrl from localStorage, API wins for everything else
+          const localMap = Object.fromEntries(local.map(s => [s.id, s]));
+          const merged: StoredCourse[] = list.map((c: any) => {
+            const stored = localMap[c.id] || localMap[c.slug] || null;
+            return {
+              id:               c.id || c._id || "",
+              title:            c.title || "",
+              duration:         c.duration || "—",
+              category:         c.category?.name || c.category || "",
+              categoryId:       c.categoryId || c.category?.id || "",
+              status:           (c.status?.toLowerCase() === "active" ? "active" : "draft") as "active" | "draft",
+              imageUrl:         c.imageUrl || "",
+              adminImageUrl:    stored?.adminImageUrl || undefined,
+              rating:           c.rating ?? 0,
+              shortDescription: c.shortDescription || "",
+              priceOriginal:    c.priceOriginal || 0,
+              priceDiscounted:  c.priceDiscounted || 0,
+              startDate:        c.startDate || "",
+              createdAt:        c.createdAt || new Date().toISOString(),
+            };
+          });
+          saveCourses(merged);
+          setCourses(merged);
+          const freshCats = ["All", ...Array.from(new Set(merged.map(c => c.category)))];
+          setCategories(freshCats);
+        }
+      }
+    } catch {
+      // Network error — localStorage data already shown, no-op
+    }
   };
 
   useEffect(() => { loadCourses(); }, []);
@@ -56,10 +102,22 @@ export default function CoursesAdminPage() {
   });
 
   // ── delete ──
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
+    // Optimistic: remove from localStorage + UI immediately
     deleteCourse(id);
     loadCourses();
     setDeleteId(null);
+
+    // Best-effort API delete (fire and forget — token may not exist on demo)
+    try {
+      const token = sessionStorage.getItem("adminToken") || localStorage.getItem("adminToken") || "";
+      await fetch(`${API}/courses/${id}`, {
+        method: "DELETE",
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+    } catch {
+      // API unavailable — localStorage already updated
+    }
   };
 
   // ── toggle status ──
@@ -295,8 +353,8 @@ function CourseModal({ course, onClose, onSaved }: {
     }
   };
 
-  // Save to localStorage store
-  const handleSave = () => {
+  // Save to localStorage AND backend API
+  const handleSave = async () => {
     if (!form.title.trim()) { setError("Title is required"); return; }
     setSaving(true); setError("");
 
@@ -304,6 +362,7 @@ function CourseModal({ course, onClose, onSaved }: {
       const selectedCat = categories.find(c => c.id === form.categoryId);
       const status: "active" | "draft" = form.status === "PUBLISHED" ? "active" : "draft";
 
+      // ── 1. Persist to localStorage immediately (optimistic) ──
       if (course?.id) {
         updateCourse(course.id, {
           title:         form.title.trim(),
@@ -312,7 +371,7 @@ function CourseModal({ course, onClose, onSaved }: {
           categoryId:    form.categoryId || course.categoryId,
           status,
           imageUrl:      form.imageUrl || course.imageUrl || "",
-          adminImageUrl: form.imageUrl || undefined,  // mark as admin-set
+          adminImageUrl: form.imageUrl || undefined,
         });
       } else {
         addCourse({
@@ -322,7 +381,7 @@ function CourseModal({ course, onClose, onSaved }: {
           categoryId:       form.categoryId || "",
           status,
           imageUrl:         form.imageUrl || "",
-          adminImageUrl:    form.imageUrl || undefined,  // mark as admin-set
+          adminImageUrl:    form.imageUrl || undefined,
           rating:           0,
           shortDescription: "",
           priceOriginal:    0,
@@ -330,6 +389,27 @@ function CourseModal({ course, onClose, onSaved }: {
           startDate:        "",
         });
       }
+
+      // ── 2. Best-effort API sync ──
+      try {
+        const token = sessionStorage.getItem("adminToken") || localStorage.getItem("adminToken") || "";
+        const payload = {
+          title:       form.title.trim(),
+          duration:    form.duration || "—",
+          categoryId:  form.categoryId || undefined,
+          status:      (form.status === "PUBLISHED" ? "Active" : "Draft") as "Active" | "Draft",
+          imageUrl:    form.imageUrl || undefined,
+        };
+
+        if (course?.id) {
+          await adminApi.updateCourse(course.id, payload);
+        } else {
+          await adminApi.createCourse(payload);
+        }
+      } catch {
+        // API unavailable or unauthenticated — localStorage already saved, proceed silently
+      }
+
       onSaved();
       onClose();
     } catch (err: any) {
@@ -458,8 +538,7 @@ function CourseModal({ course, onClose, onSaved }: {
           <button onClick={onClose} className="px-4 py-2 text-sm rounded-lg border border-gray-200 hover:bg-gray-50">Cancel</button>
           <button
             onClick={handleSave}
-            disabled={saving || uploading}
-            className="flex items-center gap-2 px-4 py-2 text-sm rounded-lg bg-[#1E90FF] text-white hover:bg-blue-500 disabled:opacity-60"
+            disabled={saving || uploading}            className="flex items-center gap-2 px-4 py-2 text-sm rounded-lg bg-[#1E90FF] text-white hover:bg-blue-500 disabled:opacity-60"
           >
             {saving && <Loader2 size={13} className="animate-spin" />}
             {course ? "Save Changes" : "Add Course"}

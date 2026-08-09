@@ -39,7 +39,7 @@ export default function AddCoursePage() {
   // ── Load categories (API preferred, local fallback already in state) ──
   useEffect(() => {
     const load = async () => {
-      const api = process.env.NEXT_PUBLIC_API_BASE_URL || "https://skillbridge-backend2-h1u9.onrender.com/api";
+      const api = process.env.NEXT_PUBLIC_API_BASE_URL || "https://skillbridge-backend2.onrender.com/api";
       const token = typeof window !== "undefined" ? (sessionStorage.getItem("adminToken") || "") : "";
       const endpoints = [
         `${api}/categories`,

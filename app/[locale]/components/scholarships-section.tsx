@@ -41,7 +41,7 @@ export function ScholarshipsSection({ showAll = false }: { showAll?: boolean }) 
   );
 
   useEffect(() => {
-    const API = process.env.NEXT_PUBLIC_API_BASE_URL || "https://skillbridge-backend2-h1u9.onrender.com/api";
+    const API = process.env.NEXT_PUBLIC_API_BASE_URL || "https://skillbridge-backend2.onrender.com/api";
 
     // Re-read localStorage first (covers same-browser admin edits)
     const stored = getStoredScholarships();
