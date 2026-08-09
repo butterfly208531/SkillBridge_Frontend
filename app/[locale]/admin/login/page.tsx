@@ -4,77 +4,93 @@ import { useState } from "react";
 import Image from "next/image";
 import { Eye, EyeOff, Lock, Mail, Loader2 } from "lucide-react";
 
-const ADMIN_EMAIL    = "admin@skillbridge.com";
-const ADMIN_PASSWORD = "Admin123!";
-
 export default function AdminLoginPage() {
-  const [email,        setEmail]        = useState(ADMIN_EMAIL);
-  const [password,     setPassword]     = useState(ADMIN_PASSWORD);
+  const [email,        setEmail]        = useState("");
+  const [password,     setPassword]     = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading,      setLoading]      = useState(false);
   const [error,        setError]        = useState("");
+
+  const [serverWaking, setServerWaking] = useState(false);
+
+  // Fetch with a configurable timeout
+  const fetchWithTimeout = (url: string, options: RequestInit, timeoutMs: number): Promise<Response> => {
+    return new Promise((resolve, reject) => {
+      const timer = setTimeout(() => reject(new Error("timeout")), timeoutMs);
+      fetch(url, options)
+        .then(res => { clearTimeout(timer); resolve(res); })
+        .catch(err => { clearTimeout(timer); reject(err); });
+    });
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     setLoading(true);
+    setServerWaking(false);
 
-    const e1 = email.trim().toLowerCase();
-    const p1 = password.trim();
+    const trimmedEmail    = email.trim().toLowerCase();
+    const trimmedPassword = password.trim();
 
-    // Check demo credentials first — no network needed
-    if (e1 !== ADMIN_EMAIL.toLowerCase() || p1 !== ADMIN_PASSWORD) {
-      setError("Invalid email or password.");
-      setLoading(false);
-      return;
-    }
-
-    // Try the real backend — if it works, use the real token
     try {
       const base = process.env.NEXT_PUBLIC_API_BASE_URL || "https://skillbridge-backend2.onrender.com/api";
-
       const endpoints = [`${base}/auth/login-admin`, `${base}/auth/login`];
-      for (const url of endpoints) {
-        let res: Response;
-        try {
-          res = await fetch(url, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ email: e1, password: p1 }),
-          });
-        } catch {
-          continue; // network error on this endpoint, try next
-        }
+      const body = JSON.stringify({ email: trimmedEmail, password: trimmedPassword });
+      const headers = { "Content-Type": "application/json" };
 
-        if (res.ok) {
-          const data = await res.json();
-          const token = data.accessToken || data.token || data.access_token || "";
-          if (token) {
-            sessionStorage.setItem("adminToken", token);
-            sessionStorage.setItem("adminUser", JSON.stringify(data.user || data.admin || { email: e1, name: "Admin" }));
-            const locale = window.location.pathname.split("/")[1] || "en";
-            window.location.replace(`/${locale}/admin/dashboard`);
+      // Try each endpoint up to 3 times (handles Render cold-start ~30–60 s)
+      for (const url of endpoints) {
+        for (let attempt = 1; attempt <= 3; attempt++) {
+          let res: Response;
+          try {
+            if (attempt === 2) setServerWaking(true); // show waking message on retry
+            res = await fetchWithTimeout(url, { method: "POST", headers, body }, 30_000);
+          } catch {
+            if (attempt < 3) {
+              await new Promise(r => setTimeout(r, 5_000)); // wait 5 s before retry
+              continue;
+            }
+            break; // all retries exhausted on this endpoint
+          }
+
+          setServerWaking(false);
+
+          if (res.ok) {
+            const data = await res.json();
+            const token = data.accessToken || data.token || data.access_token || "";
+            if (token) {
+              sessionStorage.setItem("adminToken", token);
+              sessionStorage.setItem(
+                "adminUser",
+                JSON.stringify(data.user || data.admin || { email: trimmedEmail, name: "Admin" })
+              );
+              const locale = window.location.pathname.split("/")[1] || "en";
+              window.location.replace(`/${locale}/admin/dashboard`);
+              return;
+            }
+          }
+
+          if (res.status === 401 || res.status === 403) {
+            setError("Invalid email or password.");
+            setLoading(false);
             return;
           }
-        }
 
-        if (res.status === 401 || res.status === 403) {
-          setError("Invalid email or password.");
-          setLoading(false);
-          return;
+          // 5xx or unexpected — retry
+          if (attempt < 3) {
+            await new Promise(r => setTimeout(r, 5_000));
+          }
         }
-
-        // 4xx (not 401/403) or 5xx — try next endpoint or fall through to demo
       }
-    } catch {
-      // Unexpected error — fall through to demo login
-    }
 
-    // Backend unavailable or broken — use demo token
-    sessionStorage.setItem("adminToken", "demo-token");
-    sessionStorage.setItem("adminUser", JSON.stringify({ email: ADMIN_EMAIL, name: "Admin" }));
-    const locale = window.location.pathname.split("/")[1] || "en";
-    window.location.replace(`/${locale}/admin/dashboard`);
+      setServerWaking(false);
+      setError("Unable to reach the server. Please try again later.");
+    } catch {
+      setError("An unexpected error occurred. Please try again.");
+    } finally {
+      setLoading(false);
+      setServerWaking(false);
+    }
   };
 
   return (
@@ -109,7 +125,7 @@ export default function AdminLoginPage() {
                   value={email}
                   onChange={e => setEmail(e.target.value)}
                   className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#1E90FF] focus:border-transparent"
-                  placeholder={ADMIN_EMAIL}
+                  placeholder="Enter your email"
                 />
               </div>
             </div>
@@ -124,7 +140,7 @@ export default function AdminLoginPage() {
                   value={password}
                   onChange={e => setPassword(e.target.value)}
                   className="w-full pl-10 pr-10 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#1E90FF] focus:border-transparent"
-                  placeholder="••••••••"
+                  placeholder="Enter your password"
                 />
                 <button
                   type="button"
@@ -147,6 +163,12 @@ export default function AdminLoginPage() {
                 : "Sign In"
               }
             </button>
+
+            {serverWaking && (
+              <p className="text-center text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+                ⏳ Server is waking up, this may take up to 30 seconds…
+              </p>
+            )}
           </form>
         </div>
 
