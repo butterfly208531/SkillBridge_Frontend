@@ -1,11 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { Plus, Pencil, Trash2, Award, Users, Calendar, CheckCircle, RefreshCw, Loader2, Save } from "lucide-react";
+import { useEffect, useState, useRef, useCallback } from "react";
+import { Plus, Pencil, Trash2, Award, Users, Calendar, CheckCircle, RefreshCw, Loader2, Save, Upload, X, ImageIcon } from "lucide-react";
 import AdminHeader from "../components/AdminHeader";
 import { cn } from "@/lib/utils";
 import { scholarshipsConfig, scholarshipWinnersConfig } from "@/lib/scholarships-config";
-import { getStoredScholarships, saveScholarships, type StoredScholarship } from "@/lib/scholarship-store";
+import { getStoredScholarships, saveScholarships, getStoredWinners, saveWinners, type StoredScholarship, type StoredWinner } from "@/lib/scholarship-store";
 
 const API = process.env.NEXT_PUBLIC_API_BASE_URL || "https://skillbridge-backend2.onrender.com/api";
 
@@ -25,6 +25,7 @@ interface Scholarship {
 interface Winner {
   id: string;
   name: string;
+  image: string;
   scholarship: string;
   year: number;
   status: string;
@@ -52,6 +53,7 @@ const FALLBACK_SCHOLARSHIPS: Scholarship[] = scholarshipsConfig.map(s => ({
 const FALLBACK_WINNERS: Winner[] = scholarshipWinnersConfig.map(w => ({
   id: w.id,
   name: w.name,
+  image: w.image,
   scholarship: w.scholarshipKey.replace(/([A-Z])/g, " $1").trim() + " Scholarship",
   year: w.year,
   status: "active",
@@ -68,13 +70,20 @@ export default function ScholarshipsPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
+  // Winner modal state
+  const [showWinnerModal, setShowWinnerModal] = useState(false);
+  const [editingWinner, setEditingWinner] = useState<Winner | null>(null);
+  const [deleteWinnerId, setDeleteWinnerId] = useState<string | null>(null);
+  const [savingWinner, setSavingWinner] = useState(false);
+
   const fetchData = async () => {
     setLoading(true);
     const token = sessionStorage.getItem("adminToken");
     const headers = { Authorization: `Bearer ${token}` };
 
     // Load from localStorage first (admin-saved data)
-    const localData = getStoredScholarships();
+    const localData    = getStoredScholarships();
+    const localWinners = getStoredWinners();
 
     try {
       const [schRes, winRes] = await Promise.all([
@@ -114,19 +123,26 @@ export default function ScholarshipsPage() {
       if (winRes.ok) {
         const d = await winRes.json();
         const data = Array.isArray(d) ? d : d.data ?? [];
-        setWinners(data.length > 0 ? data.map((w: any) => ({
-          id: w.id || w._id,
-          name: w.name || w.studentName || "",
-          scholarship: w.scholarship || w.scholarshipName || "",
-          year: w.year || new Date(w.awardedAt || Date.now()).getFullYear(),
-          status: (w.status || "active").toLowerCase(),
-        })) : FALLBACK_WINNERS);
+        if (data.length > 0) {
+          const mapped: Winner[] = data.map((w: any) => ({
+            id: w.id || w._id,
+            name: w.name || w.studentName || "",
+            image: w.image || w.photo || "",
+            scholarship: w.scholarship || w.scholarshipName || "",
+            year: w.year || new Date(w.awardedAt || Date.now()).getFullYear(),
+            status: (w.status || "active").toLowerCase(),
+          }));
+          setWinners(mapped);
+          saveWinners(mapped.map(w => ({ ...w, status: w.status as "active" | "inactive" })));
+        } else {
+          setWinners(localWinners);
+        }
       } else {
-        setWinners(FALLBACK_WINNERS);
+        setWinners(localWinners);
       }
     } catch {
       setScholarships(localData.length > 0 ? localData : FALLBACK_SCHOLARSHIPS);
-      setWinners(FALLBACK_WINNERS);
+      setWinners(localWinners);
     } finally {
       setLoading(false);
     }
@@ -137,6 +153,11 @@ export default function ScholarshipsPage() {
     const local = getStoredScholarships();
     if (local.length === 0) {
       saveScholarships(FALLBACK_SCHOLARSHIPS as any);
+    }
+    // Seed winners store if empty
+    const localW = getStoredWinners();
+    if (localW.length === 0) {
+      saveWinners(FALLBACK_WINNERS.map(w => ({ ...w, status: w.status as "active" | "inactive" })));
     }
     fetchData(); 
   }, []);
@@ -202,6 +223,72 @@ export default function ScholarshipsPage() {
     setShowModal(false);
   };
 
+  const handleWinnerSave = async (data: Winner, imageFile?: File) => {
+    setSavingWinner(true);
+    const token = sessionStorage.getItem("adminToken");
+    const isEdit = !!editingWinner;
+
+    // ── Image handling ───────────────────────────────────────────────────────
+    let imageUrl = data.image; // may already be base64 or an existing URL
+
+    if (imageFile) {
+      // 1. Try multipart upload to backend
+      try {
+        const fd = new FormData();
+        fd.append("image", imageFile);
+        const res = await fetch(`${API}/upload`, {
+          method: "POST",
+          headers: { Authorization: `Bearer ${token}` },
+          body: fd,
+        });
+        if (res.ok) {
+          const json = await res.json();
+          imageUrl = json.url || json.imageUrl || json.data?.url || imageUrl;
+        }
+      } catch {
+        // API upload failed — base64 already set in data.image from the modal
+      }
+    }
+
+    const finalData: Winner = { ...data, image: imageUrl };
+    const newEntry: Winner  = isEdit ? finalData : { ...finalData, id: `winner-${Date.now()}` };
+    const updated: Winner[] = isEdit
+      ? winners.map(w => w.id === data.id ? newEntry : w)
+      : [...winners, newEntry];
+
+    setWinners(updated);
+    saveWinners(updated.map(w => ({ ...w, status: w.status as "active" | "inactive" })));
+
+    // ── Sync to backend ──────────────────────────────────────────────────────
+    try {
+      const url    = isEdit ? `${API}/scholarship-winners/${data.id}` : `${API}/scholarship-winners`;
+      const method = isEdit ? "PUT" : "POST";
+      await fetch(url, {
+        method,
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify(finalData),
+      });
+    } catch {}
+
+    setSavingWinner(false);
+    setShowWinnerModal(false);
+    setEditingWinner(null);
+  };
+
+  const handleWinnerDelete = async (id: string) => {
+    const token = sessionStorage.getItem("adminToken");
+    try {
+      await fetch(`${API}/scholarship-winners/${id}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+    } catch {}
+    const updated = winners.filter(w => w.id !== id);
+    setWinners(updated);
+    saveWinners(updated.map(w => ({ ...w, status: w.status as "active" | "inactive" })));
+    setDeleteWinnerId(null);
+  };
+
   const totalApps    = scholarships.reduce((s, x) => s + (x.applicationsCount || 0), 0);
   const totalWinners = scholarships.reduce((s, x) => s + (x.winnersCount || 0), 0);
 
@@ -216,8 +303,8 @@ export default function ScholarshipsPage() {
           {[
             { label: "Programs",     value: scholarships.length,                                    icon: Award,       color: "text-[#1E90FF]",    bg: "bg-[#1E90FF]/10" },
             { label: "Applications", value: totalApps,                                              icon: Users,       color: "text-[#F57C00]",    bg: "bg-[#F57C00]/10" },
-            { label: "Winners",      value: totalWinners,                                           icon: CheckCircle, color: "text-emerald-500",  bg: "bg-emerald-50"   },
-            { label: "Active",       value: scholarships.filter(s => s.status === "active").length, icon: Award,       color: "text-purple-500",   bg: "bg-purple-50"    },
+            { label: "Winners",      value: totalWinners,                                           icon: CheckCircle, color: "text-[#2196F3]",    bg: "bg-[#2196F3]/10"  },
+            { label: "Active",       value: scholarships.filter(s => s.status === "active").length, icon: Award,       color: "text-[#F57C00]",    bg: "bg-[#F57C00]/10"  },
           ].map(({ label, value, icon: Icon, color, bg }) => (
             <div key={label} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 flex items-center gap-3">
               <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center shrink-0", bg)}>
@@ -253,6 +340,13 @@ export default function ScholarshipsPage() {
                 <Plus size={14} /> Add Scholarship
               </button>
             )}
+            {tab === "winners" && (
+              <button
+                onClick={() => { setEditingWinner(null); setShowWinnerModal(true); }}
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-[#1E90FF] text-white text-xs font-semibold rounded-lg hover:bg-blue-500 transition-colors">
+                <Plus size={14} /> Add Winner
+              </button>
+            )}
           </div>
         </div>
 
@@ -279,7 +373,7 @@ export default function ScholarshipsPage() {
                         <p className="text-xs text-[#1E90FF] mt-0.5">{s.course}</p>
                       </div>
                       <span className={cn("px-2 py-0.5 rounded-full text-[11px] font-semibold capitalize",
-                        s.status === "active" ? "bg-emerald-100 text-emerald-700" : "bg-gray-100 text-gray-500"
+                        s.status === "active" ? "bg-[#2196F3]/10 text-[#2196F3]" : "bg-gray-100 text-gray-500"
                       )}>{s.status}</span>
                     </div>
 
@@ -345,18 +439,23 @@ export default function ScholarshipsPage() {
                   <th className="px-5 py-3 text-left font-semibold">Scholarship</th>
                   <th className="px-5 py-3 text-left font-semibold">Year</th>
                   <th className="px-5 py-3 text-left font-semibold">Status</th>
+                  <th className="px-5 py-3 text-left font-semibold">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-50">
                 {winners.length === 0 ? (
-                  <tr><td colSpan={4} className="text-center py-12 text-gray-400 text-sm">No winners found</td></tr>
+                  <tr><td colSpan={5} className="text-center py-12 text-gray-400 text-sm">No winners found. Click &quot;Add Winner&quot; to get started.</td></tr>
                 ) : winners.map(w => (
                   <tr key={w.id} className="hover:bg-gray-50/50 transition-colors">
                     <td className="px-5 py-3.5">
                       <div className="flex items-center gap-2.5">
-                        <div className="w-7 h-7 rounded-full bg-gradient-to-br from-[#1E90FF] to-[#F57C00] flex items-center justify-center text-white text-xs font-bold shrink-0">
-                          {w.name[0]}
-                        </div>
+                        {w.image ? (
+                          <img src={w.image} alt={w.name} className="w-7 h-7 rounded-full object-cover border border-gray-200 shrink-0" />
+                        ) : (
+                          <div className="w-7 h-7 rounded-full bg-gradient-to-br from-[#1E90FF] to-[#F57C00] flex items-center justify-center text-white text-xs font-bold shrink-0">
+                            {w.name[0]}
+                          </div>
+                        )}
                         <span className="font-medium text-gray-800">{w.name}</span>
                       </div>
                     </td>
@@ -364,8 +463,22 @@ export default function ScholarshipsPage() {
                     <td className="px-5 py-3.5 text-xs text-gray-500">{w.year}</td>
                     <td className="px-5 py-3.5">
                       <span className={cn("px-2.5 py-1 rounded-full text-[11px] font-semibold capitalize",
-                        w.status === "active" ? "bg-emerald-100 text-emerald-700" : "bg-gray-100 text-gray-500"
+                        w.status === "active" ? "bg-[#2196F3]/10 text-[#2196F3]" : "bg-gray-100 text-gray-500"
                       )}>{w.status}</span>
+                    </td>
+                    <td className="px-5 py-3.5">
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => { setEditingWinner(w); setShowWinnerModal(true); }}
+                          className="flex items-center gap-1 px-2.5 py-1 text-xs text-[#1E90FF] border border-[#1E90FF]/30 rounded-lg hover:bg-[#1E90FF]/5 transition-colors">
+                          <Pencil size={11} /> Edit
+                        </button>
+                        <button
+                          onClick={() => setDeleteWinnerId(w.id)}
+                          className="flex items-center gap-1 px-2.5 py-1 text-xs text-red-400 border border-red-200 rounded-lg hover:bg-red-50 transition-colors">
+                          <Trash2 size={11} /> Delete
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -386,7 +499,7 @@ export default function ScholarshipsPage() {
         />
       )}
 
-      {/* Delete confirm */}
+      {/* Delete scholarship confirm */}
       {deleteId && (
         <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl shadow-xl p-6 max-w-sm w-full">
@@ -395,6 +508,31 @@ export default function ScholarshipsPage() {
             <div className="flex gap-3 justify-end">
               <button onClick={() => setDeleteId(null)} className="px-4 py-2 text-sm rounded-lg border border-gray-200 hover:bg-gray-50">Cancel</button>
               <button onClick={() => handleDelete(deleteId)} className="px-4 py-2 text-sm rounded-lg bg-red-500 text-white hover:bg-red-600">Delete</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Winner modal */}
+      {showWinnerModal && (
+        <WinnerModal
+          winner={editingWinner}
+          saving={savingWinner}
+          scholarships={scholarships}
+          onClose={() => { setShowWinnerModal(false); setEditingWinner(null); }}
+          onSave={handleWinnerSave}
+        />
+      )}
+
+      {/* Delete winner confirm */}
+      {deleteWinnerId && (
+        <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-xl p-6 max-w-sm w-full">
+            <h3 className="font-bold text-gray-800 mb-2">Delete Winner?</h3>
+            <p className="text-sm text-gray-500 mb-5">This will remove them from the public scholarship winners display.</p>
+            <div className="flex gap-3 justify-end">
+              <button onClick={() => setDeleteWinnerId(null)} className="px-4 py-2 text-sm rounded-lg border border-gray-200 hover:bg-gray-50">Cancel</button>
+              <button onClick={() => handleWinnerDelete(deleteWinnerId)} className="px-4 py-2 text-sm rounded-lg bg-red-500 text-white hover:bg-red-600">Delete</button>
             </div>
           </div>
         </div>
@@ -575,6 +713,126 @@ function ScholarshipModal({ scholarship, saving, onClose, onSave, error }: {
             className="flex items-center gap-2 px-4 py-2 text-sm rounded-lg bg-[#1E90FF] text-white hover:bg-blue-500 disabled:opacity-60">
             {saving && <Loader2 size={13} className="animate-spin" />}
             {scholarship ? "Save Changes" : "Add Scholarship"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function WinnerModal({ winner, saving, scholarships, onClose, onSave }: {
+  winner: Winner | null;
+  saving: boolean;
+  scholarships: Scholarship[];
+  onClose: () => void;
+  onSave: (d: Winner) => void;
+}) {
+  const [form, setForm] = useState<Winner>({
+    id:         winner?.id         ?? "",
+    name:       winner?.name       ?? "",
+    image:      winner?.image      ?? "",
+    scholarship: winner?.scholarship ?? "",
+    year:       winner?.year       ?? new Date().getFullYear(),
+    status:     winner?.status     ?? "active",
+  });
+
+  const set = (field: keyof Winner, value: any) => setForm(p => ({ ...p, [field]: value }));
+
+  const previewOk = form.image.startsWith("http") || form.image.startsWith("/");
+
+  return (
+    <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
+      <div className="bg-white rounded-2xl shadow-xl p-6 max-w-md w-full max-h-[90vh] overflow-y-auto">
+        <h3 className="font-bold text-gray-800 mb-5">
+          {winner ? "Edit Winner" : "Add Scholarship Winner"}
+        </h3>
+
+        <div className="space-y-4">
+          {/* Name */}
+          <div>
+            <label className="block text-xs font-medium text-gray-600 mb-1">Full Name *</label>
+            <input
+              type="text"
+              value={form.name}
+              placeholder="e.g. Abebe Kebede"
+              onChange={e => set("name", e.target.value)}
+              className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1E90FF]/30"
+            />
+          </div>
+
+          {/* Photo URL */}
+          <div>
+            <label className="block text-xs font-medium text-gray-600 mb-1">Photo URL</label>
+            <div className="flex gap-2 items-center">
+              <input
+                type="text"
+                value={form.image}
+                placeholder="https://… or /images/…  (leave empty for initials avatar)"
+                onChange={e => set("image", e.target.value)}
+                className="flex-1 px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1E90FF]/30"
+              />
+              <div className="w-9 h-9 rounded-full overflow-hidden border border-gray-200 shrink-0 bg-gradient-to-br from-[#1E90FF] to-[#F57C00] flex items-center justify-center text-white text-xs font-bold">
+                {previewOk
+                  ? <img src={form.image} alt="preview" className="w-full h-full object-cover" />
+                  : (form.name[0] || "?")}
+              </div>
+            </div>
+            <p className="text-[11px] text-gray-400 mt-1">Leave empty to show initials avatar on the public page.</p>
+          </div>
+
+          {/* Scholarship */}
+          <div>
+            <label className="block text-xs font-medium text-gray-600 mb-1">Scholarship *</label>
+            <input
+              list="scholarship-list"
+              value={form.scholarship}
+              placeholder="e.g. Full-Stack Scholarship"
+              onChange={e => set("scholarship", e.target.value)}
+              className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1E90FF]/30"
+            />
+            <datalist id="scholarship-list">
+              {scholarships.map(s => <option key={s.id} value={s.name} />)}
+            </datalist>
+          </div>
+
+          {/* Year + Status */}
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1">Year *</label>
+              <input
+                type="number"
+                value={form.year}
+                min={2020}
+                max={2099}
+                onChange={e => set("year", Number(e.target.value))}
+                className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1E90FF]/30"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1">Status</label>
+              <select
+                value={form.status}
+                onChange={e => set("status", e.target.value)}
+                className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1E90FF]/30"
+              >
+                <option value="active">Active</option>
+                <option value="inactive">Inactive</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex gap-3 justify-end mt-6">
+          <button onClick={onClose} className="px-4 py-2 text-sm rounded-lg border border-gray-200 hover:bg-gray-50">
+            Cancel
+          </button>
+          <button
+            onClick={() => onSave(form)}
+            disabled={saving || !form.name.trim() || !form.scholarship.trim()}
+            className="flex items-center gap-2 px-4 py-2 text-sm rounded-lg bg-[#1E90FF] text-white hover:bg-blue-500 disabled:opacity-60"
+          >
+            {saving && <Loader2 size={13} className="animate-spin" />}
+            {winner ? "Save Changes" : "Add Winner"}
           </button>
         </div>
       </div>

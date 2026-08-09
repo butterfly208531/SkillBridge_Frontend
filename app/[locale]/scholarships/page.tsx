@@ -73,9 +73,9 @@ export default function ScholarshipsPage() {
               <span className="font-semibold text-[#F57C00]">Half Funded</span>
               <span className="text-gray-500">— You pay 50%</span>
             </div>
-            <div className="flex items-center gap-2 px-3 py-2 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-100 dark:border-red-800">
-              <span className="w-3 h-3 rounded-full bg-red-500 animate-pulse" />
-              <span className="font-semibold text-red-600">Closing Soon</span>
+            <div className="flex items-center gap-2 px-3 py-2 bg-[#F57C00]/10 dark:bg-[#F57C00]/20 rounded-lg border border-[#F57C00]/20 dark:border-[#F57C00]/30">
+              <span className="w-3 h-3 rounded-full bg-[#F57C00] animate-pulse" />
+              <span className="font-semibold text-[#F57C00]">Closing Soon</span>
               <span className="text-gray-500">— Less than 7 days</span>
             </div>
           </div>

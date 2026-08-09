@@ -42,26 +42,25 @@ export function JobsSection() {
   const openJobs = allJobs.filter(j => !isJobClosed(j)).slice(0, 3);
 
   return (
-    <section className="py-16 bg-[#0f2474] dark:bg-[#0a1a5c]">
+    <section className="py-16 bg-gray-50 dark:bg-gray-950">
       <div className="container mx-auto px-4">
         <SectionHeading
           title="Job Announcements"
           subtitle="Discover exciting opportunities from companies hiring SkillBridge graduates."
           center
-          titleColor="text-white"
         />
 
         {/* Stats bar */}
         <div className="flex flex-wrap justify-center gap-6 mb-10">
           {[
-            { label: "Open Positions",    value: allJobs.filter(j => !isJobClosed(j)).length, color: "text-cyan-300" },
-            { label: "Partner Companies", value: new Set(allJobs.map(j => j.company)).size,    color: "text-orange-300" },
-            { label: "Job Categories",    value: new Set(allJobs.map(j => j.category)).size,   color: "text-cyan-300" },
+            { label: "Open Positions",   value: allJobs.filter(j => !isJobClosed(j)).length, color: "text-[#1E90FF]" },
+            { label: "Partner Companies",value: new Set(allJobs.map(j => j.company)).size,    color: "text-[#F57C00]" },
+            { label: "Job Categories",   value: new Set(allJobs.map(j => j.category)).size,   color: "text-[#1E90FF]" },
           ].map(({ label, value, color }) => (
-            <div key={label} className="flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-xl border border-white/20 px-5 py-3 shadow-sm">
+            <div key={label} className="flex items-center gap-2 bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-800 px-5 py-3 shadow-sm">
               <Briefcase className={cn("h-4 w-4", color)} />
               <span className={cn("text-xl font-black", color)}>{value}</span>
-              <span className="text-xs text-blue-200">{label}</span>
+              <span className="text-xs text-gray-500 dark:text-gray-400">{label}</span>
             </div>
           ))}
         </div>
@@ -85,7 +84,7 @@ export function JobsSection() {
         {/* View All button */}
         <div className="flex justify-center">
           <Button
-            className="bg-white text-[#1E90FF] hover:bg-blue-50 font-bold px-8 h-11 gap-2 shadow-lg"
+            className="bg-[#1E90FF] hover:bg-blue-500 text-white px-8 h-11 gap-2"
             asChild
           >
             <Link href="/jobs">

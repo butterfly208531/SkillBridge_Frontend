@@ -46,6 +46,57 @@ const ApplicationForm = () => {
   const [courseCategory, setCourseCategory] = useState<string>("");
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
 
+  // ── Duplicate-application helpers ────────────────────────────────────────
+  const APPLIED_KEY = "appliedCourses"; // localStorage key
+
+  /**
+   * Returns a stable, consistent course key for duplicate tracking.
+   * Prefers the resolved UUID; falls back to the URL slug (always available).
+   * Storing BOTH means a slug→UUID change on a subsequent visit still matches.
+   */
+  const courseKeys = (courseId: string): string[] => {
+    const keys: string[] = [];
+    if (slug) keys.push(slug.trim().toLowerCase());
+    if (courseId && courseId !== slug) keys.push(courseId.trim().toLowerCase());
+    return keys;
+  };
+
+  /** Returns true if this email has already applied for this course (by any key). */
+  const hasAlreadyApplied = (email: string, courseId: string): boolean => {
+    try {
+      const raw = localStorage.getItem(APPLIED_KEY);
+      const list: { email: string; courseId: string }[] = raw ? JSON.parse(raw) : [];
+      const normalEmail = email.trim().toLowerCase();
+      const keys = courseKeys(courseId);
+      return list.some(
+        (entry) =>
+          entry.email.trim().toLowerCase() === normalEmail &&
+          keys.includes(entry.courseId.trim().toLowerCase())
+      );
+    } catch {
+      return false;
+    }
+  };
+
+  /** Persists the email + course keys so future attempts are blocked locally. */
+  const markAsApplied = (email: string, courseId: string): void => {
+    try {
+      const raw = localStorage.getItem(APPLIED_KEY);
+      const list: { email: string; courseId: string }[] = raw ? JSON.parse(raw) : [];
+      const normalEmail = email.trim().toLowerCase();
+      // Write one entry per key (slug + UUID) so both always match
+      for (const key of courseKeys(courseId)) {
+        if (!list.some(e => e.email === normalEmail && e.courseId === key)) {
+          list.push({ email: normalEmail, courseId: key });
+        }
+      }
+      localStorage.setItem(APPLIED_KEY, JSON.stringify(list));
+    } catch {
+      // Non-critical — silently ignore storage errors
+    }
+  };
+  // ─────────────────────────────────────────────────────────────────────────
+
   useEffect(() => {
     if (typeof window !== "undefined") {
       const currentUserString = sessionStorage.getItem("currentUser");
@@ -194,7 +245,18 @@ const ApplicationForm = () => {
     return true;
   };
 
-  const handleNext = () => { if (validateStep1()) setCurrentStep(2); };
+  const handleNext = () => {
+    if (!validateStep1()) return;
+    // Check for duplicate at step transition — email is confirmed valid here,
+    // and slug is always available regardless of async courseId resolution.
+    if (hasAlreadyApplied(form.email, form.courseId)) {
+      setValidationErrors([
+        `You have already applied for ${courseName || "this course"} with this email address. Each email can only submit one application per course.`,
+      ]);
+      return;
+    }
+    setCurrentStep(2);
+  };
   const handleBack = () => setCurrentStep(1);
 
   const handleReset = () => {
@@ -211,6 +273,18 @@ const ApplicationForm = () => {
   const handleSubmitApplication = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validateStep2()) return;
+
+    // ── Duplicate check ───────────────────────────────────────────────────
+    // Use form.courseId if resolved, otherwise fall back to the URL slug so
+    // the check works even if the async resolution hasn't finished yet.
+    const effectiveCourseId = form.courseId || slug;
+    if (hasAlreadyApplied(form.email, effectiveCourseId)) {
+      setValidationErrors([
+        `You have already applied for ${courseName || "this course"} with this email address. Each email can only submit one application per course.`,
+      ]);
+      return;
+    }
+    // ─────────────────────────────────────────────────────────────────────
 
     // Determine if we have a real UUID or just a slug fallback
     const uuidPattern = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
@@ -249,6 +323,9 @@ const ApplicationForm = () => {
           localApp,
           ...JSON.parse(localStorage.getItem("pendingApplications") || "[]"),
         ]));
+        // ── mark as applied so future attempts are blocked ───────────────
+        markAsApplied(form.email, effectiveCourseId);
+        // ─────────────────────────────────────────────────────────────────
         toast.success("Application Submitted Successfully!");
         const locale = (params.locale as string) || "en";
         const searchParams = new URLSearchParams();
@@ -283,6 +360,16 @@ const ApplicationForm = () => {
       });
       const responseData = await response.json();
       if (!response.ok) {
+        // ── specific message for duplicate detected by the backend ──────
+        if (response.status === 409) {
+          setValidationErrors([
+            `You have already applied for ${courseName || "this course"} with this email address. Each email can only submit one application per course.`,
+          ]);
+          // Persist locally so the next attempt is caught before hitting the API
+          markAsApplied(form.email, effectiveCourseId);
+          return;
+        }
+        // ─────────────────────────────────────────────────────────────────────
         throw new Error(responseData.message || "Failed to submit application. Please check your inputs.");
       }
 
@@ -301,6 +388,9 @@ const ApplicationForm = () => {
         localStorage.setItem("adminNotifications", JSON.stringify([notification, ...existing]));
       } catch (_) {}
 
+      // ── mark as applied on successful API submission ─────────────────
+      markAsApplied(form.email, effectiveCourseId);
+      // ─────────────────────────────────────────────────────────────────────
       toast.success("Application Submitted Successfully!");
       const submittedCourseId = form.courseId;
       const submittedAppId = responseData.id;

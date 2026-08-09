@@ -9,7 +9,7 @@ import { Button } from "@/app/[locale]/components/ui/button";
 import { SectionHeading } from "@/app/[locale]/components/ui/section-heading";
 import ScholarshipCard from "@/app/[locale]/components/ui/scholarship-card";
 import { scholarshipsConfig, scholarshipWinnersConfig, isClosed, type ScholarshipConfig } from "@/lib/scholarships-config";
-import { getStoredScholarships, saveScholarships, type StoredScholarship } from "@/lib/scholarship-store";
+import { getStoredScholarships, saveScholarships, getStoredWinners, saveWinners, type StoredScholarship, type StoredWinner } from "@/lib/scholarship-store";
 import { Archive } from "lucide-react";
 
 // Merge stored scholarship data with static config defaults
@@ -40,8 +40,26 @@ export function ScholarshipsSection({ showAll = false }: { showAll?: boolean }) 
     () => scholarshipsConfig.map(s => ({ ...s, nameOverride: "", eligibilityOverride: "" }))
   );
 
+  // Winners: seed from static config so the first render matches SSR, then
+  // swap in localStorage data (and optionally the API) on the client.
+  const [winners, setWinners] = useState<StoredWinner[]>(
+    () => scholarshipWinnersConfig.map(w => ({
+      id:         w.id,
+      name:       w.name,
+      image:      w.image,
+      scholarship: w.scholarshipKey.replace(/([A-Z])/g, " $1").trim() + " Scholarship",
+      year:       w.year,
+      status:     "active" as const,
+    }))
+  );
   useEffect(() => {
     const API = process.env.NEXT_PUBLIC_API_BASE_URL || "https://skillbridge-backend2.onrender.com/api";
+
+    // Load winners from localStorage first (admin-saved data)
+    const localWinners = getStoredWinners();
+    if (localWinners.length > 0) {
+      setWinners(localWinners);
+    }
 
     // Re-read localStorage first (covers same-browser admin edits)
     const stored = getStoredScholarships();
@@ -75,6 +93,27 @@ export function ScholarshipsSection({ showAll = false }: { showAll?: boolean }) 
       })
       .catch(() => {
         // API unavailable — localStorage/static config already applied above
+      });
+
+    // Try winners API — if it returns data, it overrides localStorage
+    fetch(`${API}/scholarship-winners`)
+      .then(r => r.ok ? r.json() : Promise.reject())
+      .then(d => {
+        const list: any[] = Array.isArray(d) ? d : d.data ?? [];
+        if (list.length === 0) return;
+        const mapped: StoredWinner[] = list.map((w: any) => ({
+          id:         w.id || w._id || "",
+          name:       w.name || w.studentName || "",
+          image:      w.image || w.photo || "",
+          scholarship: w.scholarship || w.scholarshipName || "",
+          year:       w.year || new Date(w.awardedAt || Date.now()).getFullYear(),
+          status:     ((w.status || "active").toLowerCase()) as "active" | "inactive",
+        }));
+        saveWinners(mapped);
+        setWinners(mapped);
+      })
+      .catch(() => {
+        // API unavailable — localStorage data already applied above
       });
   }, []);
 
@@ -165,7 +204,7 @@ export function ScholarshipsSection({ showAll = false }: { showAll?: boolean }) 
             {t("previousWinners")}
           </h3>
           <div className="flex flex-wrap justify-center gap-6">
-            {scholarshipWinnersConfig.map((winner, i) => (
+            {winners.filter(w => w.status === "active").map((winner, i) => (
               <motion.div
                 key={winner.id}
                 initial={{ opacity: 0, scale: 0.9 }}
@@ -174,8 +213,20 @@ export function ScholarshipsSection({ showAll = false }: { showAll?: boolean }) 
                 viewport={{ once: true }}
                 className="flex flex-col items-center gap-2"
               >
-                <div className="relative w-16 h-16 rounded-full overflow-hidden border-2 border-[#2196F3]">
-                  <Image src={winner.image} alt={`${winner.name} scholarship winner`} fill className="object-cover" sizes="64px" />
+                <div className="relative w-16 h-16 rounded-full overflow-hidden border-2 border-[#2196F3] shrink-0">
+                  {winner.image ? (
+                    <Image
+                      src={winner.image}
+                      alt={`${winner.name} scholarship winner`}
+                      fill
+                      className="object-cover"
+                      sizes="64px"
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-gradient-to-br from-[#1E90FF] to-[#F57C00] flex items-center justify-center text-white text-xl font-bold">
+                      {winner.name.charAt(0).toUpperCase()}
+                    </div>
+                  )}
                 </div>
                 <p className="text-sm font-medium text-gray-800 dark:text-gray-200">{winner.name}</p>
                 <p className="text-xs text-gray-400 dark:text-gray-500">{winner.year}</p>

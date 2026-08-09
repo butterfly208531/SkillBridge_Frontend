@@ -47,20 +47,20 @@ function CountdownBadge({ deadline }: { deadline: string }) {
   }
   if (days === 0) {
     return (
-      <span className="flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-red-100 text-red-600 animate-pulse">
+      <span className="flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-[#F57C00]/15 text-[#F57C00] animate-pulse">
         <Clock className="h-3 w-3" /> Closes Today!
       </span>
     );
   }
   if (days <= 7) {
     return (
-      <span className="flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-red-100 text-red-600">
+      <span className="flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-[#F57C00]/15 text-[#F57C00]">
         <Clock className="h-3 w-3" /> {days}d left
       </span>
     );
   }
   return (
-    <span className="flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-emerald-100 text-emerald-700">
+    <span className="flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-[#2196F3]/10 text-[#2196F3]">
       <Clock className="h-3 w-3" /> {days} days left
     </span>
   );
@@ -113,7 +113,7 @@ export default function ScholarshipCard({
   return (
     <div className={cn(
       "flex flex-col h-full rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-shadow duration-300 bg-white dark:bg-gray-900 border dark:border-gray-800",
-      closed ? "border-gray-200 opacity-80" : closingSoon ? "border-red-300" : "border-gray-100"
+      closed ? "border-gray-200 opacity-80" : closingSoon ? "border-[#F57C00]/40" : "border-gray-100"
     )}>
 
       {/* ── Header ── */}
@@ -124,7 +124,7 @@ export default function ScholarshipCard({
         {/* Closing Soon badge */}
         {closingSoon && !closed && (
           <div className="absolute top-3 left-3">
-            <span className="flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-black bg-red-500 text-white animate-pulse shadow-md">
+            <span className="flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-black bg-[#F57C00] text-white animate-pulse shadow-md">
               ⚠ Closing Soon!
             </span>
           </div>
@@ -237,13 +237,13 @@ export default function ScholarshipCard({
           closed
             ? "bg-gray-100 text-gray-500 dark:bg-gray-800"
             : closingSoon
-            ? "bg-red-50 text-red-600 dark:bg-red-900/20"
+            ? "bg-[#F57C00]/10 text-[#F57C00] dark:bg-[#F57C00]/20"
             : "bg-blue-50 text-gray-500 dark:bg-blue-900/20"
         )}>
-          <CalendarDays className={cn("h-3.5 w-3.5 shrink-0", closed ? "text-gray-400" : closingSoon ? "text-red-500" : "text-[#2196F3]")} />
+          <CalendarDays className={cn("h-3.5 w-3.5 shrink-0", closed ? "text-gray-400" : closingSoon ? "text-[#F57C00]" : "text-[#2196F3]")} />
           <span>
             {closed ? "Closed: " : "Deadline: "}
-            <strong className={cn(closed ? "text-gray-500" : closingSoon ? "text-red-600" : "text-gray-800 dark:text-gray-200")}>
+            <strong className={cn(closed ? "text-gray-500" : closingSoon ? "text-[#F57C00]" : "text-gray-800 dark:text-gray-200")}>
               {formatDeadline(deadline)}
             </strong>
           </span>

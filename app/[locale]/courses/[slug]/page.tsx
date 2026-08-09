@@ -66,37 +66,60 @@ export default function CourseDetailPage() {
         }
 
         // 3. Try localStorage store (admin-added courses use slug as id)
+        // Also resolve any admin-set prices that may have been lost in the API merge
+        const stored = getStoredCourses();
+        const idSlug = toSlug(id);
+        const storedMatch = stored.find(
+          (c) =>
+            c.id === id ||
+            toSlug(c.id) === idSlug ||
+            toSlug(c.title) === idSlug
+        );
+
         if (!foundCourse) {
-          const stored = getStoredCourses();
-          const idSlug = toSlug(id);
-          const match = stored.find(
-            (c) =>
-              c.id === id ||
-              toSlug(c.id) === idSlug ||
-              toSlug(c.title) === idSlug
-          );
-          if (match) {
+          if (storedMatch) {
             // Shape it like a backend Course so the rest of the transform works
             foundCourse = {
-              id: match.id,
-              title: match.title,
-              shortDescription: match.shortDescription,
+              id: storedMatch.id,
+              title: storedMatch.title,
+              shortDescription: storedMatch.shortDescription,
               detailedDescription: "",
-              imageUrl: match.adminImageUrl || match.imageUrl,
-              priceOriginal: match.priceOriginal,
-              priceDiscounted: match.priceDiscounted,
-              duration: match.duration,
+              imageUrl: storedMatch.adminImageUrl || storedMatch.imageUrl,
+              priceOriginal: storedMatch.priceOriginal,
+              priceDiscounted: storedMatch.priceDiscounted,
+              duration: storedMatch.duration,
               level: "Beginner",
-              rating: match.rating,
+              rating: storedMatch.rating,
               studentsEnrolled: 0,
-              startDate: match.startDate,
-              category: { id: "", name: match.category, description: "", status: "" },
+              startDate: storedMatch.startDate,
+              category: { id: "", name: storedMatch.category, description: "", status: "" },
               instructor: { id: "", name: "Instructor", email: "", imageUrl: "", role: "", status: "" },
               modules: [],
               learningOutcomes: [],
               prerequisites: [],
             };
           }
+        } else if (storedMatch) {
+          // Course was found via API — but the API may return 0 for prices if it uses
+          // different field names. Patch in the admin-set localStorage prices when the
+          // API returns nothing useful, handling common field-name variants.
+          const apiOriginal =
+            foundCourse.priceOriginal ??
+            foundCourse.price_original ??
+            foundCourse.originalPrice ??
+            foundCourse.price ??
+            0;
+          const apiDiscounted =
+            foundCourse.priceDiscounted ??
+            foundCourse.price_discounted ??
+            foundCourse.discountedPrice ??
+            foundCourse.monthlyPrice ??
+            0;
+          foundCourse = {
+            ...foundCourse,
+            priceOriginal:  apiOriginal  > 0 ? apiOriginal  : storedMatch.priceOriginal,
+            priceDiscounted: apiDiscounted > 0 ? apiDiscounted : storedMatch.priceDiscounted,
+          };
         }
 
         console.log("Found Course:", foundCourse);
@@ -125,8 +148,19 @@ export default function CourseDetailPage() {
           instructor: instructor.name || foundCourse.instructor || "",
           description: foundCourse.shortDescription || "",
           longDescription: foundCourse.detailedDescription || "",
-          price: foundCourse.priceOriginal || 0,
-          discount: foundCourse.priceDiscounted || 0,
+          // Handle both camelCase and snake_case API field name variants
+          price:
+            foundCourse.priceOriginal ||
+            foundCourse.price_original ||
+            foundCourse.originalPrice ||
+            (typeof foundCourse.price === "number" ? foundCourse.price : 0) ||
+            0,
+          discount:
+            foundCourse.priceDiscounted ||
+            foundCourse.price_discounted ||
+            foundCourse.discountedPrice ||
+            foundCourse.monthlyPrice ||
+            0,
           learningOutcomes:
             (foundCourse.learningOutcomes || []).map((lo: any) =>
               typeof lo === "string" ? lo : lo.text
@@ -389,23 +423,8 @@ if (loading) {
                 <div className='p-6'>
                   <div className='flex items-baseline gap-2 mb-4'>
                     <span className='text-3xl font-bold'>
-                      {course.discount > 0 ? course.discount : course.price} <span className="text-sm">{"ETB"}</span>
+                      {course.price} <span className="text-sm">{"ETB"}</span>
                     </span>
-
-                    {course.discount > 0 ? (
-                      <span className='text-lg text-gray-500 line-through'>
-                        {course.price} <span className="text-xs">{" ETB"}</span>
-                      </span>
-                    ) : null}
-                    <Badge className='ml-auto bg-green-500'>
-                      {course.discount > 0
-                        ? Math.round(
-                            ((course.price - course.discount) / course.price) *
-                              100
-                          )
-                        : 0}
-                      % off
-                    </Badge>
                   </div>
 
                   <div className='space-y-4 mb-6'>
@@ -417,47 +436,27 @@ if (loading) {
                         <RadioGroupItem value='one-time' id='one-time' />
                         <Label htmlFor='one-time'>
                           {courseMessages.tabContent.otp} (
-                          {course.discount > 0 ? course.discount : course.price } <span className="text-sm">{" ETB"} </span>
+                          {course.price} <span className="text-sm">{" ETB"} </span>
                           )
                         </Label>
                       </div>
-                      <div className='flex items-center space-x-2'>
-                        <RadioGroupItem value='monthly' id='monthly' />
-                        <Label htmlFor='monthly'>
-                          {courseMessages.tabContent.subscription} (
-                          {(() => {
-                            // Extract number and unit from duration string (e.g., "12 week")
-                            const match =
-                              course.duration.match(/^(\d+)\s*(\w+)/);
-                            if (!match) return "N/A";
-                            const durationNum = parseInt(match[1], 10);
-                            const durationUnit = match[2].toLowerCase();
-
-                            // Calculate months if unit is week
-                            let months = durationNum;
-                            if (
-                              durationUnit === "week" ||
-                              durationUnit === "weeks"
-                            ) {
-                              months = Math.ceil(durationNum / 4);
-                            }
-
-                            const price =
-                              course.discount > 0
-                                ? course.discount
-                                : course.price;
-                            return Math.round(price / months);
-                          })()} <span className="text-sm">{" ETB"}</span> 
-                          {courseMessages.tabContent.perMonth}{" "}
-                          {(() => {
-                            const match =
-                              course.duration.match(/^(\d+)\s*(\w+)/);
-                            if (!match) return course.duration;
-                            return `${match[1]} ${match[2]}`;
-                          })()}
-                          )
-                        </Label>
-                      </div>
+                      {course.discount > 0 && (
+                        <div className='flex items-center space-x-2'>
+                          <RadioGroupItem value='monthly' id='monthly' />
+                          <Label htmlFor='monthly'>
+                            {courseMessages.tabContent.subscription} (
+                            {course.discount}{" "}
+                            <span className="text-sm">ETB</span>{" "}
+                            {courseMessages.tabContent.perMonth}{" "}
+                            {(() => {
+                              const match = course.duration.match(/^(\d+)\s*(\w+)/);
+                              if (!match) return course.duration;
+                              return `${match[1]} ${match[2]}`;
+                            })()}
+                            )
+                          </Label>
+                        </div>
+                      )}
                     </RadioGroup>
                   </div>
                   <Button asChild className='w-full mb-4' size='lg'>

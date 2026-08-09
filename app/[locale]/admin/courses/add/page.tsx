@@ -170,7 +170,7 @@ export default function AddCoursePage() {
 
             {/* Original Price */}
             <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1">Original Price ($)</label>
+              <label className="block text-xs font-medium text-gray-600 mb-1">One-time Price (ETB)</label>
               <input
                 type="number" step="0.01"
                 value={basic.priceOriginal}
@@ -182,7 +182,7 @@ export default function AddCoursePage() {
 
             {/* Discounted Price */}
             <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1">Discounted Price ($)</label>
+              <label className="block text-xs font-medium text-gray-600 mb-1">Monthly Subscription (ETB)</label>
               <input
                 type="number" step="0.01"
                 value={basic.priceDiscounted}

@@ -160,12 +160,12 @@ export default function AddScholarshipPage() {
                   tab === t
                     ? "border-[#1E90FF] text-[#1E90FF]"
                     : isComplete(t)
-                    ? "border-transparent text-emerald-500"
+                    ? "border-transparent text-[#2196F3]"
                     : "border-transparent text-gray-400 hover:text-gray-600"
                 )}
               >
                 {isComplete(t)
-                  ? <CheckCircle size={14} className="text-emerald-500" />
+                  ? <CheckCircle size={14} className="text-[#2196F3]" />
                   : <Icon size={14} />
                 }
                 {t}
@@ -332,7 +332,7 @@ export default function AddScholarshipPage() {
             {/* Tuition amount */}
             <div>
               <label className="block text-xs font-medium text-gray-700 mb-1">
-                Course Tuition Amount (USD) *
+                Course Tuition Amount (Birr) *
               </label>
               <div className="relative">
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm font-semibold">ETB</span>
@@ -352,8 +352,8 @@ export default function AddScholarshipPage() {
               <div className={cn(
                 "rounded-xl p-4 border",
                 form.fundingType === "full"
-                  ? "bg-emerald-50 border-emerald-200"
-                  : "bg-orange-50 border-orange-200"
+                  ? "bg-[#1E90FF]/5 border-[#1E90FF]/20"
+                  : "bg-[#F57C00]/5 border-[#F57C00]/20"
               )}>
                 <p className="text-xs font-bold text-gray-600 uppercase tracking-wide mb-2">Tuition Preview</p>
                 <div className="flex items-center gap-4 flex-wrap">
@@ -527,7 +527,7 @@ export default function AddScholarshipPage() {
             {tuition > 0 && (
               <div className={cn(
                 "rounded-xl p-4 border",
-                form.fundingType === "full" ? "bg-emerald-50 border-emerald-200" : "bg-orange-50 border-orange-200"
+                form.fundingType === "full" ? "bg-[#1E90FF]/5 border-[#1E90FF]/20" : "bg-[#F57C00]/5 border-[#F57C00]/20"
               )}>
                 <p className="text-xs font-bold text-gray-600 uppercase tracking-wide mb-2">Tuition Breakdown</p>
                 <div className="flex items-center gap-4 text-sm">
@@ -561,7 +561,7 @@ export default function AddScholarshipPage() {
             )}
 
             {success && (
-              <div className="px-4 py-3 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-lg text-sm flex items-center gap-2">
+              <div className="px-4 py-3 bg-[#2196F3]/10 border border-[#2196F3]/30 text-[#2196F3] rounded-lg text-sm flex items-center gap-2">
                 <CheckCircle size={16} /> Scholarship created! Redirecting...
               </div>
             )}

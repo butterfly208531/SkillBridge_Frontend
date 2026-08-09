@@ -266,7 +266,7 @@ export default function EditJobPage({ params }: { params: Promise<{ id: string }
               <div>
                 <label className="block text-xs font-medium text-gray-700 mb-1">Salary Range</label>
                 <input value={form.salary} onChange={e => set("salary", e.target.value)}
-                  placeholder="e.g. $800 – $1,200 / month"
+                  placeholder="e.g. 8,000 – 12,000 Birr / month"
                   className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1E90FF]/30" />
               </div>
               <div>

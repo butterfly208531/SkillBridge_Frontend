@@ -59,10 +59,18 @@ export default function CoursesAdminPage() {
         const d = await res.json();
         const list: any[] = Array.isArray(d) ? d : d.data ?? [];
         if (list.length > 0) {
-          // Merge: keep adminImageUrl from localStorage, API wins for everything else
+          // Merge: keep adminImageUrl and admin-set prices from localStorage,
+          // API wins for everything else
           const localMap = Object.fromEntries(local.map(s => [s.id, s]));
           const merged: StoredCourse[] = list.map((c: any) => {
             const stored = localMap[c.id] || localMap[c.slug] || null;
+            // Resolve price: API may return camelCase, snake_case, or other variants.
+            // If the API gives a non-zero value, use it; otherwise fall back to the
+            // admin-set value already in localStorage so it is never silently zeroed out.
+            const apiPriceOriginal =
+              c.priceOriginal ?? c.price_original ?? c.originalPrice ?? c.price ?? null;
+            const apiPriceDiscounted =
+              c.priceDiscounted ?? c.price_discounted ?? c.discountedPrice ?? c.monthlyPrice ?? null;
             return {
               id:               c.id || c._id || "",
               title:            c.title || "",
@@ -74,8 +82,13 @@ export default function CoursesAdminPage() {
               adminImageUrl:    stored?.adminImageUrl || undefined,
               rating:           c.rating ?? 0,
               shortDescription: c.shortDescription || "",
-              priceOriginal:    c.priceOriginal || 0,
-              priceDiscounted:  c.priceDiscounted || 0,
+              // Prefer API value if non-zero; otherwise keep what admin set locally
+              priceOriginal:    (apiPriceOriginal != null && apiPriceOriginal > 0)
+                                  ? apiPriceOriginal
+                                  : (stored?.priceOriginal ?? 0),
+              priceDiscounted:  (apiPriceDiscounted != null && apiPriceDiscounted > 0)
+                                  ? apiPriceDiscounted
+                                  : (stored?.priceDiscounted ?? 0),
               startDate:        c.startDate || "",
               createdAt:        c.createdAt || new Date().toISOString(),
             };
@@ -483,7 +496,7 @@ function CourseModal({ course, onClose, onSaved }: {
           {/* Pricing */}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1">One-time Price ($)</label>
+              <label className="block text-xs font-medium text-gray-600 mb-1">One-time Price (ETB)</label>
               <input
                 type="number"
                 min="0"
@@ -495,7 +508,7 @@ function CourseModal({ course, onClose, onSaved }: {
               />
             </div>
             <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1">Monthly Subscription ($)</label>
+              <label className="block text-xs font-medium text-gray-600 mb-1">Monthly Subscription (ETB)</label>
               <input
                 type="number"
                 min="0"
