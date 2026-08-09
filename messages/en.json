@@ -4937,12 +4937,12 @@
       "softwareEngineering": {
          "title": "Software Engineering Path",
          "outcome": "Software Engineer",
-         "steps": ["Programming Fundamentals", "Full-Stack Development", "Advanced Backend & APIs", "Internship", "Software Engineer"]
+         "steps": ["Programming Fundamentals", "Full-Stack Development", "Advanced Backend & APIs", "Software Engineering Internship", "Software Engineer"]
       },
       "erpConsultant": {
          "title": "ERP Consultant Path",
          "outcome": "ERP Consultant",
-         "steps": ["Odoo Functional", "Odoo Technical", "ERP Implementation", "Business Process Analysis", "ERP Consultant"]
+         "steps": ["Odoo Functional Mastery", "Odoo Technical Development", "ERP Implementation Methodology", "Business Process Analysis", "ERP Consultant & Solutions Architect"]
       },
       "aiEngineer": {
          "title": "AI Engineer Path",
