@@ -1,6 +1,5 @@
 import * as React from "react"
 import { useState } from "react"
-import Image from "next/image"
 import Link from "next/link"
 import { Clock, CalendarDays, Monitor, BarChart2, Star } from "lucide-react"
 import { Button } from "@/app/[locale]/components/ui/button"
@@ -67,15 +66,13 @@ export default function BootcampCard({
         "shadow-sm hover:shadow-lg transition-shadow duration-300"
       )}
     >
-      {/* Course image */}
-      <div className="relative h-56 w-full overflow-hidden bg-gray-100 dark:bg-gray-800">
-        <Image
+      {/* Course image — aspect-video (16:9) so uploaded images are never cropped */}
+      <div className="relative w-full aspect-video overflow-hidden bg-gray-100 dark:bg-gray-800">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
           src={imgSrc}
           alt={`${title} course thumbnail`}
-          fill
-          unoptimized
-          className="object-cover object-center"
-          sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
+          className="w-full h-full object-contain"
           onError={() => setImgSrc(fallbackImage ?? categoryFallback)}
         />
         {category && (
