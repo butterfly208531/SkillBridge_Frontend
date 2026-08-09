@@ -9,8 +9,6 @@ const API = process.env.NEXT_PUBLIC_API_BASE_URL || "https://skillbridge-backend
 
 type Status = "all" | "pending" | "approved" | "rejected";
 
-
-
 interface Application {
   id?: string;
   _id?: string;
@@ -21,6 +19,7 @@ interface Application {
   telegramHandle?: string;
   courseId?: string;
   course?: string;
+  category?: string;
   paymentMethod?: string;
   payment?: string;
   paymentReference?: string;
@@ -45,15 +44,54 @@ const statusIcon: Record<string, React.ReactNode> = {
   rejected: <XCircle size={12} />,
 };
 
+// Map course name keywords → category labels (mirrors courses-section logic)
+function inferCategory(courseName: string): string {
+  const n = courseName.toLowerCase();
+  if (n.includes("odoo") || n.includes("erp") || n.includes("sap"))           return "ERP";
+  if (n.includes("ai") || n.includes("machine learning") || n.includes("ml") || n.includes("data science")) return "AI";
+  if (n.includes("python") || n.includes("java") || n.includes("react") ||
+      n.includes("node") || n.includes("web") || n.includes("flutter") ||
+      n.includes("android") || n.includes("ios") || n.includes("dev"))        return "Development";
+  if (n.includes("network") || n.includes("cyber") || n.includes("linux") ||
+      n.includes("cisco") || n.includes("cloud") || n.includes("aws") ||
+      n.includes("it ") || n.startsWith("it"))                                 return "IT";
+  if (n.includes("excel") || n.includes("accountin") || n.includes("finance") ||
+      n.includes("business") || n.includes("market") || n.includes("manag"))  return "Business";
+  if (n.includes("arabic") || n.includes("english") || n.includes("french") ||
+      n.includes("language") || n.includes("ielts") || n.includes("toefl"))   return "Language";
+  if (n.includes("automat") || n.includes("robot") || n.includes("rpa"))      return "Automation";
+  return "Other";
+}
+
+const categoryColor: Record<string, string> = {
+  Development: "bg-[#F57C00]/10 text-[#F57C00]",
+  AI:          "bg-purple-100 text-purple-600",
+  ERP:         "bg-[#1E90FF]/10 text-[#1E90FF]",
+  IT:          "bg-cyan-100 text-cyan-600",
+  Business:    "bg-emerald-100 text-emerald-600",
+  Language:    "bg-pink-100 text-pink-600",
+  Automation:  "bg-teal-100 text-teal-600",
+  Other:       "bg-gray-100 text-gray-500",
+};
+
 export default function ApplicationsPage() {
-  const [apps, setApps] = useState<Application[]>([]);
-  const [search, setSearch] = useState("");
+  const [apps, setApps]               = useState<Application[]>([]);
+  const [search, setSearch]           = useState("");
   const [statusFilter, setStatusFilter] = useState<Status>("all");
-  const [selected, setSelected] = useState<Application | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [updating, setUpdating] = useState<string | null>(null);
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState("All");
+  const [categories, setCategories]   = useState<string[]>(["All"]);
+  const [selected, setSelected]       = useState<Application | null>(null);
+  const [loading, setLoading]         = useState(true);
+  const [updating, setUpdating]       = useState<string | null>(null);
+  const [error, setError]             = useState("");
+  const [success, setSuccess]         = useState("");
+
+  // Derive a stable category for each application
+  const getAppCategory = (a: Application): string => {
+    if (a.category) return a.category;
+    const courseName = a.course || (a.courseId && !a.courseId.includes("-") ? a.courseId : "") || "";
+    return courseName ? inferCategory(courseName) : "Other";
+  };
 
   const fetchApps = async () => {
     const token = sessionStorage.getItem("adminToken");
@@ -66,28 +104,34 @@ export default function ApplicationsPage() {
       try {
         const pending = JSON.parse(localStorage.getItem("pendingApplications") || "[]");
         const notifs: any[] = JSON.parse(localStorage.getItem("adminNotifications") || "[]");
-        // Merge both sources, deduplicate by id
         const all = [...pending, ...notifs];
         const seen = new Set<string>();
         return all
           .filter(n => { const id = n.id || n._id; if (!id || seen.has(id)) return false; seen.add(id); return true; })
           .map(n => ({
-            id: n.id || n._id,
-            fullName: n.fullName,
-            email: n.email,
-            phone: n.phone,
+            id:             n.id || n._id,
+            fullName:       n.fullName,
+            email:          n.email,
+            phone:          n.phone,
             telegramHandle: n.telegramHandle,
-            address: n.address,
-            gender: n.gender,
-            nationality: n.nationality,
-            university: n.university,
-            courseId: n.courseSlug || n.courseId,
-            course: n.courseName || n.course,
-            paymentMethod: n.paymentMethod,
-            status: n.status || "pending",
-            createdAt: n.submittedAt || n.createdAt,
+            address:        n.address,
+            gender:         n.gender,
+            nationality:    n.nationality,
+            university:     n.university,
+            courseId:       n.courseSlug || n.courseId,
+            course:         n.courseName || n.course,
+            category:       n.category,
+            paymentMethod:  n.paymentMethod,
+            status:         n.status || "pending",
+            createdAt:      n.submittedAt || n.createdAt,
           }));
       } catch { return []; }
+    };
+
+    const applyAndSetApps = (list: Application[]) => {
+      setApps(list);
+      const cats = ["All", ...Array.from(new Set(list.map(a => getAppCategory(a)))).sort()];
+      setCategories(cats);
     };
 
     try {
@@ -98,54 +142,46 @@ export default function ApplicationsPage() {
       if (response.ok) {
         const data = await response.json();
         const apiApps: Application[] = Array.isArray(data) ? data : data.data ?? [];
-        // Merge local-only submissions not already in the API list
         const local = loadLocal();
         const apiIds = new Set(apiApps.map(a => a.id || a._id));
-        const merged = [
-          ...apiApps,
-          ...local.filter(l => !apiIds.has(l.id)),
-        ];
-        setApps(merged);
+        const merged = [...apiApps, ...local.filter(l => !apiIds.has(l.id))];
+        applyAndSetApps(merged);
         if (merged.length > 0) {
           setSuccess(`Loaded ${merged.length} application${merged.length !== 1 ? "s" : ""}`);
         }
       } else if (response.status === 401 || response.status === 403) {
-        // Backend auth not available — show local data only, no error banner
-        const local = loadLocal();
-        setApps(local);
+        applyAndSetApps(loadLocal());
       } else {
-        // Other API error — show local submissions with info banner
         const local = loadLocal();
-        setApps(local);
+        applyAndSetApps(local);
         if (local.length > 0) {
           setError(`Showing ${local.length} locally stored submission${local.length !== 1 ? "s" : ""} (live data unavailable)`);
         }
       }
     } catch {
-      const local = loadLocal();
-      setApps(local);
-      // No error banner — just show what we have locally
+      applyAndSetApps(loadLocal());
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => {
-    fetchApps();
-  }, []);
+  useEffect(() => { fetchApps(); }, []);
 
   const filtered = apps.filter(a => {
-    const name = a.fullName || a.name || "";
-    // Prefer course name over raw UUID for search matching
+    const name   = a.fullName || a.name || "";
     const course = a.course || "";
-    const email = a.email || "";
+    const email  = a.email || "";
     const status = (a.status || "").toLowerCase();
-    const matchStatus = statusFilter === "all" || status === statusFilter;
-    const matchSearch = !search ||
+    const cat    = getAppCategory(a);
+
+    const matchStatus   = statusFilter === "all" || status === statusFilter;
+    const matchCategory = categoryFilter === "All" || cat === categoryFilter;
+    const matchSearch   = !search ||
       name.toLowerCase().includes(search.toLowerCase()) ||
       course.toLowerCase().includes(search.toLowerCase()) ||
       email.toLowerCase().includes(search.toLowerCase());
-    return matchStatus && matchSearch;
+
+    return matchStatus && matchCategory && matchSearch;
   });
 
   const counts = {
@@ -157,17 +193,11 @@ export default function ApplicationsPage() {
 
   const updateStatus = async (id: string, newStatus: string) => {
     if (updating === id) return;
-
     setUpdating(id);
     setError("");
     setSuccess("");
 
-    // Local-only submissions (id starts with "local-") — update state + localStorage only
     if (id.startsWith("local-")) {
-      try {
-        const raw = localStorage.getItem("adminNotifications") || "[]";
-        // adminNotifications doesn't store status, but we track it in apps state
-      } catch (_) {}
       setApps(prev => prev.map(a => (a.id || a._id) === id ? { ...a, status: newStatus } : a));
       setSelected(prev => prev && (prev.id || prev._id) === id ? { ...prev, status: newStatus } : prev);
       setSuccess(`Application ${newStatus} successfully`);
@@ -186,9 +216,7 @@ export default function ApplicationsPage() {
         },
         body: JSON.stringify({ status: newStatus }),
       });
-
       if (!response.ok) throw new Error(`Failed to update status: ${response.status}`);
-
       setApps(prev => prev.map(a => (a.id || a._id) === id ? { ...a, status: newStatus } : a));
       setSelected(prev => prev && (prev.id || prev._id) === id ? { ...prev, status: newStatus } : prev);
       setSuccess(`Application ${newStatus} successfully`);
@@ -206,11 +234,29 @@ export default function ApplicationsPage() {
       <AdminHeader title="Applications" />
       <div className="flex-1 p-6 space-y-5 overflow-y-auto">
 
-        {/* Status tabs */}
+        {/* Category filter pills */}
+        <div className="flex gap-2 flex-wrap">
+          {categories.map(cat => (
+            <button
+              key={cat}
+              onClick={() => setCategoryFilter(cat)}
+              className={cn(
+                "px-3 py-1.5 rounded-full text-xs font-semibold border transition-all",
+                categoryFilter === cat
+                  ? "bg-[#1E90FF] text-white border-[#1E90FF]"
+                  : "bg-white text-gray-500 border-gray-200 hover:border-[#1E90FF] hover:text-[#1E90FF]"
+              )}
+            >
+              {cat}
+            </button>
+          ))}
+        </div>
+
+        {/* Status tabs + search */}
         <div className="flex gap-2 flex-wrap items-center">
           {(["all","pending","approved","rejected"] as Status[]).map(s => (
-            <button 
-              key={s} 
+            <button
+              key={s}
               onClick={() => setStatusFilter(s)}
               className={cn(
                 "px-4 py-1.5 rounded-full text-xs font-semibold border transition-all capitalize",
@@ -229,23 +275,31 @@ export default function ApplicationsPage() {
           <div className="ml-auto flex items-center gap-2">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-gray-400" />
-              <input 
-                type="search" 
-                placeholder="Search applicants..." 
+              <input
+                type="search"
+                placeholder="Search applicants..."
                 value={search}
                 onChange={e => setSearch(e.target.value)}
                 className="pl-8 pr-3 py-1.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1E90FF]/30 w-52"
               />
             </div>
-            <button 
-              onClick={fetchApps} 
-              className="p-1.5 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors" 
+            <button
+              onClick={fetchApps}
+              className="p-1.5 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors"
               title="Refresh"
               disabled={loading}
             >
               <RefreshCw size={14} className={cn("text-gray-500", loading && "animate-spin")} />
             </button>
           </div>
+        </div>
+
+        {/* Summary */}
+        <div className="flex gap-4 text-sm">
+          <span className="text-gray-500">Total: <strong className="text-gray-800">{filtered.length}</strong></span>
+          <span className="text-yellow-600">Pending: <strong>{filtered.filter(a => (a.status || "").toLowerCase() === "pending").length}</strong></span>
+          <span className="text-emerald-600">Approved: <strong>{filtered.filter(a => (a.status || "").toLowerCase() === "approved").length}</strong></span>
+          <span className="text-red-400">Rejected: <strong>{filtered.filter(a => (a.status || "").toLowerCase() === "rejected").length}</strong></span>
         </div>
 
         {/* Messages */}
@@ -273,22 +327,23 @@ export default function ApplicationsPage() {
                   <tr className="bg-gray-50 text-xs text-gray-500 uppercase tracking-wide border-b border-gray-100">
                     <th className="px-5 py-3 text-left font-semibold">Student</th>
                     <th className="px-5 py-3 text-left font-semibold">Course</th>
+                    <th className="px-5 py-3 text-left font-semibold">Category</th>
                     <th className="px-5 py-3 text-left font-semibold">Date</th>
+                    <th className="px-5 py-3 text-left font-semibold">Status</th>
                     <th className="px-5 py-3 text-left font-semibold">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-50">
                   {filtered.map((app, i) => {
-                    const id = app.id || app._id || String(i);
-                    const name = app.fullName || app.name || "—";
-                    const email = app.email || "—";
-                    // Prefer human-readable course name over raw UUID
-                    const course = app.course || (app.courseId && !app.courseId.includes("-") ? app.courseId : "") || "—";
-                    const payment = app.paymentMethod || app.payment || "—";
-                    const date = app.createdAt ? new Date(app.createdAt).toLocaleDateString() : app.date || "—";
-                    const status = (app.status || "pending").toLowerCase();
+                    const id      = app.id || app._id || String(i);
+                    const name    = app.fullName || app.name || "—";
+                    const email   = app.email || "—";
+                    const course  = app.course || (app.courseId && !app.courseId.includes("-") ? app.courseId : "") || "—";
+                    const date    = app.createdAt ? new Date(app.createdAt).toLocaleDateString() : app.date || "—";
+                    const status  = (app.status || "pending").toLowerCase();
+                    const cat     = getAppCategory(app);
                     const isUpdating = updating === id;
-                    
+
                     return (
                       <tr key={id} className="hover:bg-gray-50/60 transition-colors">
                         <td className="px-5 py-3.5">
@@ -296,21 +351,38 @@ export default function ApplicationsPage() {
                           <p className="text-[11px] text-gray-400">{email}</p>
                         </td>
                         <td className="px-5 py-3.5 text-xs text-gray-600 max-w-[160px] truncate">{course}</td>
+                        <td className="px-5 py-3.5">
+                          <span className={cn(
+                            "px-2 py-0.5 rounded-full text-[11px] font-semibold",
+                            categoryColor[cat] ?? "bg-gray-100 text-gray-500"
+                          )}>
+                            {cat}
+                          </span>
+                        </td>
                         <td className="px-5 py-3.5 text-xs text-gray-400">{date}</td>
                         <td className="px-5 py-3.5">
+                          <span className={cn(
+                            "flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold w-fit capitalize",
+                            statusStyle[status] ?? "bg-gray-100 text-gray-500"
+                          )}>
+                            {statusIcon[status]}
+                            {status}
+                          </span>
+                        </td>
+                        <td className="px-5 py-3.5">
                           <div className="flex items-center gap-1.5">
-                            <button 
-                              onClick={() => setSelected(app)} 
-                              className="p-1.5 rounded-lg text-[#1E90FF] hover:bg-[#1E90FF]/10 transition-colors" 
+                            <button
+                              onClick={() => setSelected(app)}
+                              className="p-1.5 rounded-lg text-[#1E90FF] hover:bg-[#1E90FF]/10 transition-colors"
                               title="View"
                               disabled={isUpdating}
                             >
                               <Eye size={14} />
                             </button>
                             {status !== "approved" && (
-                              <button 
-                                onClick={() => updateStatus(id, "approved")} 
-                                className="p-1.5 rounded-lg text-emerald-500 hover:bg-emerald-50 transition-colors disabled:opacity-50" 
+                              <button
+                                onClick={() => updateStatus(id, "approved")}
+                                className="p-1.5 rounded-lg text-emerald-500 hover:bg-emerald-50 transition-colors disabled:opacity-50"
                                 title="Approve"
                                 disabled={isUpdating}
                               >
@@ -318,9 +390,9 @@ export default function ApplicationsPage() {
                               </button>
                             )}
                             {status !== "rejected" && (
-                              <button 
-                                onClick={() => updateStatus(id, "rejected")} 
-                                className="p-1.5 rounded-lg text-red-400 hover:bg-red-50 transition-colors disabled:opacity-50" 
+                              <button
+                                onClick={() => updateStatus(id, "rejected")}
+                                className="p-1.5 rounded-lg text-red-400 hover:bg-red-50 transition-colors disabled:opacity-50"
                                 title="Reject"
                                 disabled={isUpdating}
                               >
@@ -355,26 +427,34 @@ export default function ApplicationsPage() {
                 </h3>
                 <p className="text-xs text-gray-400">{selected.id || selected._id}</p>
               </div>
-              <span className={cn(
-                "px-2.5 py-1 rounded-full text-[11px] font-semibold capitalize",
-                statusStyle[(selected.status || "pending").toLowerCase()] ?? "bg-gray-100 text-gray-500"
-              )}>
-                {selected.status || "pending"}
-              </span>
+              <div className="flex flex-col items-end gap-1.5">
+                <span className={cn(
+                  "px-2.5 py-1 rounded-full text-[11px] font-semibold capitalize",
+                  statusStyle[(selected.status || "pending").toLowerCase()] ?? "bg-gray-100 text-gray-500"
+                )}>
+                  {selected.status || "pending"}
+                </span>
+                <span className={cn(
+                  "px-2 py-0.5 rounded-full text-[11px] font-semibold",
+                  categoryColor[getAppCategory(selected)] ?? "bg-gray-100 text-gray-500"
+                )}>
+                  {getAppCategory(selected)}
+                </span>
+              </div>
             </div>
 
             <div className="grid grid-cols-2 gap-3 text-sm">
               {[
-                { label: "Email",          value: selected.email },
-                { label: "Phone",          value: selected.phone },
-                { label: "Telegram",       value: selected.telegramHandle },
-                { label: "Course",         value: selected.course || (selected.courseId && !selected.courseId.includes("-") ? selected.courseId : "") || selected.courseId },
-                { label: "Payment",        value: selected.paymentMethod },
-                { label: "Payment Ref",    value: selected.paymentReference },
-                { label: "Gender",         value: selected.gender },
-                { label: "Nationality",    value: selected.nationality },
-                { label: "Address",        value: selected.address },
-                { label: "Date",           value: selected.createdAt ? new Date(selected.createdAt).toLocaleDateString() : selected.date },
+                { label: "Email",       value: selected.email },
+                { label: "Phone",       value: selected.phone },
+                { label: "Telegram",    value: selected.telegramHandle },
+                { label: "Course",      value: selected.course || (selected.courseId && !selected.courseId.includes("-") ? selected.courseId : "") || selected.courseId },
+                { label: "Payment",     value: selected.paymentMethod },
+                { label: "Payment Ref", value: selected.paymentReference },
+                { label: "Gender",      value: selected.gender },
+                { label: "Nationality", value: selected.nationality },
+                { label: "Address",     value: selected.address },
+                { label: "Date",        value: selected.createdAt ? new Date(selected.createdAt).toLocaleDateString() : selected.date },
               ].filter(f => f.value).map(({ label, value }) => (
                 <div key={label}>
                   <p className="text-[10px] text-gray-400 uppercase tracking-wide">{label}</p>
@@ -387,17 +467,17 @@ export default function ApplicationsPage() {
             {selected.receiptUrl && (
               <div>
                 <p className="text-[10px] text-gray-400 uppercase tracking-wide mb-1">Payment Receipt</p>
-                <img 
-                  src={selected.receiptUrl} 
-                  alt="Receipt" 
-                  className="w-full rounded-lg border border-gray-100 max-h-48 object-contain" 
+                <img
+                  src={selected.receiptUrl}
+                  alt="Receipt"
+                  className="w-full rounded-lg border border-gray-100 max-h-48 object-contain"
                 />
               </div>
             )}
 
             <div className="flex gap-2 pt-2">
               {(selected.status || "").toLowerCase() !== "approved" && (
-                <button 
+                <button
                   onClick={() => updateStatus(selected.id || selected._id || "", "approved")}
                   className="flex-1 py-2 rounded-lg bg-emerald-500 text-white text-sm font-semibold hover:bg-emerald-600 transition-colors disabled:opacity-50"
                   disabled={updating === (selected.id || selected._id)}
@@ -406,7 +486,7 @@ export default function ApplicationsPage() {
                 </button>
               )}
               {(selected.status || "").toLowerCase() !== "rejected" && (
-                <button 
+                <button
                   onClick={() => updateStatus(selected.id || selected._id || "", "rejected")}
                   className="flex-1 py-2 rounded-lg bg-red-500 text-white text-sm font-semibold hover:bg-red-600 transition-colors disabled:opacity-50"
                   disabled={updating === (selected.id || selected._id)}
@@ -414,7 +494,7 @@ export default function ApplicationsPage() {
                   {updating === (selected.id || selected._id) ? "Updating..." : "Reject"}
                 </button>
               )}
-              <button 
+              <button
                 onClick={() => setSelected(null)}
                 className="flex-1 py-2 rounded-lg border border-gray-200 text-gray-600 text-sm hover:bg-gray-50 transition-colors"
               >
