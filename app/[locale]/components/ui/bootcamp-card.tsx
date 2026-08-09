@@ -1,6 +1,7 @@
 import * as React from "react"
 import { useState } from "react"
 import Link from "next/link"
+import { useLocale } from "next-intl"
 import { Clock, CalendarDays, Monitor, BarChart2, Star } from "lucide-react"
 import { Button } from "@/app/[locale]/components/ui/button"
 import { Badge } from "@/app/[locale]/components/ui/badge"
@@ -55,6 +56,7 @@ export default function BootcampCard({
   showViewDetails = false,
   fallbackImage,
 }: BootcampCardProps) {
+  const locale = useLocale()
   const categoryFallback = (category && categoryImages[category]) ?? defaultFallback
   const [imgSrc, setImgSrc] = useState(image || categoryFallback)
 
@@ -170,14 +172,14 @@ export default function BootcampCard({
             className="flex-1 border-[#2196F3] text-[#2196F3] hover:bg-blue-50 dark:hover:bg-blue-950/30 focus-visible:ring-2 focus-visible:ring-blue-500"
             asChild
           >
-            <Link href={`/courses/${id}`}>View Details</Link>
+            <Link href={`/${locale}/courses/${id}`}>View Details</Link>
           </Button>
           <Button
             size="sm"
             className="flex-1 bg-[#2196F3] hover:bg-blue-500 text-white focus-visible:ring-2 focus-visible:ring-blue-400"
             asChild
           >
-            <Link href={`/courses/${id}/ApplicationForm`}>Enroll Now</Link>
+            <Link href={`/${locale}/courses/${id}/ApplicationForm`}>Enroll Now</Link>
           </Button>
         </div>
       </div>

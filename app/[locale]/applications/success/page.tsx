@@ -246,12 +246,6 @@ export default function SuccessPage() {
                 {t("viewCourse")}
               </Link>
               <Link
-                href='/my-courses'
-                className='px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow-sm transition-colors duration-200 text-sm font-medium'
-              >
-                {t("myCourses")}
-              </Link>
-              <Link
                 href='/'
                 className='px-6 py-3 text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors duration-200 text-sm font-medium'
               >
