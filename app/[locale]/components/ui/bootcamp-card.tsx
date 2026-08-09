@@ -72,7 +72,7 @@ export default function BootcampCard({
         <img
           src={imgSrc}
           alt={`${title} course thumbnail`}
-          className="w-full h-full object-contain"
+          className="w-full h-full object-cover"
           onError={() => setImgSrc(fallbackImage ?? categoryFallback)}
         />
         {category && (
