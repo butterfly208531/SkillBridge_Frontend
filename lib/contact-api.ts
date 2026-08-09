@@ -172,7 +172,7 @@ export interface LocalContactMessage {
   email: string;
   phone?: string;
   message: string;
-  status: "new" | "read" | "replied";
+  status: "new" | "read";
   createdAt: string;
   read: boolean; // mirrors status === "new" — used by the bell badge
 }

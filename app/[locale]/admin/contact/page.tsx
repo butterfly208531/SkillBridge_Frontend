@@ -12,7 +12,7 @@ import {
 
 const API = process.env.NEXT_PUBLIC_API_BASE_URL || "https://skillbridge-backend2-h1u9.onrender.com/api";
 
-type MsgStatus = "new" | "read" | "replied";
+type MsgStatus = "new" | "read";
 
 interface ContactMsg {
   id?: string;
@@ -26,15 +26,13 @@ interface ContactMsg {
 }
 
 const statusStyle: Record<MsgStatus, string> = {
-  new:     "bg-yellow-100 text-yellow-700",
-  read:    "bg-blue-100 text-blue-600",
-  replied: "bg-emerald-100 text-emerald-700",
+  new:  "bg-yellow-100 text-yellow-700",
+  read: "bg-blue-100 text-blue-600",
 };
 
 const statusIcon: Record<MsgStatus, React.ReactNode> = {
-  new:     <Clock size={11} />,
-  read:    <Eye size={11} />,
-  replied: <CheckCircle size={11} />,
+  new:  <Clock size={11} />,
+  read: <Eye size={11} />,
 };
 
 export default function ContactPage() {
@@ -162,10 +160,9 @@ export default function ContactPage() {
   });
 
   const counts = {
-    total:   messages.length,
-    new:     messages.filter(m => m.status === "new").length,
-    read:    messages.filter(m => m.status === "read").length,
-    replied: messages.filter(m => m.status === "replied").length,
+    total: messages.length,
+    new:   messages.filter(m => m.status === "new").length,
+    read:  messages.filter(m => m.status === "read").length,
   };
 
   return (
@@ -256,7 +253,6 @@ export default function ContactPage() {
               <option value="all">All Status</option>
               <option value="new">New</option>
               <option value="read">Read</option>
-              <option value="replied">Replied</option>
             </select>
             <span className="text-xs text-gray-400 ml-auto">
               Showing {filtered.length} of {messages.length}
