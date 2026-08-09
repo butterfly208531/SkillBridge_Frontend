@@ -44,6 +44,13 @@ const statusIcon: Record<string, React.ReactNode> = {
   rejected: <XCircle size={12} />,
 };
 
+/** Normalizes raw API/localStorage status values to the three canonical display values. */
+const normalizeStatus = (raw: string | undefined): string => {
+  const s = (raw || "pending").toLowerCase();
+  if (s === "pending_sync" || s === "pending sync") return "pending";
+  return s;
+};
+
 
 export default function ApplicationsPage() {
   const [apps, setApps]                 = useState<Application[]>([]);
@@ -108,9 +115,19 @@ export default function ApplicationsPage() {
       if (response.ok) {
         const data = await response.json();
         const apiApps: Application[] = Array.isArray(data) ? data : data.data ?? [];
+
+        // Only merge local entries that are truly offline (local- prefix, not yet synced to the API).
+        // Never merge API-backed entries from localStorage — they carry stale status (always "pending")
+        // and will override whatever the API just returned (e.g. "approved").
         const local = loadLocal();
-        const apiIds = new Set(apiApps.map(a => a.id || a._id));
-        const merged = [...apiApps, ...local.filter(l => !apiIds.has(l.id))];
+        const apiIds = new Set(
+          apiApps.flatMap(a => [a.id, (a as any)._id]).filter(Boolean)
+        );
+        const offlineOnly = local.filter(l => {
+          const lid = l.id || (l as any)._id || "";
+          return lid.startsWith("local-") && !apiIds.has(lid);
+        });
+        const merged = [...apiApps, ...offlineOnly];
         applyAndSetApps(merged);
         if (merged.length > 0) {
           setSuccess(`Loaded ${merged.length} application${merged.length !== 1 ? "s" : ""}`);
@@ -137,7 +154,7 @@ export default function ApplicationsPage() {
     const name   = a.fullName || a.name || "";
     const course = a.course || "";
     const email  = a.email || "";
-    const status = (a.status || "").toLowerCase();
+    const status = normalizeStatus(a.status);
     const appCourse = getAppCourse(a);
     const matchStatus = statusFilter === "all" || status === statusFilter;
     const matchCourse = courseFilter === "All" || appCourse === courseFilter;
@@ -150,9 +167,9 @@ export default function ApplicationsPage() {
 
   const counts = {
     all:      apps.length,
-    pending:  apps.filter(a => (a.status || "").toLowerCase() === "pending").length,
-    approved: apps.filter(a => (a.status || "").toLowerCase() === "approved").length,
-    rejected: apps.filter(a => (a.status || "").toLowerCase() === "rejected").length,
+    pending:  apps.filter(a => normalizeStatus(a.status) === "pending").length,
+    approved: apps.filter(a => normalizeStatus(a.status) === "approved").length,
+    rejected: apps.filter(a => normalizeStatus(a.status) === "rejected").length,
   };
 
   const updateStatus = async (id: string, newStatus: string) => {
@@ -161,9 +178,21 @@ export default function ApplicationsPage() {
     setError("");
     setSuccess("");
 
+    // Helper: update status in both localStorage arrays so refreshes don't revert
+    const persistStatusToLocalStorage = (appId: string, status: string) => {
+      ["pendingApplications", "adminNotifications"].forEach(key => {
+        try {
+          const arr = JSON.parse(localStorage.getItem(key) || "[]");
+          const updated = arr.map((a: any) => (a.id || a._id) === appId ? { ...a, status } : a);
+          localStorage.setItem(key, JSON.stringify(updated));
+        } catch { /* ignore */ }
+      });
+    };
+
     if (id.startsWith("local-")) {
       setApps(prev => prev.map(a => (a.id || a._id) === id ? { ...a, status: newStatus } : a));
-      setSelected(prev => prev && (prev.id || prev._id) === id ? { ...prev, status: newStatus } : prev);
+      persistStatusToLocalStorage(id, newStatus);
+      setSelected(null);
       setSuccess(`Application ${newStatus} successfully`);
       setTimeout(() => setSuccess(""), 3000);
       setUpdating(null);
@@ -179,7 +208,8 @@ export default function ApplicationsPage() {
       });
       if (!response.ok) throw new Error(`Failed to update status: ${response.status}`);
       setApps(prev => prev.map(a => (a.id || a._id) === id ? { ...a, status: newStatus } : a));
-      setSelected(prev => prev && (prev.id || prev._id) === id ? { ...prev, status: newStatus } : prev);
+      persistStatusToLocalStorage(id, newStatus);
+      setSelected(null);
       setSuccess(`Application ${newStatus} successfully`);
       setTimeout(() => setSuccess(""), 3000);
     } catch (err) {
@@ -292,9 +322,9 @@ export default function ApplicationsPage() {
         {/* Summary */}
         <div className="flex gap-4 text-sm">
           <span className="text-gray-500">Total: <strong className="text-gray-800">{filtered.length}</strong></span>
-          <span className="text-yellow-600">Pending: <strong>{filtered.filter(a => (a.status || "").toLowerCase() === "pending").length}</strong></span>
-          <span className="text-emerald-600">Approved: <strong>{filtered.filter(a => (a.status || "").toLowerCase() === "approved").length}</strong></span>
-          <span className="text-red-400">Rejected: <strong>{filtered.filter(a => (a.status || "").toLowerCase() === "rejected").length}</strong></span>
+          <span className="text-yellow-600">Pending: <strong>{filtered.filter(a => normalizeStatus(a.status) === "pending").length}</strong></span>
+          <span className="text-emerald-600">Approved: <strong>{filtered.filter(a => normalizeStatus(a.status) === "approved").length}</strong></span>
+          <span className="text-red-400">Rejected: <strong>{filtered.filter(a => normalizeStatus(a.status) === "rejected").length}</strong></span>
         </div>
 
         {/* Messages */}
@@ -335,7 +365,7 @@ export default function ApplicationsPage() {
                     const email  = app.email || "—";
                     const course = app.course || (app.courseId && !app.courseId.includes("-") ? app.courseId : "") || "—";
                     const date   = app.createdAt ? new Date(app.createdAt).toLocaleDateString() : app.date || "—";
-                    const status = (app.status || "pending").toLowerCase();
+                    const status = normalizeStatus(app.status);
                     const cat    = getAppCourse(app);
 
                     return (
@@ -407,9 +437,9 @@ export default function ApplicationsPage() {
               <div className="flex flex-col items-end gap-1.5">
                 <span className={cn(
                   "px-2.5 py-1 rounded-full text-[11px] font-semibold capitalize",
-                  statusStyle[(selected.status || "pending").toLowerCase()] ?? "bg-gray-100 text-gray-500"
+                  statusStyle[normalizeStatus(selected.status)] ?? "bg-gray-100 text-gray-500"
                 )}>
-                  {selected.status || "pending"}
+                  {normalizeStatus(selected.status)}
                 </span>
                 <span className={cn(
                   "px-2 py-0.5 rounded-full text-[11px] font-semibold bg-[#1E90FF]/10 text-[#1E90FF]"
@@ -451,7 +481,7 @@ export default function ApplicationsPage() {
             )}
 
             <div className="flex gap-2 pt-2">
-              {(selected.status || "").toLowerCase() !== "approved" && (
+              {normalizeStatus(selected.status) !== "approved" && (
                 <button
                   onClick={() => updateStatus(selected.id || selected._id || "", "approved")}
                   className="flex-1 py-2 rounded-lg bg-emerald-500 text-white text-sm font-semibold hover:bg-emerald-600 transition-colors disabled:opacity-50"
@@ -460,7 +490,7 @@ export default function ApplicationsPage() {
                   {updating === (selected.id || selected._id) ? "Updating..." : "Approve"}
                 </button>
               )}
-              {(selected.status || "").toLowerCase() !== "rejected" && (
+              {normalizeStatus(selected.status) !== "rejected" && (
                 <button
                   onClick={() => updateStatus(selected.id || selected._id || "", "rejected")}
                   className="flex-1 py-2 rounded-lg bg-red-500 text-white text-sm font-semibold hover:bg-red-600 transition-colors disabled:opacity-50"
