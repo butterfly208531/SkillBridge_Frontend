@@ -79,7 +79,7 @@ export function CoursesSection() {
 
   return (
     <section className='py-16 dark:bg-gray-950'>
-      <div className=' mx-auto px-4'>
+      <div className='max-w-7xl mx-auto px-4'>
         <SectionHeading
           title={t("topCoursesHeading.title")}
           subtitle={t("topCoursesHeading.subtitle")}
@@ -87,7 +87,7 @@ export function CoursesSection() {
         />
 
         <div className='w-full mb-8'>
-          <div className='grid min-[840px]:grid-cols-3 gap-8 xl:gap-10 2xl:gap-12 min-[1710px]:gap-32  lg:px-4 xl:px-10 2xl:px-24 '>
+          <div className='grid min-[840px]:grid-cols-3 gap-8 xl:gap-10 2xl:gap-12'>
             {topCourses.map((course, index) => (
               <AnimatedCard key={course.id} delay={0.1 * index}>
                 <Card className='flex overflow-hidden border-none shadow-[2px_2px_15px_rgba(0,0,0,0.2)] dark:bg-gray-900/40 transition-all duration-300 hover:shadow-xl gap-2 h-full  '>
