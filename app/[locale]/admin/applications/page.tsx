@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Search, Eye, CheckCircle, XCircle, Clock, RefreshCw } from "lucide-react";
+import { Search, Eye, Trash2, CheckCircle, XCircle, Clock, RefreshCw } from "lucide-react";
 import AdminHeader from "../components/AdminHeader";
 import { cn } from "@/lib/utils";
 
@@ -83,6 +83,7 @@ export default function ApplicationsPage() {
   const [selected, setSelected]       = useState<Application | null>(null);
   const [loading, setLoading]         = useState(true);
   const [updating, setUpdating]       = useState<string | null>(null);
+  const [deleteId, setDeleteId]       = useState<string | null>(null);
   const [error, setError]             = useState("");
   const [success, setSuccess]         = useState("");
 
@@ -227,6 +228,27 @@ export default function ApplicationsPage() {
     } finally {
       setUpdating(null);
     }
+  };
+
+  const deleteApp = async (id: string) => {
+    setDeleteId(null);
+    // Remove from local state immediately
+    setApps(prev => {
+      const next = prev.filter(a => (a.id || a._id) !== id);
+      const cats = ["All", ...Array.from(new Set(next.map(a => getAppCategory(a)))).sort()];
+      setCategories(cats);
+      return next;
+    });
+    if (selected && (selected.id || selected._id) === id) setSelected(null);
+
+    // Best-effort API delete
+    const token = sessionStorage.getItem("adminToken");
+    try {
+      await fetch(`${API}/applications/${id}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+    } catch { /* silent */ }
   };
 
   return (
@@ -375,30 +397,16 @@ export default function ApplicationsPage() {
                               onClick={() => setSelected(app)}
                               className="p-1.5 rounded-lg text-[#1E90FF] hover:bg-[#1E90FF]/10 transition-colors"
                               title="View"
-                              disabled={isUpdating}
                             >
                               <Eye size={14} />
                             </button>
-                            {status !== "approved" && (
-                              <button
-                                onClick={() => updateStatus(id, "approved")}
-                                className="p-1.5 rounded-lg text-emerald-500 hover:bg-emerald-50 transition-colors disabled:opacity-50"
-                                title="Approve"
-                                disabled={isUpdating}
-                              >
-                                <CheckCircle size={14} />
-                              </button>
-                            )}
-                            {status !== "rejected" && (
-                              <button
-                                onClick={() => updateStatus(id, "rejected")}
-                                className="p-1.5 rounded-lg text-red-400 hover:bg-red-50 transition-colors disabled:opacity-50"
-                                title="Reject"
-                                disabled={isUpdating}
-                              >
-                                <XCircle size={14} />
-                              </button>
-                            )}
+                            <button
+                              onClick={() => setDeleteId(id)}
+                              className="p-1.5 rounded-lg text-red-400 hover:bg-red-50 transition-colors"
+                              title="Delete"
+                            >
+                              <Trash2 size={14} />
+                            </button>
                           </div>
                         </td>
                       </tr>
@@ -499,6 +507,29 @@ export default function ApplicationsPage() {
                 className="flex-1 py-2 rounded-lg border border-gray-200 text-gray-600 text-sm hover:bg-gray-50 transition-colors"
               >
                 Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Delete confirmation */}
+      {deleteId && (
+        <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-xl p-6 max-w-sm w-full">
+            <h3 className="font-bold text-gray-800 mb-2">Delete Application?</h3>
+            <p className="text-sm text-gray-500 mb-5">This will permanently remove the application record.</p>
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={() => setDeleteId(null)}
+                className="px-4 py-2 text-sm rounded-lg border border-gray-200 hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => deleteApp(deleteId)}
+                className="px-4 py-2 text-sm rounded-lg bg-red-500 text-white hover:bg-red-600"
+              >
+                Delete
               </button>
             </div>
           </div>
