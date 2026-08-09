@@ -4,11 +4,10 @@ import { useState } from "react";
 import Image from "next/image";
 import { Eye, EyeOff, Lock, Mail, Loader2 } from "lucide-react";
 
-const BASE = process.env.NEXT_PUBLIC_API_BASE_URL || "https://skillbridge-backend2.onrender.com/api";
-const ENDPOINTS = [`${BASE}/auth/login-admin`, `${BASE}/auth/login`];
-const MAX_ATTEMPTS = 3;
-const TIMEOUT_MS   = 35_000; // 35 s per attempt
-const RETRY_DELAY  = 6_000;  // 6 s between retries
+const API_URL = `${process.env.NEXT_PUBLIC_API_BASE_URL || "https://skillbridge-backend2.onrender.com/api"}/auth/login`;
+const TIMEOUT_MS  = 40_000; // 40 s — enough for Render cold start
+const RETRY_DELAY = 8_000;  // 8 s between retries
+const MAX_RETRIES = 3;
 
 function fetchWithTimeout(url: string, options: RequestInit, ms: number): Promise<Response> {
   return new Promise((resolve, reject) => {
@@ -17,10 +16,6 @@ function fetchWithTimeout(url: string, options: RequestInit, ms: number): Promis
       .then(r  => { clearTimeout(timer); resolve(r); })
       .catch(e => { clearTimeout(timer); reject(e); });
   });
-}
-
-async function sleep(ms: number) {
-  return new Promise(r => setTimeout(r, ms));
 }
 
 export default function AdminLoginPage() {
@@ -40,58 +35,65 @@ export default function AdminLoginPage() {
     const body    = JSON.stringify({ email: email.trim().toLowerCase(), password: password.trim() });
     const headers = { "Content-Type": "application/json" };
 
-    try {
-      for (const url of ENDPOINTS) {
-        for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
-          if (attempt === 2) setStatusMsg("⏳ Server is waking up, please wait…");
-          if (attempt === 3) setStatusMsg("⏳ Still waking up, almost there…");
+    for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+      try {
+        if (attempt === 2) setStatusMsg("⏳ Server is waking up, please wait…");
+        if (attempt === 3) setStatusMsg("⏳ Almost there, one more try…");
 
-          let res: Response | null = null;
+        const res = await fetchWithTimeout(API_URL, { method: "POST", headers, body }, TIMEOUT_MS);
 
-          try {
-            res = await fetchWithTimeout(url, { method: "POST", headers, body }, TIMEOUT_MS);
-          } catch {
-            // Network error / timeout — retry if attempts remain
-            if (attempt < MAX_ATTEMPTS) { await sleep(RETRY_DELAY); continue; }
-            else break; // exhausted retries on this endpoint → try next
-          }
+        setStatusMsg("");
 
-          setStatusMsg("");
+        // ✅ Logged in
+        if (res.ok) {
+          const data  = await res.json();
+          const token = data.accessToken || data.token || data.access_token || "";
 
-          // ✅ Success
-          if (res.ok) {
-            const data  = await res.json();
-            const token = data.accessToken || data.token || data.access_token || "";
-            if (token) {
-              sessionStorage.setItem("adminToken", token);
-              sessionStorage.setItem("adminUser", JSON.stringify(
-                data.user || data.admin || { email: email.trim().toLowerCase(), name: "Admin" }
-              ));
-              const locale = window.location.pathname.split("/")[1] || "en";
-              window.location.replace(`/${locale}/admin/dashboard`);
-              return;
-            }
-          }
-
-          // ❌ Wrong credentials — no point retrying
-          if (res.status === 401 || res.status === 403) {
-            setError("Invalid email or password.");
+          // Check role — only allow admin
+          const role = (data.user?.role || data.admin?.role || data.role || "").toLowerCase();
+          if (role && role !== "admin") {
+            setError("Access denied. Admin accounts only.");
+            setLoading(false);
             return;
           }
 
-          // 5xx or other — retry after delay
-          if (attempt < MAX_ATTEMPTS) await sleep(RETRY_DELAY);
+          if (token) {
+            sessionStorage.setItem("adminToken", token);
+            sessionStorage.setItem("adminUser", JSON.stringify(
+              data.user || data.admin || { email: email.trim().toLowerCase(), name: "Admin" }
+            ));
+            const locale = window.location.pathname.split("/")[1] || "en";
+            window.location.replace(`/${locale}/admin/dashboard`);
+            return;
+          }
+        }
+
+        // ❌ Wrong credentials — stop immediately, no retry
+        if (res.status === 400 || res.status === 401 || res.status === 403) {
+          setError("Invalid email or password.");
+          setLoading(false);
+          return;
+        }
+
+        // 5xx — retry after delay
+        if (attempt < MAX_RETRIES) await new Promise(r => setTimeout(r, RETRY_DELAY));
+
+      } catch {
+        // Network error or timeout
+        if (attempt < MAX_RETRIES) {
+          await new Promise(r => setTimeout(r, RETRY_DELAY));
+        } else {
+          setStatusMsg("");
+          setError("Unable to reach the server. Please check your connection and try again.");
+          setLoading(false);
+          return;
         }
       }
-
-      // All endpoints & retries exhausted
-      setError("Unable to reach the server. Please check your connection and try again.");
-    } catch {
-      setError("An unexpected error occurred. Please try again.");
-    } finally {
-      setLoading(false);
-      setStatusMsg("");
     }
+
+    setStatusMsg("");
+    setError("Unable to reach the server. Please check your connection and try again.");
+    setLoading(false);
   };
 
   return (
