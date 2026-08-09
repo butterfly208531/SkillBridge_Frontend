@@ -54,7 +54,6 @@ export default function AddProjectPage() {
     title:        "",
     description:  "",
     studentName:  "",
-    image:        "",
     technologies: [] as string[],
     category:     "Web Development" as ProjectCategory,
     subCategory:  "Portfolio Websites" as ProjectSubCategory,
@@ -119,7 +118,6 @@ export default function AddProjectPage() {
       id:           `proj-${Date.now()}`,
       title:        form.title,
       description:  form.description,
-      image:        form.image,
       technologies: form.technologies,
       category:     form.category,
       subCategory:  form.subCategory,
@@ -256,19 +254,6 @@ export default function AddProjectPage() {
               <textarea rows={4} value={form.description} onChange={e => set("description", e.target.value)}
                 placeholder="Describe what the project does, the problem it solves, and how it was built…"
                 className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1E90FF]/30 resize-none" />
-            </div>
-
-            <div>
-              <label className="block text-xs font-medium text-gray-700 mb-1">Project Image URL</label>
-              <input type="url" value={form.image} onChange={e => set("image", e.target.value)}
-                placeholder="https://images.unsplash.com/photo-..."
-                className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1E90FF]/30" />
-              {form.image && (
-                <div className="mt-2 rounded-lg overflow-hidden h-32 w-full">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={form.image} alt="preview" className="w-full h-full object-cover" onError={e => (e.currentTarget.style.display = "none")} />
-                </div>
-              )}
             </div>
 
             {error && <p className="text-xs text-red-500 bg-red-50 rounded-lg px-3 py-2">{error}</p>}
@@ -506,18 +491,6 @@ export default function AddProjectPage() {
                 </div>
               </div>
             </div>
-
-            {/* Image preview */}
-            {form.image && (
-              <div>
-                <p className="text-xs font-semibold text-gray-600 uppercase tracking-wide mb-2">Image Preview</p>
-                <div className="rounded-xl overflow-hidden h-40 w-full bg-gray-100">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={form.image} alt="project preview" className="w-full h-full object-cover"
-                    onError={e => { (e.currentTarget.parentElement as HTMLElement).innerHTML = '<p class="flex h-full items-center justify-center text-xs text-gray-400">Image could not be loaded</p>'; }} />
-                </div>
-              </div>
-            )}
 
             {error && <p className="text-xs text-red-500 bg-red-50 rounded-lg px-3 py-2">{error}</p>}
 

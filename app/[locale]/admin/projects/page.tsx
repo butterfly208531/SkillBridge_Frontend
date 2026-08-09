@@ -31,7 +31,6 @@ const FALLBACK: StoredProject[] = projectsConfig.map(p => ({
   id:           p.id,
   title:        p.title,
   description:  p.description,
-  image:        p.image,
   technologies: p.technologies,
   category:     p.category,
   subCategory:  p.subCategory,
@@ -67,7 +66,6 @@ export default function ProjectsAdminPage() {
             id:           p.id || p._id,
             title:        p.title || p.name || "",
             description:  p.description || "",
-            image:        p.image || p.imageUrl || "",
             technologies: Array.isArray(p.technologies) ? p.technologies : [],
             category:     p.category || "Web Development",
             subCategory:  p.subCategory || p.sub_category || "",
@@ -346,7 +344,6 @@ function ProjectModal({ project, saving, error, onClose, onSave }: {
     id:           project?.id           ?? "",
     title:        project?.title        ?? "",
     description:  project?.description  ?? "",
-    image:        project?.image        ?? "",
     technologies: project?.technologies ?? [],
     category:     project?.category     ?? "Web Development",
     subCategory:  project?.subCategory  ?? "Portfolio Websites",
@@ -459,14 +456,6 @@ function ProjectModal({ project, saving, error, onClose, onSave }: {
                 ))}
               </div>
             )}
-          </div>
-
-          {/* Image URL */}
-          <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">Image URL</label>
-            <input type="url" value={form.image} onChange={e => set("image", e.target.value)}
-              placeholder="https://images.unsplash.com/..."
-              className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1E90FF]/30" />
           </div>
 
           {/* Demo URL + GitHub URL */}

@@ -12,7 +12,6 @@ export interface StoredProject {
   id: string;
   title: string;
   description: string;
-  image: string;
   technologies: string[];
   category: ProjectCategory;
   subCategory: ProjectSubCategory;
@@ -27,7 +26,6 @@ function configToStored(p: ProjectConfig): StoredProject {
     id:          p.id,
     title:       p.title,
     description: p.description,
-    image:       p.image,
     technologies: p.technologies,
     category:    p.category,
     subCategory: p.subCategory,

@@ -8,7 +8,6 @@ import { cn } from "@/lib/utils";
 interface ProjectCardProps {
   id: string;
   title: string;
-  image: string;
   technologies: string[];
   description: string;
   category: string;
@@ -20,7 +19,6 @@ interface ProjectCardProps {
 
 export default function ProjectCard({
   title,
-  image,
   technologies,
   description,
   category,
@@ -32,50 +30,22 @@ export default function ProjectCard({
   return (
     <div className="flex flex-col h-full rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 bg-white border border-blue-100 group">
 
-      {/* ── Hero image with navy overlay ── */}
-      <div className="relative overflow-hidden" style={{ height: 200 }}>
-        {/* Background image */}
-        {image ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={image}
-            alt={title}
-            className="w-full h-full object-cover object-center transition-transform duration-500 group-hover:scale-105"
-            onError={(e) => { (e.currentTarget as HTMLImageElement).src = "https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=600&q=80"; }}
-          />
-        ) : (
-          <div className="w-full h-full bg-[#1565C0]" />
-        )}
-
-        {/* Deep navy gradient overlay — matches the CollegeTrip dark-blue sweep */}
-        <div
-          className="absolute inset-0"
-          style={{
-            background:
-              "linear-gradient(160deg, rgba(13,33,77,0.55) 0%, rgba(13,33,77,0.75) 55%, rgba(13,33,77,0.92) 100%)",
-          }}
-        />
-
-        {/* Decorative curved bottom shape (white) */}
-        <div
-          className="absolute bottom-0 left-0 right-0 h-10 bg-white"
-          style={{ borderRadius: "60% 60% 0 0 / 80% 80% 0 0" }}
-        />
-
+      {/* ── Header banner (replaces hero image) ── */}
+      <div className="relative bg-[#0D214D] px-5 pt-5 pb-8">
         {/* Category pill — top-left */}
-        <div className="absolute top-3 left-3 flex flex-col gap-1 z-10">
-          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-[#F57C00] text-white shadow">
+        <div className="flex flex-col gap-1">
+          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-[#F57C00] text-white shadow w-fit">
             {category}
           </span>
           {subCategory && (
-            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-white/20 text-white border border-white/30 backdrop-blur-sm">
+            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-white/20 text-white border border-white/30 backdrop-blur-sm w-fit">
               {subCategory}
             </span>
           )}
         </div>
 
         {/* SkillBridge brand — top-right */}
-        <div className="absolute top-3 right-3 z-10 bg-white rounded-xl px-2.5 py-1.5 shadow-md flex flex-col items-center">
+        <div className="absolute top-3 right-3 bg-white rounded-xl px-2.5 py-1.5 shadow-md flex flex-col items-center">
           <div className="w-7 h-7 mb-0.5">
             <Image src="/Logo.svg" alt="SkillBridge" width={28} height={28} className="w-full h-full object-contain" />
           </div>
@@ -83,13 +53,19 @@ export default function ProjectCard({
           <span className="text-[7px] text-gray-400 leading-none">Institute of Technology</span>
         </div>
 
-        {/* "Student Project" label — bottom-left, above the white curve */}
-        <div className="absolute bottom-6 left-5 z-10">
+        {/* "Student Project" label */}
+        <div className="mt-3">
           <p className="text-white font-extrabold leading-none" style={{ fontSize: 22 }}>Student</p>
           <p className="text-[#F57C00] font-black uppercase leading-none tracking-wide" style={{ fontSize: 18 }}>
             Project
           </p>
         </div>
+
+        {/* Decorative curved bottom shape */}
+        <div
+          className="absolute bottom-0 left-0 right-0 h-10 bg-white"
+          style={{ borderRadius: "60% 60% 0 0 / 80% 80% 0 0" }}
+        />
       </div>
 
       {/* ── Body ── */}
