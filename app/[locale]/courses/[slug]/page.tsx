@@ -95,7 +95,7 @@ export default function CourseDetailPage() {
               category: { id: "", name: storedMatch.category, description: "", status: "" },
               instructor: { id: "", name: "Instructor", email: "", imageUrl: "", role: "", status: "" },
               modules: [],
-              learningOutcomes: [],
+              learningOutcomes: storedMatch.learningOutcomes ?? [],
               prerequisites: [],
             };
           }

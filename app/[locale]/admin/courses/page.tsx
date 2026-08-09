@@ -335,6 +335,8 @@ function CourseModal({ course, onClose, onSaved }: {
     priceOriginal:     course?.priceOriginal     ?? 0,
     priceDiscounted:   course?.priceDiscounted   ?? 0,
     rating:            course?.rating            ?? 0,
+    shortDescription:  course?.shortDescription  ?? "",
+    learningOutcomes:  course?.learningOutcomes  ?? [] as string[],
   });
 
   const [categories] = useState<{ id: string; name: string }[]>(
@@ -345,7 +347,18 @@ function CourseModal({ course, onClose, onSaved }: {
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(-1);
   const [uploadErr, setUploadErr] = useState("");
+  const [outcomeInput, setOutcomeInput] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const addOutcome = () => {
+    const v = outcomeInput.trim();
+    if (v && !form.learningOutcomes.includes(v)) {
+      setForm(p => ({ ...p, learningOutcomes: [...p.learningOutcomes, v] }));
+    }
+    setOutcomeInput("");
+  };
+  const removeOutcome = (idx: number) =>
+    setForm(p => ({ ...p, learningOutcomes: p.learningOutcomes.filter((_, i) => i !== idx) }));
 
   // Image upload via Cloudinary
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -381,16 +394,18 @@ function CourseModal({ course, onClose, onSaved }: {
       // ── 1. Persist to localStorage immediately (optimistic) ──
       if (course?.id) {
         updateCourse(course.id, {
-          title:           form.title.trim(),
-          duration:        form.duration || "—",
-          category:        selectedCat?.name || form.categoryId || course.category,
-          categoryId:      form.categoryId || course.categoryId,
+          title:            form.title.trim(),
+          duration:         form.duration || "—",
+          category:         selectedCat?.name || form.categoryId || course.category,
+          categoryId:       form.categoryId || course.categoryId,
           status,
-          imageUrl:        form.imageUrl || course.imageUrl || "",
-          adminImageUrl:   form.imageUrl || undefined,
-          priceOriginal:   Number(form.priceOriginal)   || 0,
-          priceDiscounted: Number(form.priceDiscounted) || 0,
-          rating:          Number(form.rating)          || 0,
+          imageUrl:         form.imageUrl || course.imageUrl || "",
+          adminImageUrl:    form.imageUrl || undefined,
+          priceOriginal:    Number(form.priceOriginal)   || 0,
+          priceDiscounted:  Number(form.priceDiscounted) || 0,
+          rating:           Number(form.rating)          || 0,
+          shortDescription: form.shortDescription.trim(),
+          learningOutcomes: form.learningOutcomes,
         });
       } else {
         addCourse({
@@ -402,7 +417,8 @@ function CourseModal({ course, onClose, onSaved }: {
           imageUrl:         form.imageUrl || "",
           adminImageUrl:    form.imageUrl || undefined,
           rating:           Number(form.rating)          || 0,
-          shortDescription: "",
+          shortDescription: form.shortDescription.trim(),
+          learningOutcomes: form.learningOutcomes,
           priceOriginal:    Number(form.priceOriginal)   || 0,
           priceDiscounted:  Number(form.priceDiscounted) || 0,
           startDate:        "",
@@ -537,6 +553,54 @@ function CourseModal({ course, onClose, onSaved }: {
               placeholder="e.g. 4.5"
               className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1E90FF]/30"
             />
+          </div>
+
+          {/* About This Course */}
+          <div>
+            <label className="block text-xs font-medium text-gray-600 mb-1">About This Course</label>
+            <textarea
+              rows={4}
+              value={form.shortDescription}
+              onChange={e => setForm(p => ({ ...p, shortDescription: e.target.value }))}
+              placeholder="Describe what this course is about, who it's for, and what students will achieve…"
+              className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1E90FF]/30 resize-none"
+            />
+          </div>
+
+          {/* What You Will Learn */}
+          <div>
+            <label className="block text-xs font-medium text-gray-600 mb-1">What You Will Learn</label>
+            <div className="flex gap-2 mb-2">
+              <input
+                type="text"
+                value={outcomeInput}
+                onChange={e => setOutcomeInput(e.target.value)}
+                onKeyDown={e => e.key === "Enter" && (e.preventDefault(), addOutcome())}
+                placeholder="e.g. Build REST APIs — press Enter to add"
+                className="flex-1 px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1E90FF]/30"
+              />
+              <button
+                type="button"
+                onClick={addOutcome}
+                className="px-3 py-2 text-sm bg-[#1E90FF]/10 text-[#1E90FF] font-semibold rounded-lg hover:bg-[#1E90FF]/20 transition-colors"
+              >
+                Add
+              </button>
+            </div>
+            {form.learningOutcomes.length > 0 && (
+              <div className="flex flex-col gap-1.5 bg-gray-50 rounded-xl p-3">
+                {form.learningOutcomes.map((item, idx) => (
+                  <div key={idx} className="flex items-center gap-2 bg-white border border-gray-100 rounded-lg px-3 py-1.5 shadow-sm">
+                    <span className="w-4 h-4 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center text-[10px] font-bold shrink-0">✓</span>
+                    <span className="flex-1 text-xs text-gray-700">{item}</span>
+                    <button onClick={() => removeOutcome(idx)} className="text-gray-300 hover:text-red-400 transition-colors shrink-0">
+                      <X size={12} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+            <p className="mt-1 text-[10px] text-gray-400">These appear in the "What You Will Learn" section on the course page.</p>
           </div>
 
           {/* Image upload */}

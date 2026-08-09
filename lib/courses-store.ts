@@ -24,6 +24,7 @@ export interface StoredCourse {
   adminImageUrl?: string;  // explicitly set by admin — always wins
   rating: number;
   shortDescription: string;
+  learningOutcomes: string[];  // "What You Will Learn" bullet points
   priceOriginal: number;
   priceDiscounted: number;
   startDate: string;
@@ -88,6 +89,7 @@ function defaultCourses(): StoredCourse[] {
     adminImageUrl:    undefined,
     rating:           c.rating ?? 0,
     shortDescription: "",
+    learningOutcomes: [],
     priceOriginal:    0,
     priceDiscounted:  0,
     startDate:        "",
