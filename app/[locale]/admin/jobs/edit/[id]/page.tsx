@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import { ArrowLeft, Plus, Trash2, CheckCircle, Loader2, Briefcase, MapPin, Link2, FileText } from "lucide-react";
 import AdminHeader from "../../../components/AdminHeader";
@@ -13,10 +13,11 @@ const API = process.env.NEXT_PUBLIC_API_BASE_URL || "https://skillbridge-backend
 const TABS = ["Basic Info", "Details", "Requirements", "Review"] as const;
 type Tab = typeof TABS[number];
 
-export default function EditJobPage({ params }: { params: { id: string } }) {
+export default function EditJobPage({ params }: { params: Promise<{ id: string }> }) {
   const pathname = usePathname();
   const locale   = pathname.split("/")[1] || "en";
-  const jobId    = params.id;
+  const resolvedParams = React.use(params);
+  const jobId    = resolvedParams.id;
 
   const [tab,     setTab]     = useState<Tab>("Basic Info");
   const [saving,  setSaving]  = useState(false);
