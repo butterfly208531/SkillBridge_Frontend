@@ -102,14 +102,9 @@ export default function ProjectCard({
           className="w-20 h-20 overflow-hidden shadow-lg border-4 border-white dark:border-gray-900"
           style={{ clipPath: "polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)" }}
         >
-          {image ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={image} alt={title} className="w-full h-full object-cover" />
-          ) : (
-            <div className="w-full h-full flex items-center justify-center bg-white p-3">
-              <Image src="/Logo.svg" alt="SkillBridge logo" width={56} height={56} className="w-full h-full object-contain" />
-            </div>
-          )}
+          <div className="w-full h-full flex items-center justify-center bg-white p-3">
+            <Image src="/Logo.svg" alt="SkillBridge logo" width={56} height={56} className="w-full h-full object-contain" />
+          </div>
         </div>
       </div>
 
