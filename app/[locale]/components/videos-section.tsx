@@ -4,7 +4,7 @@ import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import Image from "next/image";
-import { Clock, CalendarDays, Play, Loader2 } from "lucide-react";
+import { CalendarDays, Play, Loader2 } from "lucide-react";
 import { SectionHeading } from "@/app/[locale]/components/ui/section-heading";
 import { Button } from "@/app/[locale]/components/ui/button";
 import Link from "next/link";
@@ -24,45 +24,16 @@ function formatDate(dateStr: string): string {
   return d.toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" });
 }
 
-async function fetchYouTubeVideos(): Promise<YouTubeVideo[]> {
-  const apiKey = process.env.NEXT_PUBLIC_YOUTUBE_API_KEY;
-  const channelId = process.env.NEXT_PUBLIC_YOUTUBE_CHANNEL_ID;
-  if (!apiKey || !channelId) return [];
-
-  // Get uploads playlist ID from channel
-  const channelRes = await fetch(
-    `https://www.googleapis.com/youtube/v3/channels?key=${apiKey}&id=${channelId}&part=contentDetails`
-  );
-  if (!channelRes.ok) return [];
-  const channelData = await channelRes.json();
-  const uploadsPlaylistId = channelData.items?.[0]?.contentDetails?.relatedPlaylists?.uploads;
-  if (!uploadsPlaylistId) return [];
-
-  // Fetch latest videos from uploads playlist
-  const playlistRes = await fetch(
-    `https://www.googleapis.com/youtube/v3/playlistItems?key=${apiKey}&playlistId=${uploadsPlaylistId}&part=snippet&maxResults=3`
-  );
-  if (!playlistRes.ok) return [];
-  const playlistData = await playlistRes.json();
-
-  return (playlistData.items || []).map((item: any) => ({
-    id: item.snippet.resourceId.videoId,
-    title: item.snippet.title,
-    description: item.snippet.description,
-    thumbnail: item.snippet.thumbnails?.high?.url || item.snippet.thumbnails?.medium?.url || "",
-    publishDate: item.snippet.publishedAt,
-    url: `https://www.youtube.com/watch?v=${item.snippet.resourceId.videoId}`,
-  }));
-}
-
 export function VideosSection() {
   const t = useTranslations("videosSection");
   const [videos, setVideos] = useState<YouTubeVideo[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchYouTubeVideos()
-      .then(setVideos)
+    fetch("/api/yt-videos")
+      .then((res) => res.json())
+      .then((data) => setVideos(data.videos || []))
+      .catch(() => setVideos([]))
       .finally(() => setLoading(false));
   }, []);
 

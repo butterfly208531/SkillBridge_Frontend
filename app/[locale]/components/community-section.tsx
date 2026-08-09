@@ -1,6 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import {
   Send, Youtube, Linkedin, Globe, Instagram, Facebook,
@@ -9,7 +10,8 @@ import {
 import { SectionHeading } from "@/app/[locale]/components/ui/section-heading";
 import { Button } from "@/app/[locale]/components/ui/button";
 import { CountUp } from "@/app/[locale]/components/ui/count-up";
-import { communityConfig, communityFeatures } from "@/lib/community-config";
+import { communityFeatures } from "@/lib/community-config";
+import { getEffectiveCommunityConfig } from "@/lib/community-stats-store";
 import { cn } from "@/lib/utils";
 import type { LucideIcon } from "lucide-react";
 
@@ -48,6 +50,12 @@ const featureAccent: Record<string, string> = {
 
 export function CommunitySection() {
   const t = useTranslations("communitySection");
+  const [communityConfig, setCommunityConfig] = useState(() => getEffectiveCommunityConfig());
+
+  // Re-read overrides on mount (localStorage is only available client-side)
+  useEffect(() => {
+    setCommunityConfig(getEffectiveCommunityConfig());
+  }, []);
 
   const telegramUrl = communityConfig.find((p) => p.key === "telegram")?.url ?? "#";
   const youtubeUrl  = communityConfig.find((p) => p.key === "youtube")?.url  ?? "#";
