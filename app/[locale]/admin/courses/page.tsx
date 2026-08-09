@@ -82,6 +82,7 @@ export default function CoursesAdminPage() {
               adminImageUrl:    stored?.adminImageUrl || undefined,
               rating:           c.rating ?? 0,
               shortDescription: c.shortDescription || "",
+              learningOutcomes: stored?.learningOutcomes ?? [],
               // Prefer API value if non-zero; otherwise keep what admin set locally
               priceOriginal:    (apiPriceOriginal != null && apiPriceOriginal > 0)
                                   ? apiPriceOriginal

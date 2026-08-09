@@ -107,6 +107,7 @@ export default function AddCoursePage() {
         imageUrl:         basic.imageUrl || "",
         rating:           0,
         shortDescription: basic.shortDescription || "",
+        learningOutcomes: [],
         priceOriginal:    Number(basic.priceOriginal)  || 0,
         priceDiscounted:  Number(basic.priceDiscounted) || 0,
         startDate:        basic.startDate || "",

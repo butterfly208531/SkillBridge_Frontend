@@ -62,6 +62,7 @@ export default function DashboardPage() {
             adminImageUrl:    undefined,
             rating:           c.rating ?? 0,
             shortDescription: c.shortDescription || "",
+            learningOutcomes: [],
             priceOriginal:    c.priceOriginal || 0,
             priceDiscounted:  c.priceDiscounted || 0,
             startDate:        c.startDate || "",
