@@ -4,19 +4,10 @@ import { useState } from "react";
 import Image from "next/image";
 import { Eye, EyeOff, Lock, Mail, Loader2 } from "lucide-react";
 
-const API_URL    = `${process.env.NEXT_PUBLIC_API_BASE_URL || "https://skillbridge-backend2.onrender.com/api"}/auth/login`;
-const TIMEOUT_MS = 15_000; // 15 s — if backend doesn't respond, fall through to local auth
-const ADMIN_EMAIL    = process.env.NEXT_PUBLIC_ADMIN_EMAIL    || "admin@skillbridge.com";
-const ADMIN_PASSWORD = process.env.NEXT_PUBLIC_ADMIN_PASSWORD || "Admin123!";
-
-function fetchWithTimeout(url: string, options: RequestInit, ms: number): Promise<Response> {
-  return new Promise((resolve, reject) => {
-    const timer = setTimeout(() => reject(new Error("timeout")), ms);
-    fetch(url, options)
-      .then(r  => { clearTimeout(timer); resolve(r); })
-      .catch(e => { clearTimeout(timer); reject(e); });
-  });
-}
+// ─── Admin credentials (change these to update login) ───────────────────────
+const ADMIN_EMAIL    = "admin@skillbridge.com";
+const ADMIN_PASSWORD = "Admin123!";
+// ────────────────────────────────────────────────────────────────────────────
 
 function grantAccess(email: string) {
   const token = btoa(`admin:${email}:${Date.now()}`);
@@ -32,73 +23,27 @@ export default function AdminLoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading,      setLoading]      = useState(false);
   const [error,        setError]        = useState("");
-  const [statusMsg,    setStatusMsg]    = useState("");
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-    setStatusMsg("");
     setLoading(true);
 
     const trimEmail = email.trim().toLowerCase();
     const trimPass  = password.trim();
 
-    try {
-      // ── 1. Try the live backend first (short 15s timeout) ──
-      try {
-        setStatusMsg("Connecting to server…");
-        const res = await fetchWithTimeout(
-          API_URL,
-          {
-            method:  "POST",
-            headers: { "Content-Type": "application/json" },
-            body:    JSON.stringify({ email: trimEmail, password: trimPass }),
-          },
-          TIMEOUT_MS
-        );
-
-        setStatusMsg("");
-
-        if (res.ok) {
-          const data  = await res.json();
-          const token = data.accessToken || data.token || data.access_token || "";
-          if (token) {
-            sessionStorage.setItem("adminToken", token);
-            sessionStorage.setItem("adminUser", JSON.stringify(
-              data.user || data.admin || { email: trimEmail, name: "Admin", role: "admin" }
-            ));
-            const locale = window.location.pathname.split("/")[1] || "en";
-            window.location.replace(`/${locale}/admin/dashboard`);
-            return;
-          }
-        }
-
-        // Backend returned 401/403 — definitely wrong credentials, don't fall through
-        if (res.status === 401 || res.status === 403) {
-          setError("Invalid email or password.");
-          return;
-        }
-
-        // 400, 500, etc. — backend is broken, fall through to local auth below
-
-      } catch {
-        // Timeout or network error — fall through to local auth
-        setStatusMsg("");
-      }
-
-      // ── 2. Local credential fallback (works even when backend is down) ──
-      if (trimEmail === ADMIN_EMAIL.toLowerCase() && trimPass === ADMIN_PASSWORD) {
+    // Small delay so the spinner shows
+    setTimeout(() => {
+      if (
+        trimEmail === ADMIN_EMAIL.toLowerCase() &&
+        trimPass  === ADMIN_PASSWORD
+      ) {
         grantAccess(trimEmail);
-        return;
+      } else {
+        setError("Invalid email or password.");
+        setLoading(false);
       }
-
-      // Neither backend nor local matched
-      setError("Invalid email or password.");
-
-    } finally {
-      setLoading(false);
-      setStatusMsg("");
-    }
+    }, 600);
   };
 
   return (
@@ -119,13 +64,6 @@ export default function AdminLoginPage() {
           {error && (
             <div className="mb-4 px-4 py-3 bg-red-50 border border-red-200 text-red-600 rounded-lg text-sm">
               {error}
-            </div>
-          )}
-
-          {statusMsg && !error && (
-            <div className="mb-4 px-4 py-3 bg-blue-50 border border-blue-200 text-blue-700 rounded-lg text-sm flex items-center gap-2">
-              <Loader2 className="h-3.5 w-3.5 animate-spin shrink-0" />
-              {statusMsg}
             </div>
           )}
 
