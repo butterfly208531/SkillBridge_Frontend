@@ -33,12 +33,19 @@ const nextConfig: NextConfig = {
     ],
   },
   async rewrites() {
-    return [
-      {
-        source: "/api/:path*",
-        destination: "https://skillbridge-backend-w2s4.onrender.com/api/:path*",
-      },
-    ];
+    return {
+      // beforeFiles: run before filesystem — leave empty
+      beforeFiles: [],
+      // afterFiles: run after filesystem check, so Route Handlers (app/api/*) win
+      afterFiles: [
+        {
+          source: "/api/:path*",
+          destination: "https://skillbridge-backend-w2s4.onrender.com/api/:path*",
+        },
+      ],
+      // fallback: run if nothing else matched
+      fallback: [],
+    };
   },
 };
 
