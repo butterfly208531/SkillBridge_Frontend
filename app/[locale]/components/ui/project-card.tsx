@@ -1,10 +1,8 @@
 "use client";
 
 import * as React from "react";
-import Link from "next/link";
 import Image from "next/image";
-import { User, ExternalLink, Github, Code2, MapPin, Mail } from "lucide-react";
-import { Button } from "@/app/[locale]/components/ui/button";
+import { ExternalLink, Github } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface ProjectCardProps {
@@ -20,36 +18,19 @@ interface ProjectCardProps {
   githubUrl?: string;
 }
 
-/** Per-category gradient — mirrors the scholarship card's header gradient approach */
-const categoryGradients: Record<string, string> = {
-  ERP:               "linear-gradient(135deg, #5b21b6 0%, #7c3aed 60%, #a78bfa 100%)",
-  "Web Development": "linear-gradient(135deg, #1565C0 0%, #2196F3 60%, #42A5F5 100%)",
-  AI:                "linear-gradient(135deg, #065f46 0%, #059669 60%, #34d399 100%)",
-  Automation:        "linear-gradient(135deg, #b45309 0%, #F57C00 60%, #fb923c 100%)",
-  Python:            "linear-gradient(135deg, #854d0e 0%, #ca8a04 60%, #facc15 100%)",
-  Mobile:            "linear-gradient(135deg, #9d174d 0%, #ec4899 60%, #f9a8d4 100%)",
+/** Accent color per category — used for the top header strip and CTA */
+const categoryAccent: Record<string, string> = {
+  ERP:               "#7c3aed",
+  "Web Development": "#1E90FF",
+  AI:                "#059669",
+  Automation:        "#F57C00",
+  Python:            "#ca8a04",
+  Mobile:            "#ec4899",
 };
 
-const categoryAccents: Record<string, string> = {
-  ERP:               "text-purple-500  border-purple-400  bg-purple-50  dark:bg-purple-900/20",
-  "Web Development": "text-[#2196F3]   border-[#F57C00]   bg-blue-50    dark:bg-blue-900/20",
-  AI:                "text-emerald-600 border-emerald-400 bg-emerald-50 dark:bg-emerald-900/20",
-  Automation:        "text-[#F57C00]   border-orange-400  bg-orange-50  dark:bg-orange-900/20",
-  Python:            "text-yellow-600  border-yellow-400  bg-yellow-50  dark:bg-yellow-900/20",
-  Mobile:            "text-pink-500    border-pink-400    bg-pink-50    dark:bg-pink-900/20",
-};
-
-const categoryTagColors: Record<string, string> = {
-  ERP:               "bg-purple-100 text-purple-700",
-  "Web Development": "bg-blue-100   text-blue-700",
-  AI:                "bg-green-100  text-green-700",
-  Automation:        "bg-orange-100 text-orange-700",
-  Python:            "bg-yellow-100 text-yellow-700",
-  Mobile:            "bg-pink-100   text-pink-700",
-};
+const defaultAccent = "#F57C00";
 
 export default function ProjectCard({
-  id,
   title,
   image,
   technologies,
@@ -60,159 +41,216 @@ export default function ProjectCard({
   demoUrl,
   githubUrl,
 }: ProjectCardProps) {
-  const gradient   = categoryGradients[category] ?? "linear-gradient(135deg, #374151 0%, #6b7280 100%)";
-  const accent     = categoryAccents[category]   ?? "text-gray-500 border-gray-400 bg-gray-50";
-  const tagColor   = categoryTagColors[category] ?? "bg-gray-100 text-gray-600";
+  const accent = categoryAccent[category] ?? defaultAccent;
+
+  // Split technologies into two columns, poster-style
+  const mid   = Math.ceil(technologies.slice(0, 6).length / 2);
+  const left  = technologies.slice(0, mid);
+  const right = technologies.slice(mid, 6);
 
   return (
-    <div className="flex flex-col h-full rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-shadow duration-300 bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800">
-
-      {/* ── Gradient Header ── */}
-      <div className="relative px-6 pt-7 pb-12 text-white overflow-hidden" style={{ background: gradient }}>
-        {/* Decorative circles */}
-        <div className="absolute -top-6 -right-6 w-28 h-28 rounded-full bg-white/10" />
-        <div className="absolute top-4 right-4 w-14 h-14 rounded-full bg-white/10" />
-
-        {/* Category + sub-category badges */}
-        <div className="absolute top-3 left-3 flex flex-col gap-1">
-          <span className="px-2.5 py-1 rounded-full text-[10px] font-black bg-white/20 text-white border border-white/30 backdrop-blur-sm">
+    <div
+      className="flex flex-col overflow-hidden rounded-2xl shadow-lg hover:shadow-2xl transition-shadow duration-300 border border-[#e8dece]"
+      style={{ backgroundColor: "#FFF8F0", fontFamily: "sans-serif" }}
+    >
+      {/* ── TOP HEADER STRIP ─────────────────────────────────────── */}
+      <div
+        className="relative flex items-start justify-between px-4 pt-3 pb-2 text-white"
+        style={{ backgroundColor: accent }}
+      >
+        {/* Category + sub-category */}
+        <div className="flex flex-col gap-0.5">
+          <span className="text-[10px] font-black uppercase tracking-widest bg-white/20 rounded px-2 py-0.5 w-fit">
             {category}
           </span>
           {subCategory && (
-            <span className="px-2.5 py-1 rounded-full text-[10px] font-semibold bg-black/30 text-white/90">
-              {subCategory}
-            </span>
+            <span className="text-[9px] font-semibold text-white/80">{subCategory}</span>
           )}
         </div>
 
-        {/* Header text */}
-        <p className="text-3xl font-black leading-none tracking-tight mt-6">Student</p>
-        <p className="text-xl font-black uppercase leading-tight mt-0.5">Project</p>
-
-        {/* SkillBridge label */}
-        <div className="absolute top-5 right-5 flex flex-col items-end">
-          <span className="text-[10px] font-bold uppercase tracking-widest text-white/80">SkillBridge</span>
-          <span className="text-[9px] text-white/60">Institute of Technology</span>
+        {/* SkillBridge badge */}
+        <div className="flex flex-col items-end">
+          <span className="text-[10px] font-black uppercase tracking-widest">SKILLBRIDGE</span>
+          <span className="text-[8px] text-white/70">Institute of Technology</span>
         </div>
       </div>
 
-      {/* ── Diamond Logo ── */}
-      <div className="relative flex justify-center -mt-10 mb-2">
+      {/* ── HERO IMAGE + HEADLINE ─────────────────────────────────── */}
+      <div className="relative flex" style={{ minHeight: 130 }}>
+
+        {/* Bold left headline — poster style */}
         <div
-          className="w-20 h-20 overflow-hidden shadow-lg border-4 border-white dark:border-gray-900"
-          style={{ clipPath: "polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)" }}
+          className="relative z-10 flex flex-col justify-center pl-4 pr-2"
+          style={{ width: "52%" }}
         >
-          <div className="w-full h-full flex items-center justify-center bg-white p-3">
-            <Image src="/Logo.svg" alt="SkillBridge logo" width={56} height={56} className="w-full h-full object-contain" />
-          </div>
+          <p
+            className="font-black leading-tight uppercase"
+            style={{ fontSize: "clamp(18px, 4vw, 28px)", color: accent }}
+          >
+            {/* Split title into at-most 3 words per line, poster feel */}
+            {title.split(" ").reduce<string[][]>((acc, word) => {
+              const last = acc[acc.length - 1];
+              if (!last || last.length >= 2) {
+                acc.push([word]);
+              } else {
+                last.push(word);
+              }
+              return acc;
+            }, []).map((chunk, i) => (
+              <span key={i} className="block">{chunk.join(" ")}</span>
+            ))}
+          </p>
+          {studentName && (
+            <p
+              className="mt-1 text-[11px] font-semibold"
+              style={{ color: accent, opacity: 0.85 }}
+            >
+              by {studentName}
+            </p>
+          )}
+        </div>
+
+        {/* Hero image — right side, bleeds to edge */}
+        <div className="absolute right-0 top-0 bottom-0 overflow-hidden" style={{ width: "54%" }}>
+          {/* Soft bleed gradient on the left so image fades into bg */}
+          <div
+            className="absolute inset-y-0 left-0 z-10 w-1/3"
+            style={{ background: "linear-gradient(to right, #FFF8F0, transparent)" }}
+          />
+          {image ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={image}
+              alt={title}
+              className="w-full h-full object-cover object-top"
+              onError={(e) => {
+                (e.currentTarget as HTMLImageElement).style.display = "none";
+              }}
+            />
+          ) : (
+            <div
+              className="w-full h-full flex items-center justify-center"
+              style={{ backgroundColor: `${accent}18` }}
+            >
+              <Image src="/Logo.svg" alt="SkillBridge" width={48} height={48} className="opacity-30" />
+            </div>
+          )}
         </div>
       </div>
 
-      {/* ── Body ── */}
-      <div className="flex flex-col flex-1 px-5 pb-5 gap-3">
-
-        {/* Title */}
-        <h3 className="text-base font-extrabold text-gray-900 dark:text-gray-50 text-center leading-snug uppercase tracking-wide">
-          {title}
-        </h3>
-
-        {/* Student name */}
-        {studentName && (
-          <div className="flex items-center justify-center gap-1.5 text-xs text-gray-500 dark:text-gray-400">
-            <User className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-            <span className="font-semibold">{studentName}</span>
-          </div>
-        )}
+      {/* ── WHY CHOOSE / FEATURES CARD ───────────────────────────── */}
+      <div
+        className="mx-3 rounded-xl overflow-hidden"
+        style={{ backgroundColor: "#f0e8d8", marginTop: -10, position: "relative", zIndex: 10 }}
+      >
+        {/* Label pill */}
+        <div className="flex justify-center" style={{ marginTop: -10 }}>
+          <span
+            className="text-white text-[11px] font-bold rounded-full px-4 py-1"
+            style={{ backgroundColor: accent }}
+          >
+            {description.length > 0 ? "About this project" : "Project details"}
+          </span>
+        </div>
 
         {/* Description */}
-        <p className="text-xs text-gray-600 dark:text-gray-400 line-clamp-3 leading-relaxed">
+        <p className="text-[11px] text-gray-600 leading-relaxed px-4 pt-2 pb-1 line-clamp-2">
           {description}
         </p>
 
-        {/* Technologies */}
+        {/* Tech stack — two columns, poster style */}
         {technologies.length > 0 && (
-          <div>
-            <p className={cn(
-              "text-[11px] font-black uppercase tracking-widest mb-2 border-b-2 pb-0.5 w-fit",
-              accent
-            )}>
-              Tech Stack
-            </p>
-            <div className="flex flex-wrap gap-1.5">
-              {technologies.slice(0, 5).map(tech => (
-                <span key={tech} className={cn(
-                  "flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-semibold",
-                  tagColor
-                )}>
-                  <Code2 className="h-2.5 w-2.5 shrink-0" />
-                  {tech}
-                </span>
+          <div className="flex gap-2 px-4 pb-3 pt-1">
+            {/* Left column */}
+            <div className="flex-1 space-y-1.5">
+              {left.map((tech) => (
+                <div key={tech} className="flex items-center gap-1.5">
+                  <span
+                    className="w-1.5 h-1.5 rounded-full shrink-0"
+                    style={{ backgroundColor: accent }}
+                  />
+                  <span className="text-[11px] font-semibold text-gray-700 leading-tight">{tech}</span>
+                </div>
               ))}
-              {technologies.length > 5 && (
-                <span className="px-2 py-0.5 rounded-md text-[11px] font-semibold bg-gray-100 text-gray-500">
-                  +{technologies.length - 5}
-                </span>
-              )}
             </div>
+
+            {/* Divider */}
+            {right.length > 0 && (
+              <div className="w-px bg-gray-300 mx-1 self-stretch" />
+            )}
+
+            {/* Right column */}
+            {right.length > 0 && (
+              <div className="flex-1 space-y-1.5">
+                {right.map((tech) => (
+                  <div key={tech} className="flex items-center gap-1.5">
+                    <span
+                      className="w-1.5 h-1.5 rounded-full shrink-0"
+                      style={{ backgroundColor: accent }}
+                    />
+                    <span className="text-[11px] font-semibold text-gray-700 leading-tight">{tech}</span>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
+      </div>
 
-        <div className="flex-1" />
-
-        {/* Action buttons */}
-        <div className="flex gap-2 mt-1">
-          <Button
-            size="sm"
+      {/* ── CTA FOOTER STRIP ─────────────────────────────────────── */}
+      <div
+        className="flex items-center justify-center gap-3 px-4 py-3 mt-3"
+        style={{ backgroundColor: accent }}
+      >
+        {demoUrl ? (
+          <a
+            href={demoUrl}
+            target="_blank"
+            rel="noopener noreferrer"
             className={cn(
-              "flex-1 font-bold text-white focus-visible:ring-2 focus-visible:ring-[#2196F3]",
-              !demoUrl && "opacity-40 cursor-not-allowed"
+              "flex items-center gap-1.5 px-5 py-1.5 rounded-full text-xs font-bold border-2 border-white text-white",
+              "hover:bg-white transition-colors"
             )}
-            style={{ background: demoUrl ? gradient : undefined }}
-            asChild={!!demoUrl}
-            disabled={!demoUrl}
+            style={{ color: "white" }}
+            onMouseEnter={(e) => {
+              (e.currentTarget as HTMLElement).style.color = accent;
+            }}
+            onMouseLeave={(e) => {
+              (e.currentTarget as HTMLElement).style.color = "white";
+            }}
           >
-            {demoUrl ? (
-              <a href={demoUrl} target="_blank" rel="noopener noreferrer">
-                <ExternalLink className="h-3.5 w-3.5 mr-1" aria-hidden="true" />
-                Live Demo
-              </a>
-            ) : (
-              <span>
-                <ExternalLink className="h-3.5 w-3.5 mr-1" aria-hidden="true" />
-                Live Demo
-              </span>
-            )}
-          </Button>
+            <ExternalLink className="h-3.5 w-3.5" />
+            LIVE DEMO
+          </a>
+        ) : (
+          <span className="flex items-center gap-1.5 px-5 py-1.5 rounded-full text-xs font-bold border-2 border-white/40 text-white/40">
+            <ExternalLink className="h-3.5 w-3.5" />
+            LIVE DEMO
+          </span>
+        )}
 
-          <Button
-            variant="outline"
-            size="sm"
-            className={cn(
-              "flex-1 font-bold focus-visible:ring-2 focus-visible:ring-blue-500",
-              !githubUrl && "opacity-40 cursor-not-allowed"
-            )}
-            asChild={!!githubUrl}
-            disabled={!githubUrl}
+        {githubUrl ? (
+          <a
+            href={githubUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-1.5 px-5 py-1.5 rounded-full text-xs font-bold border-2 border-white text-white hover:bg-white transition-colors"
+            onMouseEnter={(e) => {
+              (e.currentTarget as HTMLElement).style.color = accent;
+            }}
+            onMouseLeave={(e) => {
+              (e.currentTarget as HTMLElement).style.color = "white";
+            }}
           >
-            {githubUrl ? (
-              <a href={githubUrl} target="_blank" rel="noopener noreferrer">
-                <Github className="h-3.5 w-3.5 mr-1" aria-hidden="true" />
-                GitHub
-              </a>
-            ) : (
-              <span>
-                <Github className="h-3.5 w-3.5 mr-1" aria-hidden="true" />
-                GitHub
-              </span>
-            )}
-          </Button>
-        </div>
-
-        {/* Footer */}
-        <div className="flex items-center justify-between pt-2 border-t border-gray-100 dark:border-gray-800 text-[10px] text-gray-400 gap-2">
-          <span className="flex items-center gap-1"><MapPin className="h-3 w-3" />Addis Ababa, Ethiopia</span>
-          <span className="flex items-center gap-1"><Mail className="h-3 w-3" />skillbridge@gmail.com</span>
-        </div>
+            <Github className="h-3.5 w-3.5" />
+            GITHUB
+          </a>
+        ) : (
+          <span className="flex items-center gap-1.5 px-5 py-1.5 rounded-full text-xs font-bold border-2 border-white/40 text-white/40">
+            <Github className="h-3.5 w-3.5" />
+            GITHUB
+          </span>
+        )}
       </div>
     </div>
   );

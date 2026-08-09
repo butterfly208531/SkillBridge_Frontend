@@ -91,7 +91,7 @@ export function ProjectsSection() {
   };
 
   return (
-    <section className="py-16">
+    <section className="py-16" style={{ backgroundColor: "#FFF8F0" }}>
       <div className="container mx-auto px-4">
         <SectionHeading title={t("heading")} subtitle={t("subheading")} center />
 
