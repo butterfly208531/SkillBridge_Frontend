@@ -1,6 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
+import { useLocale } from "next-intl";
 import { useParams } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
@@ -11,30 +12,32 @@ import {
   Users,
   BookOpen,
   CheckCircle,
-  AlertCircle,
   ArrowLeft,
 } from "lucide-react";
-import {
-  Accordion,
-  AccordionItem,
-  AccordionTrigger,
-  AccordionContent,
-} from "@radix-ui/react-accordion";
 import { Label } from "@radix-ui/react-label";
 import { RadioGroup, RadioGroupItem } from "@radix-ui/react-radio-group";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@radix-ui/react-tabs";
 import { Button } from "../../components/ui/button";
 import { Badge } from "../../components/ui/badge";
 import { courseDetailsConfig } from "@/lib/course-details-config";
 import { Navbar } from "../../components/navbar";
 import { useEffect, useState } from "react";
-import { fetchCourses } from "@/lib/api";
+import { fetchCourses, fetchCourseById, fetchCourseBySlug } from "@/lib/api";
+import { getStoredCourses } from "@/lib/courses-store";
+
+/** Normalise a string to a URL slug for loose matching */
+function toSlug(str: string): string {
+  return str
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
 
 export default function CourseDetailPage() {
   const t = useTranslations();
+  const locale = useLocale();
   const params = useParams();
   const id = params.slug as string;
-  // const courses = t.raw("courses") as any[];
   const [course, setCourse] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -43,46 +46,105 @@ export default function CourseDetailPage() {
   useEffect(() => {
     const loadCourse = async () => {
       try {
-        const courses = await fetchCourses();
+        // 1. Try the dedicated single-course endpoints first (most accurate)
+        let foundCourse: any = await fetchCourseBySlug(id).catch(() => null);
+        if (!foundCourse) {
+          foundCourse = await fetchCourseById(id).catch(() => null);
+        }
 
-        const foundCourse = courses.find((c: any) => c.id === id);
+        // 2. Fall back to scanning the full list — match by id, slug, or title
+        if (!foundCourse) {
+          const courses = await fetchCourses();
+          const idSlug = toSlug(id);
+          foundCourse = courses.find(
+            (c: any) =>
+              c.id === id ||
+              c.slug === id ||
+              toSlug(c.slug || "") === idSlug ||
+              toSlug(c.title || "") === idSlug
+          );
+        }
+
+        // 3. Try localStorage store (admin-added courses use slug as id)
+        if (!foundCourse) {
+          const stored = getStoredCourses();
+          const idSlug = toSlug(id);
+          const match = stored.find(
+            (c) =>
+              c.id === id ||
+              toSlug(c.id) === idSlug ||
+              toSlug(c.title) === idSlug
+          );
+          if (match) {
+            // Shape it like a backend Course so the rest of the transform works
+            foundCourse = {
+              id: match.id,
+              title: match.title,
+              shortDescription: match.shortDescription,
+              detailedDescription: "",
+              imageUrl: match.adminImageUrl || match.imageUrl,
+              priceOriginal: match.priceOriginal,
+              priceDiscounted: match.priceDiscounted,
+              duration: match.duration,
+              level: "Beginner",
+              rating: match.rating,
+              studentsEnrolled: 0,
+              startDate: match.startDate,
+              category: { id: "", name: match.category, description: "", status: "" },
+              instructor: { id: "", name: "Instructor", email: "", imageUrl: "", role: "", status: "" },
+              modules: [],
+              learningOutcomes: [],
+              prerequisites: [],
+            };
+          }
+        }
+
         console.log("Found Course:", foundCourse);
 
         if (!foundCourse) {
           throw new Error("COURSE_NOT_FOUND");
         }
 
-        const courseConfig = courseDetailsConfig[id] || {};
+        // courseDetailsConfig is keyed by human-readable slug.
+        // Try id first, then slug derived from the found course title.
+        const titleSlug = toSlug(foundCourse.title || "");
+        const courseConfig =
+          courseDetailsConfig[id] ||
+          courseDetailsConfig[titleSlug] ||
+          courseDetailsConfig[foundCourse.slug || ""] ||
+          {};
 
-        const transformedCourse = foundCourse
-          ? {
-              ...foundCourse,
-              ...courseConfig,
-              image: foundCourse.imageUrl || courseConfig.image,
-              instructorImage:
-                foundCourse.instructor.imageUrl || courseConfig.instructorImage,
-              category: foundCourse.category.name,
-              instructor: foundCourse.instructor.name,
-              description: foundCourse.shortDescription,
-              longDescription: foundCourse.detailedDescription,
-              price: foundCourse.priceOriginal || 0,
-              discount: foundCourse.priceDiscounted || 0,
-              learningOutcomes:
-                foundCourse.learningOutcomes.map((lo: any) => lo.text) || [],
-              prerequisites:
-                foundCourse.prerequisites.map((pre: any) => pre.text) || [],
-              curriculum:
-                foundCourse.modules?.map((module: any) => ({
-                  title: module.title,
-                  duration: module.duration,
-                  lessons:
-                    module.lessons.map((lesson: any) => ({
-                      title: lesson.title,
-                      duration: lesson.duration,
-                    })) || [],
-                })) || [],
-            }
-          : null;
+        const instructor = foundCourse.instructor || {};
+        const transformedCourse = {
+          ...foundCourse,
+          ...courseConfig,
+          image: foundCourse.imageUrl || courseConfig.image || "",
+          instructorImage:
+            instructor.imageUrl || courseConfig.instructorImage || "",
+          category: foundCourse.category?.name || foundCourse.category || "",
+          instructor: instructor.name || foundCourse.instructor || "",
+          description: foundCourse.shortDescription || "",
+          longDescription: foundCourse.detailedDescription || "",
+          price: foundCourse.priceOriginal || 0,
+          discount: foundCourse.priceDiscounted || 0,
+          learningOutcomes:
+            (foundCourse.learningOutcomes || []).map((lo: any) =>
+              typeof lo === "string" ? lo : lo.text
+            ),
+          prerequisites:
+            (foundCourse.prerequisites || []).map((pre: any) =>
+              typeof pre === "string" ? pre : pre.text
+            ),
+          curriculum:
+            (foundCourse.modules || []).map((module: any) => ({
+              title: module.title,
+              duration: module.duration,
+              lessons: (module.lessons || []).map((lesson: any) => ({
+                title: lesson.title,
+                duration: lesson.duration,
+              })),
+            })),
+        };
         setCourse(transformedCourse);
       } catch (error) {
         setError("Failed to load course");
@@ -139,15 +201,8 @@ if (loading) {
 
             {/* Tabs skeleton */}
             <div className="mb-12">
-              <div className="grid grid-cols-3 gap-2 p-1 bg-gray-100 dark:bg-gray-800 rounded-lg mb-6">
-                {[...Array(3)].map((_, i) => (
-                  <div key={i} className="h-10 bg-gray-200 dark:bg-gray-700 rounded-md"></div>
-                ))}
-              </div>
-
-              {/* Tab content skeleton */}
               <div className="space-y-8">
-                {[...Array(3)].map((_, i) => (
+                {[...Array(2)].map((_, i) => (
                   <div key={i} className="bg-white dark:bg-gray-800 p-6 rounded-lg">
                     <div className="h-6 w-1/3 bg-gray-200 dark:bg-gray-700 rounded mb-4"></div>
                     <div className="space-y-2">
@@ -214,7 +269,7 @@ if (loading) {
         <div className='flex justify-center gap-4'>
           <Button onClick={() => window.location.reload()}>Try Again</Button>
           <Button asChild variant='outline'>
-            <Link href='/courses'>Back to Courses</Link>
+            <Link href={`/${locale}/courses`}>Back to Courses</Link>
           </Button>
         </div>
       </div>
@@ -227,7 +282,7 @@ if (loading) {
       <Navbar />
       <div className='container mx-auto px-4 py-12'>
         <Link
-          href='/courses'
+          href={`/${locale}/courses`}
           className='flex items-center text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-200 transition-colors mb-6 w-fit'
         >
           <ArrowLeft className='w-5 h-5 mr-2' />
@@ -283,9 +338,8 @@ if (loading) {
                   <Image
                     src={course.image}
                     alt={course.title || "Course image"}
-                    width={800}
-                    height={400}
-                    className='w-full h-full object-cover'
+                    fill
+                    className='object-cover'
                     priority
                   />
                 ) : (
@@ -296,30 +350,7 @@ if (loading) {
               </div>
             </div>
 
-            <Tabs defaultValue='about' className='mb-12'>
-              <TabsList className='grid w-full grid-cols-3 gap-2 p-1 bg-gray-100 dark:bg-gray-800 rounded-lg'>
-                <TabsTrigger
-                  value='about'
-                  className='data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-primary dark:data-[state=active]:bg-gray-700 px-4 py-2 text-sm font-medium transition-all duration-200 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2'
-                >
-                  {courseMessages.tabLists.about}
-                </TabsTrigger>
-                <TabsTrigger
-                  value='curriculum'
-                  className='data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-primary dark:data-[state=active]:bg-gray-700 px-4 py-2 text-sm font-medium transition-all duration-200 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2'
-                >
-                  {courseMessages.tabLists.curriculum}
-                </TabsTrigger>
-                <TabsTrigger
-                  value='instructor'
-                  className='data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-primary dark:data-[state=active]:bg-gray-700 px-4 py-2 text-sm font-medium transition-all duration-200 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2'
-                >
-                  {courseMessages.tabLists.instructor}
-                </TabsTrigger>
-              </TabsList>
-
-              <TabsContent value='about' className='pt-6 animate-fadeIn'>
-                <div className='space-y-8'>
+            <div className='space-y-8 mb-12'>
                   <div className='bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm transition-all hover:shadow-md'>
                     <h3 className='text-xl font-bold mb-4 text-gray-800 dark:text-white'>
                       {courseMessages.tabContent.aboutCourse}
@@ -349,124 +380,7 @@ if (loading) {
                       )}
                     </ul>
                   </div>
-
-                  <div className='bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm transition-all hover:shadow-md'>
-                    <h3 className='text-xl font-bold mb-4 text-gray-800 dark:text-white'>
-                      {courseMessages.tabContent.prerequisites}
-                    </h3>
-                    <ul className='space-y-2'>
-                      {course.prerequisites?.map(
-                        (prerequisite: string, index: number) => (
-                          <li
-                            key={index}
-                            className='flex items-start gap-2 p-3 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-150'
-                          >
-                            <AlertCircle className='h-5 w-5 text-blue-500 shrink-0 mt-0.5' />
-                            <span className='text-gray-700 dark:text-gray-300'>
-                              {prerequisite}
-                            </span>
-                          </li>
-                        )
-                      )}
-                    </ul>
-                  </div>
-                </div>
-              </TabsContent>
-
-              <TabsContent value='curriculum' className='pt-6 animate-fadeIn'>
-                <div className='bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm transition-all hover:shadow-md'>
-                  <h3 className='text-xl font-bold mb-6 text-gray-800 dark:text-white'>
-                    {courseMessages.tabContent.courseCur}
-                  </h3>
-                  <Accordion
-                    type='single'
-                    collapsible
-                    className='w-full space-y-2'
-                  >
-                    {course.curriculum?.map((module: any, index: number) => (
-                      <AccordionItem
-                        key={index}
-                        value={`module-${index}`}
-                        className='border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden transition-all hover:shadow-md'
-                      >
-                        <AccordionTrigger className='hover:no-underline px-4 py-3 bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors'>
-                          <div className='flex items-center justify-between w-full text-left'>
-                            <span className='font-medium text-gray-800 dark:text-white'>
-                              Module {index + 1}: {module.title}
-                            </span>
-                            <span className='text-sm text-gray-500 dark:text-gray-400'>
-                              {module.duration}
-                            </span>
-                          </div>
-                        </AccordionTrigger>
-                        <AccordionContent className='px-4 py-3 bg-white dark:bg-gray-800'>
-                          <ul className='space-y-2 pt-2'>
-                            {module.lessons?.map(
-                              (lesson: any, lessonIndex: number) => (
-                                <li
-                                  key={lessonIndex}
-                                  className='flex items-center justify-between py-2 px-3 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-150'
-                                >
-                                  <div className='flex items-center gap-3'>
-                                    <span className='text-sm font-medium text-gray-500 dark:text-gray-400'>
-                                      {index + 1}.{lessonIndex + 1}
-                                    </span>
-                                    <span className='text-gray-700 dark:text-gray-300'>
-                                      {lesson.title}
-                                    </span>
-                                  </div>
-                                  {/* {lesson.duration && ( */}
-                                  <span className='text-sm text-gray-500 dark:text-gray-400'>
-                                    {lesson.duration}
-                                  </span>
-                                  {/* )} */}
-                                </li>
-                              )
-                            )}
-                          </ul>
-                        </AccordionContent>
-                      </AccordionItem>
-                    ))}
-                  </Accordion>
-                </div>
-              </TabsContent>
-
-              <TabsContent value='instructor' className='pt-6 animate-fadeIn'>
-                <div className='bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm transition-all hover:shadow-md'>
-                  <div className='flex flex-col md:flex-row gap-6'>
-                    <div className='relative h-32 w-32 rounded-full overflow-hidden border-4 border-white dark:border-gray-700 shadow-md hover:shadow-lg transition-shadow'>
-                      {course?.instructorImage ? (
-                        <Image
-                          src={course.instructorImage}
-                          alt={course.instructor || "Instructor image"}
-                          width={800}
-                          height={400}
-                          className='w-full h-full object-cover'
-                          priority
-                        />
-                      ) : (
-                        <div className='w-full h-full flex items-center justify-center text-gray-400'>
-                          <span>No image available</span>
-                        </div>
-                      )}
-                    </div>
-                    <div className='flex-1'>
-                      <h3 className='text-xl font-bold mb-2 text-gray-800 dark:text-white'>
-                        {course.instructor}
-                      </h3>
-                      <p className='text-gray-500 dark:text-gray-400 mb-4'>
-                        {course.instructorTitle ||
-                          courseMessages.tabLists.instructor}
-                      </p>
-                      <p className='text-gray-600 dark:text-gray-300 leading-relaxed'>
-                        {course.instructorBio ||
-                          `${course.instructor} is an experienced instructor with expertise in ${course.category}. They have helped thousands of students master the skills needed to succeed in this field.`}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </TabsContent>
-            </Tabs>
+            </div>
           </div>
 
           <div className='lg:col-span-1'>
@@ -547,7 +461,7 @@ if (loading) {
                     </RadioGroup>
                   </div>
                   <Button asChild className='w-full mb-4' size='lg'>
-                    <Link href={`/courses/${course?.id || id}/ApplicationForm`}>
+                    <Link href={`/${locale}/courses/${course?.id || id}/ApplicationForm`}>
                       {courseMessages.tabContent.enroll}
                     </Link>
                   </Button>
