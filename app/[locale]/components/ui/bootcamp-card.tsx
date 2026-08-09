@@ -25,21 +25,21 @@ interface BootcampCardProps {
 
 // Category-specific Unsplash images so every card shows a relevant photo
 const categoryImages: Record<string, string> = {
-  "Development":              "https://images.unsplash.com/photo-1461749280684-dccba630e2f6?w=600&h=400&fit=crop",
-  "ERP Development":          "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=600&h=400&fit=crop",
-  "ERP Functional Training":  "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=600&h=400&fit=crop",
-  "Design":                   "https://images.unsplash.com/photo-1561070791-2526d30994b5?w=600&h=400&fit=crop",
-  "Artificial Intelligence":  "https://images.unsplash.com/photo-1677442135703-1787eea5ce01?w=600&h=400&fit=crop",
-  "AI":                       "https://images.unsplash.com/photo-1677442135703-1787eea5ce01?w=600&h=400&fit=crop",
-  "Data Science":             "https://images.unsplash.com/photo-1666875753105-c63a6f3bdc86?w=600&h=400&fit=crop",
-  "Automation":               "https://images.unsplash.com/photo-1611532736597-de2d4265fba3?w=600&h=400&fit=crop",
-  "Language":                 "https://images.unsplash.com/photo-1546410531-bb4caa6b424d?w=600&h=400&fit=crop",
-  "Business":                 "https://images.unsplash.com/photo-1542744173-8e7e53415bb0?w=600&h=400&fit=crop",
-  "Marketing":                "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=600&h=400&fit=crop",
-  "Mobile":                   "https://images.unsplash.com/photo-1601784551446-20c9e07cdbdb?w=600&h=400&fit=crop",
+  "Development":              "https://images.unsplash.com/photo-1461749280684-dccba630e2f6?w=600&h=340&fit=crop",
+  "ERP Development":          "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=600&h=340&fit=crop",
+  "ERP Functional Training":  "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=600&h=340&fit=crop",
+  "Design":                   "https://images.unsplash.com/photo-1561070791-2526d30994b5?w=600&h=340&fit=crop",
+  "Artificial Intelligence":  "https://images.unsplash.com/photo-1677442135703-1787eea5ce01?w=600&h=340&fit=crop",
+  "AI":                       "https://images.unsplash.com/photo-1677442135703-1787eea5ce01?w=600&h=340&fit=crop",
+  "Data Science":             "https://images.unsplash.com/photo-1666875753105-c63a6f3bdc86?w=600&h=340&fit=crop",
+  "Automation":               "https://images.unsplash.com/photo-1611532736597-de2d4265fba3?w=600&h=340&fit=crop",
+  "Language":                 "https://images.unsplash.com/photo-1546410531-bb4caa6b424d?w=600&h=340&fit=crop",
+  "Business":                 "https://images.unsplash.com/photo-1542744173-8e7e53415bb0?w=600&h=340&fit=crop",
+  "Marketing":                "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=600&h=340&fit=crop",
+  "Mobile":                   "https://images.unsplash.com/photo-1601784551446-20c9e07cdbdb?w=600&h=340&fit=crop",
 }
 
-const defaultFallback = "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=600&h=400&fit=crop"
+const defaultFallback = "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=600&h=340&fit=crop"
 
 export default function BootcampCard({
   id,
@@ -68,13 +68,13 @@ export default function BootcampCard({
       )}
     >
       {/* Course image */}
-      <div className="relative h-48 w-full overflow-hidden">
+      <div className="relative h-56 w-full overflow-hidden bg-gray-100 dark:bg-gray-800">
         <Image
           src={imgSrc}
           alt={`${title} course thumbnail`}
           fill
           unoptimized
-          className="object-cover"
+          className="object-cover object-center"
           sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
           onError={() => setImgSrc(fallbackImage ?? categoryFallback)}
         />
