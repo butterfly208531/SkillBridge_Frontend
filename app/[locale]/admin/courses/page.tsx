@@ -313,12 +313,15 @@ function CourseModal({ course, onClose, onSaved }: {
   onSaved: () => void;
 }) {
   const [form, setForm] = useState({
-    title:      course?.title      ?? "",
-    duration:   course?.duration   ?? "",
-    categoryId: course?.categoryId ?? "",
-    status:     course?.status === "active" ? "PUBLISHED" : "DRAFT",
+    title:             course?.title             ?? "",
+    duration:          course?.duration          ?? "",
+    categoryId:        course?.categoryId        ?? "",
+    status:            course?.status === "active" ? "PUBLISHED" : "DRAFT",
     // Show adminImageUrl if already set, otherwise show current imageUrl
-    imageUrl:   course?.adminImageUrl || course?.imageUrl || "",
+    imageUrl:          course?.adminImageUrl || course?.imageUrl || "",
+    priceOriginal:     course?.priceOriginal     ?? 0,
+    priceDiscounted:   course?.priceDiscounted   ?? 0,
+    rating:            course?.rating            ?? 0,
   });
 
   const [categories] = useState<{ id: string; name: string }[]>(
@@ -365,13 +368,16 @@ function CourseModal({ course, onClose, onSaved }: {
       // ── 1. Persist to localStorage immediately (optimistic) ──
       if (course?.id) {
         updateCourse(course.id, {
-          title:         form.title.trim(),
-          duration:      form.duration || "—",
-          category:      selectedCat?.name || form.categoryId || course.category,
-          categoryId:    form.categoryId || course.categoryId,
+          title:           form.title.trim(),
+          duration:        form.duration || "—",
+          category:        selectedCat?.name || form.categoryId || course.category,
+          categoryId:      form.categoryId || course.categoryId,
           status,
-          imageUrl:      form.imageUrl || course.imageUrl || "",
-          adminImageUrl: form.imageUrl || undefined,
+          imageUrl:        form.imageUrl || course.imageUrl || "",
+          adminImageUrl:   form.imageUrl || undefined,
+          priceOriginal:   Number(form.priceOriginal)   || 0,
+          priceDiscounted: Number(form.priceDiscounted) || 0,
+          rating:          Number(form.rating)          || 0,
         });
       } else {
         addCourse({
@@ -382,10 +388,10 @@ function CourseModal({ course, onClose, onSaved }: {
           status,
           imageUrl:         form.imageUrl || "",
           adminImageUrl:    form.imageUrl || undefined,
-          rating:           0,
+          rating:           Number(form.rating)          || 0,
           shortDescription: "",
-          priceOriginal:    0,
-          priceDiscounted:  0,
+          priceOriginal:    Number(form.priceOriginal)   || 0,
+          priceDiscounted:  Number(form.priceDiscounted) || 0,
           startDate:        "",
         });
       }
@@ -394,11 +400,14 @@ function CourseModal({ course, onClose, onSaved }: {
       try {
         const token = sessionStorage.getItem("adminToken") || localStorage.getItem("adminToken") || "";
         const payload = {
-          title:       form.title.trim(),
-          duration:    form.duration || "—",
-          categoryId:  form.categoryId || undefined,
-          status:      (form.status === "PUBLISHED" ? "Active" : "Draft") as "Active" | "Draft",
-          imageUrl:    form.imageUrl || undefined,
+          title:           form.title.trim(),
+          duration:        form.duration || "—",
+          categoryId:      form.categoryId || undefined,
+          status:          (form.status === "PUBLISHED" ? "Active" : "Draft") as "Active" | "Draft",
+          imageUrl:        form.imageUrl || undefined,
+          priceOriginal:   Number(form.priceOriginal)   || 0,
+          priceDiscounted: Number(form.priceDiscounted) || 0,
+          rating:          Number(form.rating)          || 0,
         };
 
         if (course?.id) {
@@ -469,6 +478,52 @@ function CourseModal({ course, onClose, onSaved }: {
               <option value="PUBLISHED">Active</option>
               <option value="DRAFT">Draft</option>
             </select>
+          </div>
+
+          {/* Pricing */}
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1">One-time Price ($)</label>
+              <input
+                type="number"
+                min="0"
+                step="0.01"
+                value={form.priceOriginal === 0 ? "" : form.priceOriginal}
+                onChange={e => setForm(p => ({ ...p, priceOriginal: parseFloat(e.target.value) || 0 }))}
+                placeholder="e.g. 199"
+                className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1E90FF]/30"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1">Monthly Subscription ($)</label>
+              <input
+                type="number"
+                min="0"
+                step="0.01"
+                value={form.priceDiscounted === 0 ? "" : form.priceDiscounted}
+                onChange={e => setForm(p => ({ ...p, priceDiscounted: parseFloat(e.target.value) || 0 }))}
+                placeholder="e.g. 29"
+                className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1E90FF]/30"
+              />
+            </div>
+          </div>
+
+          {/* Rating */}
+          <div>
+            <label className="block text-xs font-medium text-gray-600 mb-1">Rating (0 – 5)</label>
+            <input
+              type="number"
+              min="0"
+              max="5"
+              step="0.1"
+              value={form.rating === 0 ? "" : form.rating}
+              onChange={e => {
+                const v = parseFloat(e.target.value);
+                setForm(p => ({ ...p, rating: isNaN(v) ? 0 : Math.min(5, Math.max(0, v)) }));
+              }}
+              placeholder="e.g. 4.5"
+              className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1E90FF]/30"
+            />
           </div>
 
           {/* Image upload */}
