@@ -44,22 +44,20 @@ const statusIcon: Record<string, React.ReactNode> = {
   rejected: <XCircle size={12} />,
 };
 
-// Map course name keywords → category labels (mirrors courses-section logic)
 function inferCategory(courseName: string): string {
   const n = courseName.toLowerCase();
-  if (n.includes("odoo") || n.includes("erp") || n.includes("sap"))           return "ERP";
+  if (n.includes("odoo") || n.includes("erp") || n.includes("sap"))                                        return "ERP";
   if (n.includes("ai") || n.includes("machine learning") || n.includes("ml") || n.includes("data science")) return "AI";
-  if (n.includes("python") || n.includes("java") || n.includes("react") ||
-      n.includes("node") || n.includes("web") || n.includes("flutter") ||
-      n.includes("android") || n.includes("ios") || n.includes("dev"))        return "Development";
-  if (n.includes("network") || n.includes("cyber") || n.includes("linux") ||
-      n.includes("cisco") || n.includes("cloud") || n.includes("aws") ||
-      n.includes("it ") || n.startsWith("it"))                                 return "IT";
+  if (n.includes("python") || n.includes("java") || n.includes("react") || n.includes("node") ||
+      n.includes("web") || n.includes("flutter") || n.includes("android") || n.includes("dev"))             return "Development";
+  if (n.includes("network") || n.includes("cyber") || n.includes("linux") || n.includes("cisco") ||
+      n.includes("cloud") || n.includes("aws") || n.includes("it ") || n.startsWith("it"))                 return "IT";
   if (n.includes("excel") || n.includes("accountin") || n.includes("finance") ||
-      n.includes("business") || n.includes("market") || n.includes("manag"))  return "Business";
+      n.includes("business") || n.includes("market") || n.includes("manag"))                                return "Business";
   if (n.includes("arabic") || n.includes("english") || n.includes("french") ||
-      n.includes("language") || n.includes("ielts") || n.includes("toefl"))   return "Language";
-  if (n.includes("automat") || n.includes("robot") || n.includes("rpa"))      return "Automation";
+      n.includes("language") || n.includes("ielts") || n.includes("toefl"))                                return "Language";
+  if (n.includes("automat") || n.includes("robot") || n.includes("rpa"))                                   return "Automation";
+  if (n.includes("computer") || n.includes("basic"))                                                       return "IT";
   return "Other";
 }
 
@@ -75,19 +73,18 @@ const categoryColor: Record<string, string> = {
 };
 
 export default function ApplicationsPage() {
-  const [apps, setApps]               = useState<Application[]>([]);
-  const [search, setSearch]           = useState("");
-  const [statusFilter, setStatusFilter] = useState<Status>("all");
+  const [apps, setApps]                     = useState<Application[]>([]);
+  const [search, setSearch]                 = useState("");
+  const [statusFilter, setStatusFilter]     = useState<Status>("all");
   const [categoryFilter, setCategoryFilter] = useState("All");
-  const [categories, setCategories]   = useState<string[]>(["All"]);
-  const [selected, setSelected]       = useState<Application | null>(null);
-  const [loading, setLoading]         = useState(true);
-  const [updating, setUpdating]       = useState<string | null>(null);
-  const [deleteId, setDeleteId]       = useState<string | null>(null);
-  const [error, setError]             = useState("");
-  const [success, setSuccess]         = useState("");
+  const [categories, setCategories]         = useState<string[]>(["All"]);
+  const [selected, setSelected]             = useState<Application | null>(null);
+  const [loading, setLoading]               = useState(true);
+  const [updating, setUpdating]             = useState<string | null>(null);
+  const [deleteId, setDeleteId]             = useState<string | null>(null);
+  const [error, setError]                   = useState("");
+  const [success, setSuccess]               = useState("");
 
-  // Derive a stable category for each application
   const getAppCategory = (a: Application): string => {
     if (a.category) return a.category;
     const courseName = a.course || (a.courseId && !a.courseId.includes("-") ? a.courseId : "") || "";
@@ -100,7 +97,6 @@ export default function ApplicationsPage() {
     setError("");
     setSuccess("");
 
-    // Load locally-stored pending submissions (offline / API-down submissions)
     const loadLocal = (): Application[] => {
       try {
         const pending = JSON.parse(localStorage.getItem("pendingApplications") || "[]");
@@ -118,7 +114,6 @@ export default function ApplicationsPage() {
             address:        n.address,
             gender:         n.gender,
             nationality:    n.nationality,
-            university:     n.university,
             courseId:       n.courseSlug || n.courseId,
             course:         n.courseName || n.course,
             category:       n.category,
@@ -174,14 +169,12 @@ export default function ApplicationsPage() {
     const email  = a.email || "";
     const status = (a.status || "").toLowerCase();
     const cat    = getAppCategory(a);
-
     const matchStatus   = statusFilter === "all" || status === statusFilter;
     const matchCategory = categoryFilter === "All" || cat === categoryFilter;
     const matchSearch   = !search ||
       name.toLowerCase().includes(search.toLowerCase()) ||
       course.toLowerCase().includes(search.toLowerCase()) ||
       email.toLowerCase().includes(search.toLowerCase());
-
     return matchStatus && matchCategory && matchSearch;
   });
 
@@ -211,10 +204,7 @@ export default function ApplicationsPage() {
     try {
       const response = await fetch(`${API}/applications/${id}/status`, {
         method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify({ status: newStatus }),
       });
       if (!response.ok) throw new Error(`Failed to update status: ${response.status}`);
@@ -232,7 +222,6 @@ export default function ApplicationsPage() {
 
   const deleteApp = async (id: string) => {
     setDeleteId(null);
-    // Remove from local state immediately
     setApps(prev => {
       const next = prev.filter(a => (a.id || a._id) !== id);
       const cats = ["All", ...Array.from(new Set(next.map(a => getAppCategory(a)))).sort()];
@@ -240,8 +229,6 @@ export default function ApplicationsPage() {
       return next;
     });
     if (selected && (selected.id || selected._id) === id) setSelected(null);
-
-    // Best-effort API delete
     const token = sessionStorage.getItem("adminToken");
     try {
       await fetch(`${API}/applications/${id}`, {
@@ -357,14 +344,13 @@ export default function ApplicationsPage() {
                 </thead>
                 <tbody className="divide-y divide-gray-50">
                   {filtered.map((app, i) => {
-                    const id      = app.id || app._id || String(i);
-                    const name    = app.fullName || app.name || "—";
-                    const email   = app.email || "—";
-                    const course  = app.course || (app.courseId && !app.courseId.includes("-") ? app.courseId : "") || "—";
-                    const date    = app.createdAt ? new Date(app.createdAt).toLocaleDateString() : app.date || "—";
-                    const status  = (app.status || "pending").toLowerCase();
-                    const cat     = getAppCategory(app);
-                    const isUpdating = updating === id;
+                    const id     = app.id || app._id || String(i);
+                    const name   = app.fullName || app.name || "—";
+                    const email  = app.email || "—";
+                    const course = app.course || (app.courseId && !app.courseId.includes("-") ? app.courseId : "") || "—";
+                    const date   = app.createdAt ? new Date(app.createdAt).toLocaleDateString() : app.date || "—";
+                    const status = (app.status || "pending").toLowerCase();
+                    const cat    = getAppCategory(app);
 
                     return (
                       <tr key={id} className="hover:bg-gray-50/60 transition-colors">
@@ -471,7 +457,6 @@ export default function ApplicationsPage() {
               ))}
             </div>
 
-            {/* Receipt image if available */}
             {selected.receiptUrl && (
               <div>
                 <p className="text-[10px] text-gray-400 uppercase tracking-wide mb-1">Payment Receipt</p>
@@ -512,6 +497,7 @@ export default function ApplicationsPage() {
           </div>
         </div>
       )}
+
       {/* Delete confirmation */}
       {deleteId && (
         <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
