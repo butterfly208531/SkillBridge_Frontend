@@ -100,11 +100,11 @@ export function ProjectsSection() {
               key={cat}
               onClick={() => handleCategoryClick(cat)}
               className={cn(
-                "px-4 py-1.5 rounded-full text-sm font-medium transition-all duration-200",
-                "border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500",
+                "px-4 py-1.5 rounded-full text-sm font-semibold transition-all duration-200",
+                "border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#F57C00]",
                 activeCategory === cat
-                  ? "bg-[#2196F3] text-white border-[#2196F3]"
-                  : "bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-400 border-gray-200 dark:border-gray-700 hover:border-[#2196F3]"
+                  ? "bg-[#F57C00] text-white border-[#F57C00] shadow-sm"
+                  : "bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-400 border-gray-200 dark:border-gray-700 hover:border-[#F57C00] hover:text-[#F57C00]"
               )}
             >
               {cat === "All" ? t("all") : cat}
@@ -162,7 +162,7 @@ export function ProjectsSection() {
         )}
 
         <div className="flex justify-center mt-10">
-          <Button className="bg-[#2196F3] hover:bg-blue-500 text-white px-8 h-11" asChild>
+          <Button className="bg-[#F57C00] hover:bg-orange-500 text-white px-8 h-11" asChild>
             <Link href="/projects">{t("viewMore")}</Link>
           </Button>
         </div>
