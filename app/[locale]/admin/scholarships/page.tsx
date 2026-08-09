@@ -410,6 +410,9 @@ function ScholarshipModal({ scholarship, saving, onClose, onSave, error }: {
   onSave: (d: Scholarship) => void;
   error: string;
 }) {
+  // Pull stored funding fields (they live in StoredScholarship but not the plain Scholarship interface)
+  const storedExtra = scholarship as any;
+
   const [form, setForm] = useState<Scholarship>({
     id:                scholarship?.id                ?? "",
     name:              scholarship?.name              ?? "",
@@ -423,7 +426,19 @@ function ScholarshipModal({ scholarship, saving, onClose, onSave, error }: {
     applicationFormUrl: scholarship?.applicationFormUrl ?? "",
   });
 
+  const [fundingType,   setFundingType]   = useState<"full" | "half">(storedExtra?.fundingType  ?? "full");
+  const [tuitionAmount, setTuitionAmount] = useState<string>(String(storedExtra?.tuitionAmount ?? ""));
+
   const set = (field: keyof Scholarship, value: any) => setForm(p => ({ ...p, [field]: value }));
+
+  const tuition    = Number(tuitionAmount) || 0;
+  const studentPay = fundingType === "full" ? 0 : Math.round(tuition * 0.5);
+
+  // Merge funding fields into the saved object
+  const handleSave = () => {
+    const enriched = { ...form, fundingType, tuitionAmount: tuition } as any;
+    onSave(enriched);
+  };
 
   return (
     <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
@@ -449,13 +464,63 @@ function ScholarshipModal({ scholarship, saving, onClose, onSave, error }: {
               className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1E90FF]/30" />
           </div>
 
-          {/* Application Form URL — prominent */}
+          {/* Funding Type */}
+          <div>
+            <label className="block text-xs font-medium text-gray-600 mb-2">Funding Type</label>
+            <div className="grid grid-cols-2 gap-3">
+              {(["full", "half"] as const).map(type => (
+                <button key={type} type="button" onClick={() => setFundingType(type)}
+                  className={cn(
+                    "flex flex-col items-start p-3 rounded-xl border-2 text-left transition-all",
+                    fundingType === type
+                      ? type === "full" ? "border-[#1E90FF] bg-[#1E90FF]/5" : "border-[#F57C00] bg-[#F57C00]/5"
+                      : "border-gray-200 hover:border-gray-300"
+                  )}>
+                  <div className="flex items-center gap-2 mb-1">
+                    <div className={cn("w-3.5 h-3.5 rounded-full border-2 flex items-center justify-center",
+                      fundingType === type ? (type === "full" ? "border-[#1E90FF]" : "border-[#F57C00]") : "border-gray-300"
+                    )}>
+                      {fundingType === type && <div className={cn("w-2 h-2 rounded-full", type === "full" ? "bg-[#1E90FF]" : "bg-[#F57C00]")} />}
+                    </div>
+                    <span className={cn("text-xs font-bold",
+                      fundingType === type ? (type === "full" ? "text-[#1E90FF]" : "text-[#F57C00]") : "text-gray-700"
+                    )}>
+                      {type === "full" ? "Fully Funded" : "Half Funded"}
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-gray-400">
+                    {type === "full" ? "Student pays ETB 0" : "Student pays 50%"}
+                  </p>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Tuition Amount */}
+          <div>
+            <label className="block text-xs font-medium text-gray-600 mb-1">Tuition Amount (ETB)</label>
+            <div className="relative">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs font-semibold">ETB</span>
+              <input type="number" min={0} value={tuitionAmount}
+                onChange={e => setTuitionAmount(e.target.value)}
+                placeholder="0"
+                className="w-full pl-10 pr-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1E90FF]/30" />
+            </div>
+            {tuition > 0 && (
+              <p className={cn("mt-1.5 text-xs font-semibold", fundingType === "full" ? "text-[#1E90FF]" : "text-[#F57C00]")}>
+                Student pays: ETB {fundingType === "full" ? 0 : studentPay}
+                {fundingType === "half" && <span className="text-gray-400 font-normal"> (saves ETB {Math.round(tuition * 0.5)})</span>}
+              </p>
+            )}
+          </div>
+
+          {/* Application Form URL */}
           <div className="bg-[#1E90FF]/5 border border-[#1E90FF]/20 rounded-xl p-3">
             <label className="block text-xs font-semibold text-[#1E90FF] mb-1">
               🔗 Application Form URL
             </label>
             <p className="text-[11px] text-gray-400 mb-2">
-              Paste your Google Form, Typeform, or any external link. Leave empty to use the default course form.
+              Leave empty to use the default course form.
             </p>
             <input type="url" value={form.applicationFormUrl ?? ""}
               placeholder="https://forms.google.com/..."
@@ -472,7 +537,7 @@ function ScholarshipModal({ scholarship, saving, onClose, onSave, error }: {
               className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1E90FF]/30" />
           </div>
 
-          {/* Deadline + Winners Count side by side */}
+          {/* Deadline + Winners Count */}
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-xs font-medium text-gray-600 mb-1">Deadline *</label>
@@ -482,8 +547,7 @@ function ScholarshipModal({ scholarship, saving, onClose, onSave, error }: {
             </div>
             <div>
               <label className="block text-xs font-medium text-gray-600 mb-1">Winners Count</label>
-              <input type="number" value={form.winnersCount}
-                min={1}
+              <input type="number" value={form.winnersCount} min={1}
                 onChange={e => set("winnersCount", Number(e.target.value))}
                 className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1E90FF]/30" />
             </div>
@@ -507,7 +571,7 @@ function ScholarshipModal({ scholarship, saving, onClose, onSave, error }: {
 
         <div className="flex gap-3 justify-end mt-6">
           <button onClick={onClose} className="px-4 py-2 text-sm rounded-lg border border-gray-200 hover:bg-gray-50">Cancel</button>
-          <button onClick={() => onSave(form)} disabled={saving}
+          <button onClick={handleSave} disabled={saving}
             className="flex items-center gap-2 px-4 py-2 text-sm rounded-lg bg-[#1E90FF] text-white hover:bg-blue-500 disabled:opacity-60">
             {saving && <Loader2 size={13} className="animate-spin" />}
             {scholarship ? "Save Changes" : "Add Scholarship"}

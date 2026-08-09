@@ -24,6 +24,7 @@ export default function EditJobPage({ params }: { params: Promise<{ id: string }
   const [success, setSuccess] = useState(false);
   const [error,   setError]   = useState("");
   const [notFound, setNotFound] = useState(false);
+  const [loadingJob, setLoadingJob] = useState(true);
 
   const [form, setForm] = useState({
     title:       "",
@@ -41,29 +42,46 @@ export default function EditJobPage({ params }: { params: Promise<{ id: string }
   const [requirements,     setRequirements]     = useState<string[]>([""]);
   const [responsibilities, setResponsibilities] = useState<string[]>([""]);
 
-  // Load the job to edit
+  // Load the job to edit — localStorage first, then API fallback
   useEffect(() => {
-    const jobs = getStoredJobs();
-    const job  = jobs.find(j => j.id === jobId);
-    if (!job) {
-      setNotFound(true);
-      return;
-    }
-    setForm({
-      title:       job.title,
-      company:     job.company,
-      location:    job.location,
-      type:        job.type,
-      level:       job.level,
-      category:    job.category,
-      salary:      job.salary ?? "",
-      deadline:    job.deadline ? job.deadline.split("T")[0] : "",
-      status:      job.status,
-      description: job.description,
-      applyUrl:    job.applyUrl,
-    });
-    setRequirements(job.requirements.length > 0 ? job.requirements : [""]);
-    setResponsibilities(job.responsibilities.length > 0 ? job.responsibilities : [""]);
+    const populate = (job: Job) => {
+      setForm({
+        title:       job.title,
+        company:     job.company,
+        location:    job.location,
+        type:        job.type,
+        level:       job.level,
+        category:    job.category,
+        salary:      job.salary ?? "",
+        deadline:    job.deadline ? job.deadline.split("T")[0] : "",
+        status:      job.status,
+        description: job.description,
+        applyUrl:    job.applyUrl,
+      });
+      setRequirements(job.requirements?.length > 0 ? job.requirements : [""]);
+      setResponsibilities(job.responsibilities?.length > 0 ? job.responsibilities : [""]);
+    };
+
+    // 1. Try localStorage first (instant)
+    const stored = getStoredJobs();
+    const local  = stored.find(j => j.id === jobId);
+    if (local) { populate(local); setLoadingJob(false); return; }
+
+    // 2. Fall back to API
+    const token = sessionStorage.getItem("adminToken");
+    fetch(`${API}/jobs/${jobId}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then(r => r.ok ? r.json() : Promise.reject(r.status))
+      .then(d => {
+        const job: Job = d?.data ?? d;
+        if (!job?.id && !job?.title) throw new Error("empty");
+        // Save to localStorage so future edits are instant
+        saveJobs([job, ...stored]);
+        populate(job);
+      })
+      .catch(() => setNotFound(true))
+      .finally(() => setLoadingJob(false));
   }, [jobId]);
 
   const set = (field: keyof typeof form, value: string) =>
@@ -122,6 +140,17 @@ export default function EditJobPage({ params }: { params: Promise<{ id: string }
     setTimeout(() => { window.location.href = `/${locale}/admin/jobs`; }, 1500);
     setSaving(false);
   };
+
+  if (loadingJob) {
+    return (
+      <div className="flex flex-col h-full">
+        <AdminHeader title="Edit Job" />
+        <div className="flex-1 flex items-center justify-center">
+          <div className="w-8 h-8 border-4 border-[#1E90FF] border-t-transparent rounded-full animate-spin" />
+        </div>
+      </div>
+    );
+  }
 
   if (notFound) {
     return (
