@@ -244,22 +244,38 @@ export default function ApplicationsPage() {
       <div className="flex-1 p-6 space-y-5 overflow-y-auto">
 
         {/* Category filter pills */}
-        <div className="flex gap-2 flex-wrap">
-          {categories.map(cat => (
-            <button
-              key={cat}
-              onClick={() => setCategoryFilter(cat)}
-              className={cn(
-                "px-3 py-1.5 rounded-full text-xs font-semibold border transition-all",
-                categoryFilter === cat
-                  ? "bg-[#1E90FF] text-white border-[#1E90FF]"
-                  : "bg-white text-gray-500 border-gray-200 hover:border-[#1E90FF] hover:text-[#1E90FF]"
-              )}
-            >
-              {cat}
-            </button>
-          ))}
-        </div>
+        {categories.length > 1 && (
+          <div className="flex gap-2 flex-wrap items-center">
+            <span className="text-xs font-semibold text-gray-400 uppercase tracking-wide mr-1">Category</span>
+            {categories.map(cat => {
+              const count = cat === "All"
+                ? apps.length
+                : apps.filter(a => getAppCategory(a) === cat).length;
+              return (
+                <button
+                  key={cat}
+                  onClick={() => setCategoryFilter(cat)}
+                  className={cn(
+                    "px-3 py-1.5 rounded-full text-xs font-semibold border transition-all flex items-center gap-1.5",
+                    categoryFilter === cat
+                      ? "bg-[#1E90FF] text-white border-[#1E90FF] shadow-sm"
+                      : "bg-white text-gray-500 border-gray-200 hover:border-[#1E90FF] hover:text-[#1E90FF]"
+                  )}
+                >
+                  {cat}
+                  <span className={cn(
+                    "px-1.5 py-0.5 rounded-full text-[10px] font-bold",
+                    categoryFilter === cat
+                      ? "bg-white/20 text-white"
+                      : "bg-gray-100 text-gray-400"
+                  )}>
+                    {count}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        )}
 
         {/* Status tabs + search */}
         <div className="flex gap-2 flex-wrap items-center">
