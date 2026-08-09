@@ -225,36 +225,25 @@ export default function ProjectsAdminPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {displayed.map(project => (
                   <div key={project.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden flex flex-col hover:shadow-md transition-shadow">
-                    {/* Image */}
-                    <div className="relative h-40 w-full overflow-hidden bg-gray-100">
-                      {project.image ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img src={project.image} alt={project.title} className="w-full h-full object-cover" />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center">
-                          <FolderOpen size={32} className="text-gray-300" />
-                        </div>
-                      )}
-                      {/* Status badge */}
-                      <span className={cn(
-                        "absolute top-2 right-2 px-2 py-0.5 rounded-full text-[10px] font-bold",
-                        project.status === "active"
-                          ? "bg-emerald-100 text-emerald-700"
-                          : "bg-gray-100 text-gray-500"
-                      )}>
-                        {project.status}
-                      </span>
-                      {/* Category badge */}
-                      <span className={cn(
-                        "absolute top-2 left-2 px-2 py-0.5 rounded-full text-[10px] font-semibold",
-                        categoryColors[project.category] ?? "bg-gray-100 text-gray-600"
-                      )}>
-                        {project.category}
-                      </span>
-                    </div>
-
                     {/* Body */}
                     <div className="flex-1 p-4 flex flex-col gap-2">
+                      {/* Badges row */}
+                      <div className="flex items-center justify-between">
+                        <span className={cn(
+                          "px-2 py-0.5 rounded-full text-[10px] font-semibold",
+                          categoryColors[project.category] ?? "bg-gray-100 text-gray-600"
+                        )}>
+                          {project.category}
+                        </span>
+                        <span className={cn(
+                          "px-2 py-0.5 rounded-full text-[10px] font-bold",
+                          project.status === "active"
+                            ? "bg-emerald-100 text-emerald-700"
+                            : "bg-gray-100 text-gray-500"
+                        )}>
+                          {project.status}
+                        </span>
+                      </div>
                       <h3 className="font-bold text-sm text-gray-800 leading-snug line-clamp-2">{project.title}</h3>
                       {project.studentName && (
                         <p className="text-xs text-[#1E90FF] font-medium">by {project.studentName}</p>
