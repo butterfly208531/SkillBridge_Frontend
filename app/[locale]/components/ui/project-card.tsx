@@ -32,7 +32,7 @@ export default function ProjectCard({
     <div className="flex flex-col h-full rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 bg-white group" style={{ border: "1px solid rgba(30,144,255,0.2)" }}>
 
       {/* ── Header banner ── */}
-      <div className="relative bg-[#1E90FF] px-5 pt-5 pb-8">
+      <div className="relative px-5 pt-5 pb-8" style={{ backgroundColor: "#1E90FF" }}>
         {/* Category pills — top-left */}
         <div className="flex flex-col gap-1">
           <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-[#F57C00] text-white shadow w-fit">
@@ -50,8 +50,8 @@ export default function ProjectCard({
           <div className="w-7 h-7 mb-0.5">
             <Image src="/Logo.svg" alt="SkillBridge" width={28} height={28} className="w-full h-full object-contain" />
           </div>
-          <span className="text-[8px] font-black text-[#1E90FF] leading-none tracking-tight">SKILLBRIDGE</span>
-          <span className="text-[7px] text-[#1E90FF]/50 leading-none">Institute of Technology</span>
+          <span className="text-[8px] font-black leading-none tracking-tight" style={{ color: "#1E90FF" }}>SKILLBRIDGE</span>
+          <span className="text-[7px] leading-none" style={{ color: "rgba(30,144,255,0.5)" }}>Institute of Technology</span>
         </div>
 
         {/* "Student Project" label */}
@@ -73,20 +73,20 @@ export default function ProjectCard({
       <div className="flex flex-col flex-1 px-5 pt-3 pb-5 gap-3">
 
         {/* Title */}
-        <h3 className="text-[15px] font-extrabold text-[#1E90FF] text-center uppercase tracking-wide leading-snug">
+        <h3 className="text-[15px] font-extrabold text-center uppercase tracking-wide leading-snug" style={{ color: "#1E90FF" }}>
           {title}
         </h3>
 
         {/* Student name */}
         {studentName && (
-          <div className="flex items-center justify-center gap-1.5 text-xs text-[#1E90FF]">
+          <div className="flex items-center justify-center gap-1.5 text-xs" style={{ color: "#1E90FF" }}>
             <User className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
             <span className="font-semibold">{studentName}</span>
           </div>
         )}
 
         {/* Description */}
-        <p className="text-[12px] text-[#1E90FF]/60 line-clamp-3 leading-relaxed text-center">
+        <p className="text-[12px] line-clamp-3 leading-relaxed text-center" style={{ color: "rgba(30,144,255,0.6)" }}>
           {description}
         </p>
 
@@ -144,8 +144,8 @@ export default function ProjectCard({
               href={githubUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-sm font-bold text-[#1E90FF] bg-white border-2 border-[#1E90FF] transition-colors"
-              style={{}}
+              className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-sm font-bold bg-white border-2 transition-colors"
+              style={{ color: "#1E90FF", borderColor: "#1E90FF" }}
               onMouseEnter={e => (e.currentTarget.style.background = "rgba(30,144,255,0.08)")}
               onMouseLeave={e => (e.currentTarget.style.background = "white")}
             >
@@ -153,7 +153,7 @@ export default function ProjectCard({
               GitHub
             </a>
           ) : (
-            <span className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-sm font-bold text-[#1E90FF] bg-white border-2 border-[#1E90FF] opacity-40 cursor-not-allowed">
+            <span className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-sm font-bold bg-white border-2 opacity-40 cursor-not-allowed" style={{ color: "#1E90FF", borderColor: "#1E90FF" }}>
               <Github className="h-3.5 w-3.5" aria-hidden="true" />
               GitHub
             </span>
@@ -166,7 +166,10 @@ export default function ProjectCard({
             href={figmaUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="mt-2 flex items-center justify-center gap-1.5 py-2 rounded-xl text-sm font-bold text-white bg-[#1E90FF] hover:bg-[#1670CC] transition-colors shadow-sm"
+            className="mt-2 flex items-center justify-center gap-1.5 py-2 rounded-xl text-sm font-bold text-white transition-colors shadow-sm"
+            style={{ backgroundColor: "#1E90FF" }}
+            onMouseEnter={e => (e.currentTarget.style.backgroundColor = "#1670CC")}
+            onMouseLeave={e => (e.currentTarget.style.backgroundColor = "#1E90FF")}
           >
             <Figma className="h-3.5 w-3.5" aria-hidden="true" />
             Figma Design
@@ -180,7 +183,7 @@ export default function ProjectCard({
             Addis Ababa, Ethiopia
           </span>
           <span className="flex items-center gap-1">
-            <Mail className="h-3 w-3 text-[#1E90FF]" />
+            <Mail className="h-3 w-3" style={{ color: "#1E90FF" }} />
             skillbridge@gmail.com
           </span>
         </div>
