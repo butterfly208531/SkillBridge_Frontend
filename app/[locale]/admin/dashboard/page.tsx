@@ -36,7 +36,7 @@ function categoryColor(name: string): string {
 }
 
 // Map a Course from the API into the StoredCourse shape for localStorage persistence
-function toStoredCourse(c: Course) {
+function toStoredCourse(c: Course, index: number) {
   return {
     id:               c.id,
     title:            c.title,
@@ -53,6 +53,7 @@ function toStoredCourse(c: Course) {
     priceDiscounted:  c.priceDiscounted || 0,
     startDate:        c.startDate || "",
     createdAt:        c.createdAt || new Date().toISOString(),
+    priority:         index,
   };
 }
 
@@ -106,7 +107,7 @@ export default function DashboardPage() {
     try {
       const coursesData = await fetchCourses();
       if (coursesData.length > 0) {
-        saveCourses(coursesData.map(toStoredCourse));
+        saveCourses(coursesData.map((c, i) => toStoredCourse(c, i)));
         setCourses(coursesData);
       } else {
         // API returned empty — fall back to localStorage
