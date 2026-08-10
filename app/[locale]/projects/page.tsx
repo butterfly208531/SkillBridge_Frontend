@@ -1,31 +1,79 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useTranslations } from "next-intl";
 import { motion, AnimatePresence } from "framer-motion";
 import { Navbar } from "@/app/[locale]/components/navbar";
 import Footer from "@/app/[locale]/components/footer";
 import ProjectCard from "@/app/[locale]/components/ui/project-card";
 import { SectionHeading } from "@/app/[locale]/components/ui/section-heading";
-import { projectsConfig, CATEGORY_MAP, type ProjectCategory } from "@/lib/projects-config";
+import { projectsConfig, CATEGORY_MAP, type ProjectCategory, type ProjectConfig } from "@/lib/projects-config";
+import { getStoredProjects, saveProjects, type StoredProject } from "@/lib/project-store";
 import { cn } from "@/lib/utils";
 
 const PAGE_SIZE = 50;
+const API = process.env.NEXT_PUBLIC_API_BASE_URL || "https://skillbridge-backend2.onrender.com/api";
 
 const TOP_CATEGORIES = ["All", "ERP", "Web Development", "AI", "Automation", "Python", "Mobile"] as const;
+
+function storedToConfig(p: StoredProject): ProjectConfig {
+  return {
+    id:           p.id,
+    title:        p.title,
+    description:  p.description,
+    technologies: p.technologies,
+    category:     p.category,
+    subCategory:  p.subCategory,
+    studentName:  p.studentName  || undefined,
+    demoUrl:      p.demoUrl      || undefined,
+    githubUrl:    p.githubUrl    || undefined,
+  };
+}
 
 export default function ProjectsPage() {
   const t = useTranslations("projectsPage");
   const [activeCategory, setActiveCategory] = useState<string>("All");
   const [activeSubCategory, setActiveSubCategory] = useState<string>("All");
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+  const [projects, setProjects] = useState<ProjectConfig[]>(projectsConfig);
+
+  useEffect(() => {
+    // Tier 1: localStorage
+    const stored = getStoredProjects();
+    if (stored.length > 0) {
+      setProjects(stored.filter(p => p.status === "active").map(storedToConfig));
+    }
+
+    // Tier 2: API (authoritative)
+    fetch(`${API}/projects`)
+      .then(r => r.ok ? r.json() : Promise.reject())
+      .then(d => {
+        const list: any[] = Array.isArray(d) ? d : d.data ?? [];
+        if (list.length === 0) return;
+        const mapped: StoredProject[] = list.map((p: any) => ({
+          id:           p.id || p._id || "",
+          title:        p.title || p.name || "",
+          description:  p.description || "",
+          technologies: Array.isArray(p.technologies) ? p.technologies : [],
+          category:     p.category || "Web Development",
+          subCategory:  p.subCategory || p.sub_category || "",
+          studentName:  p.studentName || p.student || "",
+          demoUrl:      p.demoUrl || p.demo || "",
+          githubUrl:    p.githubUrl || p.github || "",
+          status:       (p.status || "active").toLowerCase(),
+        }));
+        saveProjects(mapped);
+        setProjects(mapped.filter(p => p.status === "active").map(storedToConfig));
+      })
+      .catch(() => {});
+  }, []);
 
   const subCategories =
     activeCategory !== "All"
       ? ["All", ...(CATEGORY_MAP[activeCategory as ProjectCategory] ?? [])]
       : [];
 
-  const filtered = projectsConfig.filter((p) => {
+  const filtered = projects.filter((p) => {
     if (activeCategory !== "All" && p.category !== activeCategory) return false;
     if (activeSubCategory !== "All" && p.subCategory !== activeSubCategory) return false;
     return true;
