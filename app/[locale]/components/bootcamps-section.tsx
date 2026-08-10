@@ -53,12 +53,28 @@ export function BootcampsSection() {
     }
     setLoading(false);
 
-    // Fetch from API — API is authoritative, including an empty list
+    // Fetch from API — merge, never drop admin-saved local courses
     fetchCourses()
       .then(data => {
         if (Array.isArray(data)) {
-          const storedMap = Object.fromEntries(getStoredCourses().map(s => [s.id, s]));
-          // Merge: API data wins for content; adminImageUrl + priority from store always win
+          const stored = getStoredCourses();
+          const storedMap = Object.fromEntries(stored.map(s => [s.id, s]));
+
+          const toDisplay = (c: any) => ({
+            id:               c.id,
+            slug:             c.id,
+            title:            c.title,
+            shortDescription: c.shortDescription || "",
+            duration:         c.duration,
+            category:         { name: c.category },
+            rating:           c.rating,
+            imageUrl:         c.imageUrl,
+            adminImageUrl:    c.adminImageUrl,
+            status:           c.status,
+            priority:         c.priority ?? 0,
+          });
+
+          // API data wins for content; adminImageUrl + priority from store always win
           const merged = data.map((apiCourse: any) => {
             // Try to find matching stored course by slug or title
             const storedMatch = storedMap[apiCourse.slug || apiCourse.id]
@@ -71,6 +87,15 @@ export function BootcampsSection() {
               priority:      storedMatch?.priority ?? 999,
             };
           });
+
+          // Keep admin-added local courses the backend doesn't have (including when API is empty)
+          const matchedKeys = new Set(data.map((a: any) => (a.slug || a.id)));
+          stored.forEach(s => {
+            const alreadyInApi = matchedKeys.has(s.id)
+              || data.some((a: any) => (a.title || "").toLowerCase() === (s.title || "").toLowerCase());
+            if (!alreadyInApi) merged.push(toDisplay(s));
+          });
+
           setCourses(merged);
         }
       })

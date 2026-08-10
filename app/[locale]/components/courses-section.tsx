@@ -29,12 +29,12 @@ export function CoursesSection() {
     const loadCourses = async () => {
       try {
         // Build a map of stored courses so adminImageUrl survives the API merge
-        const storedMap = Object.fromEntries(
-          getStoredCourses().map(s => [s.id, s])
-        );
+        const stored = getStoredCourses();
+        const storedMap = Object.fromEntries(stored.map(s => [s.id, s]));
 
         const data = await fetchCourses();
-        const transformedCourses = data.map((course: any) => {
+        const list = Array.isArray(data) ? data : [];
+        const transform = (course: any) => {
           // Match stored course by slug or title to pick up adminImageUrl
           const storedMatch = storedMap[course.slug || course.id]
             || Object.values(storedMap).find(s =>
@@ -50,15 +50,26 @@ export function CoursesSection() {
           });
           return {
             ...course,
-            categoryName:  course.category.name,
-            description:   course.shortDescription,
+            categoryName:  course.category?.name || course.category || "Other",
+            description:   course.shortDescription || course.description || "",
             rating:        course.rating || 0,
             reviews:       course.reviews || 0,
             instructor:    course.instructor?.name,
             image,
             instructorImage: course.instructor?.imageUrl || "",
           };
+        };
+
+        const transformedCourses = list.map(transform);
+
+        // Keep admin-added local courses the backend doesn't have (including when API is empty)
+        const matchedKeys = new Set(list.map((a: any) => (a.slug || a.id)));
+        stored.forEach(s => {
+          const alreadyInApi = matchedKeys.has(s.id)
+            || list.some((a: any) => (a.title || "").toLowerCase() === (s.title || "").toLowerCase());
+          if (!alreadyInApi) transformedCourses.push(transform(s));
         });
+
         setCourses(transformedCourses);
       } catch (error) {
         console.error("Error fetching courses:", error);

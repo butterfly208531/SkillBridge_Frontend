@@ -64,11 +64,29 @@ export default function CoursesPage() {
     })));
     setLoading(false);
 
-    // Refresh from API in background — API is authoritative, including an empty list
+    // Refresh from API in background — merge, never drop admin-saved local courses
     fetchCourses()
       .then(data => {
         const list = Array.isArray(data) ? data : [];
-        const storedMap = Object.fromEntries(getStoredCourses().map(s => [s.id, s]));
+        const stored = getStoredCourses();
+        const storedMap = Object.fromEntries(stored.map(s => [s.id, s]));
+
+        const toDisplay = (c: any) => ({
+          id:               c.id,
+          slug:             c.id,
+          title:            c.title,
+          shortDescription: c.shortDescription || "",
+          duration:         c.duration,
+          category:         { name: c.category },
+          rating:           c.rating,
+          imageUrl:         c.imageUrl,
+          adminImageUrl:    c.adminImageUrl,
+          startDate:        c.startDate || undefined,
+          status:           c.status,
+          priority:         c.priority ?? 0,
+        });
+
+        // API data wins for content; adminImageUrl + priority from store always win
         const merged = list.map((apiCourse: any) => {
           const storedMatch = storedMap[apiCourse.slug || apiCourse.id]
             || Object.values(storedMap).find(s =>
@@ -80,6 +98,15 @@ export default function CoursesPage() {
             priority:      storedMatch?.priority ?? 999,
           };
         });
+
+        // Keep admin-added local courses the backend doesn't have (including when API is empty)
+        const matchedKeys = new Set(list.map((a: any) => (a.slug || a.id)));
+        stored.forEach(s => {
+          const alreadyInApi = matchedKeys.has(s.id)
+            || list.some((a: any) => (a.title || "").toLowerCase() === (s.title || "").toLowerCase());
+          if (!alreadyInApi) merged.push(toDisplay(s));
+        });
+
         setCourses(merged);
       })
       .catch(() => {/* keep stored data */});
