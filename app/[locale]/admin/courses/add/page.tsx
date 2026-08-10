@@ -7,6 +7,7 @@ import AdminHeader from "../../components/AdminHeader";
 import { uploadImage } from "@/lib/uploadImage";
 import { getAllCategories } from "@/lib/courses-config";
 import { addCourse } from "@/lib/courses-store";
+import { adminApi } from "@/lib/api";
 
 export default function AddCoursePage() {
   const pathname = usePathname();
@@ -89,31 +90,53 @@ export default function AddCoursePage() {
     }
   };
 
-  // ── Submit — saves to localStorage store ────────────────
-  const handleSubmit = () => {
+  // ── Submit — POST to backend API, localStorage as fallback ─
+  const handleSubmit = async () => {
     if (!basic.title.trim()) { setError("Course title is required"); return; }
     if (!basic.categoryId)   { setError("Please select a category");  return; }
 
     setSaving(true);
     setError("");
 
+    const selectedCat = categories.find(c => c.id === basic.categoryId);
+    const courseData = {
+      title:            basic.title.trim(),
+      duration:         basic.duration || "—",
+      category:         selectedCat?.name || basic.categoryId,
+      categoryId:       basic.categoryId,
+      status:           basic.status === "PUBLISHED" ? "active" : "draft",
+      imageUrl:         basic.imageUrl || "",
+      rating:           0,
+      shortDescription: basic.shortDescription || "",
+      learningOutcomes: [],
+      priceOriginal:    Number(basic.priceOriginal)   || 0,
+      priceDiscounted:  Number(basic.priceDiscounted) || 0,
+      startDate:        basic.startDate || "",
+      priority:         Number(basic.priority)        || 0,
+    };
+
     try {
-      const selectedCat = categories.find(c => c.id === basic.categoryId);
-      addCourse({
-        title:            basic.title.trim(),
-        duration:         basic.duration || "—",
-        category:         selectedCat?.name || basic.categoryId,
-        categoryId:       basic.categoryId,
-        status:           basic.status === "PUBLISHED" ? "active" : "draft",
-        imageUrl:         basic.imageUrl || "",
+      // 1. Try to save to backend — this makes it visible to everyone
+      await adminApi.createCourse({
+        title:            courseData.title,
+        category:         courseData.category,
+        categoryId:       courseData.categoryId,
+        duration:         courseData.duration,
+        status:           basic.status,
+        imageUrl:         courseData.imageUrl,
+        shortDescription: courseData.shortDescription,
+        priceOriginal:    courseData.priceOriginal,
+        priceDiscounted:  courseData.priceDiscounted,
+        startDate:        courseData.startDate,
         rating:           0,
-        shortDescription: basic.shortDescription || "",
-        learningOutcomes: [],
-        priceOriginal:    Number(basic.priceOriginal)   || 0,
-        priceDiscounted:  Number(basic.priceDiscounted) || 0,
-        startDate:        basic.startDate || "",
-        priority:         Number(basic.priority)        || 0,
       });
+    } catch {
+      // API unavailable or unauthenticated — fall through to localStorage only
+    }
+
+    // 2. Always save to localStorage so it shows immediately in this browser too
+    try {
+      addCourse(courseData);
       setSuccess(true);
       setTimeout(() => window.location.href = `/${locale}/admin/courses`, 1200);
     } catch (err: any) {
