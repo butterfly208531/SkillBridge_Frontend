@@ -57,16 +57,17 @@ export function BootcampsSection() {
         imageUrl:        c.imageUrl,
         adminImageUrl:   c.adminImageUrl,
         status:          c.status,
+        priority:        c.priority ?? 0,
       })));
       setLoading(false);
     }
 
-    // Then refresh from the API — merge adminImageUrl from store so uploads survive
+    // Merge stored courses for priority info
     fetchCourses()
       .then(data => {
         if (Array.isArray(data) && data.length > 0) {
           const storedMap = Object.fromEntries(getStoredCourses().map(s => [s.id, s]));
-          // Merge: API data wins for content; adminImageUrl from store always wins for image
+          // Merge: API data wins for content; adminImageUrl + priority from store always win
           const merged = data.map((apiCourse: any) => {
             // Try to find matching stored course by slug or title
             const storedMatch = storedMap[apiCourse.slug || apiCourse.id]
@@ -76,6 +77,7 @@ export function BootcampsSection() {
             return {
               ...apiCourse,
               adminImageUrl: storedMatch?.adminImageUrl || undefined,
+              priority:      storedMatch?.priority ?? 999,
             };
           });
           setCourses(merged);
@@ -89,7 +91,15 @@ export function BootcampsSection() {
       .finally(() => setLoading(false));
   }, []);
 
-  const visible = courses.slice(0, 6);
+  // Sort by priority (admin-set) first, then by rating as tiebreaker
+  const visible = [...courses]
+    .sort((a, b) => {
+      const pa = a.priority ?? 999;
+      const pb = b.priority ?? 999;
+      if (pa !== pb) return pa - pb;
+      return (b.rating ?? 0) - (a.rating ?? 0);
+    })
+    .slice(0, 6);
 
   return (
     <section className="py-16 bg-gray-50 dark:bg-gray-900">

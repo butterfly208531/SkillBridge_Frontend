@@ -29,6 +29,8 @@ export interface StoredCourse {
   priceDiscounted: number;
   startDate: string;
   createdAt: string;
+  /** Display order on public pages. Lower number = higher position. Default 0. */
+  priority: number;
 }
 
 // ── config image lookups ───────────────────────────────────
@@ -78,7 +80,7 @@ export function getEffectiveImage(course: {
 // ── helpers ────────────────────────────────────────────────
 
 function defaultCourses(): StoredCourse[] {
-  return coursesConfig.map(c => ({
+  return coursesConfig.map((c, index) => ({
     id:               c.slug ?? String(c.key),
     title:            c.title ?? "",
     duration:         c.duration || "—",
@@ -94,6 +96,7 @@ function defaultCourses(): StoredCourse[] {
     priceDiscounted:  0,
     startDate:        "",
     createdAt:        new Date().toISOString(),
+    priority:         index,
   }));
 }
 
@@ -123,8 +126,13 @@ export function getStoredCourses(): StoredCourse[] {
     if (raw) {
       const parsed = JSON.parse(raw);
       if (Array.isArray(parsed) && parsed.length > 0) {
-        const patched = patchImages(parsed);
-        if (patched.some((c, i) => c.imageUrl !== parsed[i].imageUrl)) {
+        // Backfill priority for older entries that pre-date this field
+        const withPriority = parsed.map((c: StoredCourse, index: number) => ({
+          ...c,
+          priority: c.priority ?? index,
+        }));
+        const patched = patchImages(withPriority);
+        if (patched.some((c, i) => c.imageUrl !== parsed[i].imageUrl || c.priority !== parsed[i].priority)) {
           localStorage.setItem(STORAGE_KEY, JSON.stringify(patched));
         }
         return patched;
@@ -177,6 +185,24 @@ export function toggleCourseStatus(id: string): boolean {
   const idx = all.findIndex(c => c.id === id);
   if (idx === -1) return false;
   all[idx].status = all[idx].status === "active" ? "draft" : "active";
+  saveCourses(all);
+  return true;
+}
+
+/**
+ * Move a course one position up (lower priority number) or down.
+ * Re-normalises the full list so priorities stay contiguous after the swap.
+ */
+export function moveCourse(id: string, direction: "up" | "down"): boolean {
+  const all = [...getStoredCourses()].sort((a, b) => (a.priority ?? 0) - (b.priority ?? 0));
+  const idx = all.findIndex(c => c.id === id);
+  if (idx === -1) return false;
+  const swapIdx = direction === "up" ? idx - 1 : idx + 1;
+  if (swapIdx < 0 || swapIdx >= all.length) return false;
+  // Swap priority values
+  const tmp = all[idx].priority;
+  all[idx].priority = all[swapIdx].priority;
+  all[swapIdx].priority = tmp;
   saveCourses(all);
   return true;
 }

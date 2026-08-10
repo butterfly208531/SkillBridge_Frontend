@@ -32,6 +32,7 @@ export default function AddCoursePage() {
     shortDescription: "",
     imageUrl:         "",
     startDate:        "",
+    priority:         "",
   });
 
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -108,9 +109,10 @@ export default function AddCoursePage() {
         rating:           0,
         shortDescription: basic.shortDescription || "",
         learningOutcomes: [],
-        priceOriginal:    Number(basic.priceOriginal)  || 0,
+        priceOriginal:    Number(basic.priceOriginal)   || 0,
         priceDiscounted:  Number(basic.priceDiscounted) || 0,
         startDate:        basic.startDate || "",
+        priority:         Number(basic.priority)        || 0,
       });
       setSuccess(true);
       setTimeout(() => window.location.href = `/${locale}/admin/courses`, 1200);
@@ -226,6 +228,21 @@ export default function AddCoursePage() {
                 onChange={e => setBasic(p => ({ ...p, startDate: e.target.value }))}
                 className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1E90FF]/30"
               />
+            </div>
+
+            {/* Priority */}
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1">Display Priority</label>
+              <input
+                type="number"
+                min="0"
+                step="1"
+                value={basic.priority}
+                onChange={e => setBasic(p => ({ ...p, priority: e.target.value }))}
+                placeholder="0"
+                className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1E90FF]/30"
+              />
+              <p className="mt-1 text-[10px] text-gray-400">Lower number = shown first on public pages. 0 is the highest priority.</p>
             </div>
 
             {/* Short Description */}

@@ -43,7 +43,7 @@ export default function CoursesPage() {
   const [loading, setLoading] = useState(true);
   const [activeCategory, setActiveCategory] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
-  const [sortBy, setSortBy] = useState("popular");
+  const [sortBy, setSortBy] = useState("rating");
 
   useEffect(() => {
     // Always show local store data first (admin-managed courses)
@@ -60,6 +60,7 @@ export default function CoursesPage() {
       adminImageUrl:    c.adminImageUrl,   // carry through so getEffectiveImage works
       startDate:        c.startDate || undefined,
       status:           c.status,
+      priority:         c.priority ?? 0,
     })));
     setLoading(false);
 
@@ -73,7 +74,11 @@ export default function CoursesPage() {
               || Object.values(storedMap).find(s =>
                   s.title.toLowerCase() === (apiCourse.title || "").toLowerCase()
                 );
-            return { ...apiCourse, adminImageUrl: storedMatch?.adminImageUrl || undefined };
+            return {
+              ...apiCourse,
+              adminImageUrl: storedMatch?.adminImageUrl || undefined,
+              priority:      storedMatch?.priority ?? 999,
+            };
           });
           setCourses(merged);
         }
@@ -95,11 +100,18 @@ export default function CoursesPage() {
     return isActive && matchCat && matchSearch;
   });
 
-  const sorted = [...filtered].sort((a, b) =>
-    sortBy === "newest"
-      ? new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()
-      : (b.studentsEnrolled || b.reviews || 0) - (a.studentsEnrolled || a.reviews || 0)
-  );
+  const sorted = [...filtered].sort((a, b) => {
+    // Priority (admin-set) always comes first — lower number = higher position
+    const pa = a.priority ?? 999;
+    const pb = b.priority ?? 999;
+    if (pa !== pb) return pa - pb;
+    // Within the same priority tier, apply the user's chosen sort
+    if (sortBy === "newest")
+      return new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime();
+    if (sortBy === "popular")
+      return (b.studentsEnrolled || b.reviews || 0) - (a.studentsEnrolled || a.reviews || 0);
+    return (b.rating ?? 0) - (a.rating ?? 0); // "rating" — default
+  });
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
@@ -151,6 +163,11 @@ export default function CoursesPage() {
             ))}
           </div>
           <div className="flex gap-2 shrink-0">
+            <Button size="sm" variant={sortBy === "rating" ? "default" : "outline"}
+              onClick={() => setSortBy("rating")}
+              className={cn("rounded-xl text-sm", sortBy === "rating" ? "bg-[#2196F3] text-white hover:bg-blue-600" : "")}>
+              Top Rated
+            </Button>
             <Button size="sm" variant={sortBy === "popular" ? "default" : "outline"}
               onClick={() => setSortBy("popular")}
               className={cn("rounded-xl text-sm", sortBy === "popular" ? "bg-[#2196F3] text-white hover:bg-blue-600" : "")}>

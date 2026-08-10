@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Search, Plus, Pencil, Trash2, Star, Clock, Upload, X, Loader2, RefreshCw } from "lucide-react";
+import { Search, Plus, Pencil, Trash2, Star, Clock, Upload, X, Loader2, RefreshCw, ChevronUp, ChevronDown } from "lucide-react";
 import { uploadImage } from "@/lib/uploadImage";
 import { getAllCategories } from "@/lib/courses-config";
 import { adminApi } from "@/lib/api";
@@ -12,6 +12,7 @@ import {
   updateCourse,
   addCourse,
   saveCourses,
+  moveCourse,
   getEffectiveImage,
   type StoredCourse,
 } from "@/lib/courses-store";
@@ -62,7 +63,7 @@ export default function CoursesAdminPage() {
           // Merge: keep adminImageUrl and admin-set prices from localStorage,
           // API wins for everything else
           const localMap = Object.fromEntries(local.map(s => [s.id, s]));
-          const merged: StoredCourse[] = list.map((c: any) => {
+          const merged: StoredCourse[] = list.map((c: any, index: number) => {
             const stored = localMap[c.id] || localMap[c.slug] || null;
             // Resolve price: API may return camelCase, snake_case, or other variants.
             // If the API gives a non-zero value, use it; otherwise fall back to the
@@ -92,6 +93,8 @@ export default function CoursesAdminPage() {
                                   : (stored?.priceDiscounted ?? 0),
               startDate:        c.startDate || "",
               createdAt:        c.createdAt || new Date().toISOString(),
+              // Preserve admin-set priority; fall back to current list order
+              priority:         stored?.priority ?? index,
             };
           });
           saveCourses(merged);
@@ -107,13 +110,15 @@ export default function CoursesAdminPage() {
 
   useEffect(() => { loadCourses(); }, []);
 
-  const filtered = courses.filter(c => {
-    const matchCat    = category === "All" || c.category === category;
-    const matchSearch = !search ||
-      c.title.toLowerCase().includes(search.toLowerCase()) ||
-      c.category.toLowerCase().includes(search.toLowerCase());
-    return matchCat && matchSearch;
-  });
+  const filtered = courses
+    .filter(c => {
+      const matchCat    = category === "All" || c.category === category;
+      const matchSearch = !search ||
+        c.title.toLowerCase().includes(search.toLowerCase()) ||
+        c.category.toLowerCase().includes(search.toLowerCase());
+      return matchCat && matchSearch;
+    })
+    .sort((a, b) => (a.priority ?? 0) - (b.priority ?? 0));
 
   // ── delete ──
   const handleDelete = async (id: string) => {
@@ -137,6 +142,12 @@ export default function CoursesAdminPage() {
   // ── toggle status ──
   const handleToggleStatus = (id: string) => {
     toggleCourseStatus(id);
+    loadCourses();
+  };
+
+  // ── move priority ──
+  const handleMove = (id: string, direction: "up" | "down") => {
+    moveCourse(id, direction);
     loadCourses();
   };
 
@@ -210,6 +221,7 @@ export default function CoursesAdminPage() {
                   <th scope="col" className="px-5 py-3 text-left font-semibold">Duration</th>
                   <th scope="col" className="px-5 py-3 text-left font-semibold">Rating</th>
                   <th scope="col" className="px-5 py-3 text-left font-semibold">Status</th>
+                  <th scope="col" className="px-5 py-3 text-left font-semibold">Priority</th>
                   <th scope="col" className="px-5 py-3 text-left font-semibold">Actions</th>
                 </tr>
               </thead>
@@ -257,6 +269,30 @@ export default function CoursesAdminPage() {
                       >
                         {course.status === "active" ? "Active" : "Draft"}
                       </button>
+                    </td>
+                    {/* Priority reorder */}
+                    <td className="px-5 py-3.5">
+                      <div className="flex items-center gap-1">
+                        <span className="text-xs font-mono text-gray-500 w-5 text-center">
+                          {course.priority ?? 0}
+                        </span>
+                        <div className="flex flex-col gap-0.5">
+                          <button
+                            onClick={() => handleMove(course.id, "up")}
+                            className="p-0.5 rounded text-gray-400 hover:text-[#1E90FF] hover:bg-[#1E90FF]/10 transition-colors"
+                            title="Move up"
+                          >
+                            <ChevronUp size={13} />
+                          </button>
+                          <button
+                            onClick={() => handleMove(course.id, "down")}
+                            className="p-0.5 rounded text-gray-400 hover:text-[#1E90FF] hover:bg-[#1E90FF]/10 transition-colors"
+                            title="Move down"
+                          >
+                            <ChevronDown size={13} />
+                          </button>
+                        </div>
+                      </div>
                     </td>
                     <td className="px-5 py-3.5">
                       <div className="flex items-center gap-2">
@@ -338,6 +374,7 @@ function CourseModal({ course, onClose, onSaved }: {
     rating:            course?.rating            ?? 0,
     shortDescription:  course?.shortDescription  ?? "",
     learningOutcomes:  course?.learningOutcomes  ?? [] as string[],
+    priority:          course?.priority          ?? 0,
   });
 
   const [categories] = useState<{ id: string; name: string }[]>(
@@ -407,6 +444,7 @@ function CourseModal({ course, onClose, onSaved }: {
           rating:           Number(form.rating)          || 0,
           shortDescription: form.shortDescription.trim(),
           learningOutcomes: form.learningOutcomes,
+          priority:         Number(form.priority)        || 0,
         });
       } else {
         addCourse({
@@ -423,6 +461,7 @@ function CourseModal({ course, onClose, onSaved }: {
           priceOriginal:    Number(form.priceOriginal)   || 0,
           priceDiscounted:  Number(form.priceDiscounted) || 0,
           startDate:        "",
+          priority:         Number(form.priority)        || 0,
         });
       }
 
@@ -554,6 +593,26 @@ function CourseModal({ course, onClose, onSaved }: {
               placeholder="e.g. 4.5"
               className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1E90FF]/30"
             />
+          </div>
+
+          {/* Priority */}
+          <div>
+            <label className="block text-xs font-medium text-gray-600 mb-1">
+              Display Priority
+            </label>
+            <input
+              type="number"
+              min="0"
+              step="1"
+              value={form.priority === 0 ? "" : form.priority}
+              onChange={e => {
+                const v = parseInt(e.target.value, 10);
+                setForm(p => ({ ...p, priority: isNaN(v) ? 0 : Math.max(0, v) }));
+              }}
+              placeholder="0"
+              className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1E90FF]/30"
+            />
+            <p className="mt-1 text-[10px] text-gray-400">Lower number = shown first on the public page. 0 is the highest priority.</p>
           </div>
 
           {/* About This Course */}
