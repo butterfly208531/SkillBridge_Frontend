@@ -1,19 +1,19 @@
 import { CoursesConfig } from "@/types";
 
-// Unique Unsplash images — one per course, no repeats
+// Local course images from /public/images/courses
 const COURSE_IMAGES = {
-  python:          "https://images.unsplash.com/photo-1526379095098-d400fd0bf935?w=600&h=400&fit=crop",
-  computerBasics:  "https://images.unsplash.com/photo-1461749280684-dccba630e2f6?w=600&h=400&fit=crop",
-  flutter:         "https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?w=600&h=400&fit=crop",
-  fullstack:       "https://images.unsplash.com/photo-1547658719-da2b51169166?w=600&h=400&fit=crop",
-  datascience:     "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=600&h=400&fit=crop",
-  odooFunctional:  "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=600&h=400&fit=crop",
-  odooTechnical:   "https://images.unsplash.com/photo-1504868584819-f8e8b4b6d7e3?w=600&h=400&fit=crop",
-  cybersecurity:   "https://images.unsplash.com/photo-1563013544-824ae1b704d3?w=600&h=400&fit=crop",
-  accounting:      "https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=600&h=400&fit=crop",
-  digitalMarketing:"https://images.unsplash.com/photo-1533750349088-cd871a92f312?w=600&h=400&fit=crop",
-  ielts:           "https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=600&h=400&fit=crop",
-  office365:       "https://images.unsplash.com/photo-1542744173-8e7e53415bb0?w=600&h=400&fit=crop",
+  python:          "/images/courses/phyton.jpg",
+  computerBasics:  "/images/courses/basicComputerskill.jpg",
+  flutter:         "/images/courses/flutter.jpg",
+  fullstack:       "/images/courses/fullStuck.jpg",
+  datascience:     "/images/courses/dataSaince.jpg",
+  odooFunctional:  "/images/courses/odooErpFunction.jpg",
+  odooTechnical:   "/images/courses/odooTechnical.jpg",
+  cybersecurity:   "/images/courses/cybercecurty.jpg",
+  accounting:      "/images/courses/accounting.jpg",
+  digitalMarketing:"/images/courses/digitalMarketing.jpg",
+  ielts:           "/images/courses/tofl.jpg",
+  office365:       "/images/courses/microsoft.jpg",
 };
 
 export const coursesConfig: CoursesConfig[] = [
