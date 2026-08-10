@@ -10,6 +10,7 @@ import { SectionHeading } from "@/app/[locale]/components/ui/section-heading";
 import ScholarshipCard from "@/app/[locale]/components/ui/scholarship-card";
 import { scholarshipsConfig, scholarshipWinnersConfig, isClosed, type ScholarshipConfig } from "@/lib/scholarships-config";
 import { getStoredScholarships, saveScholarships, getStoredWinners, saveWinners, isScholarshipsInitialized, isWinnersInitialized, type StoredScholarship, type StoredWinner } from "@/lib/scholarship-store";
+import { syncSharedScholarshipsToLocal } from "@/lib/scholarship-shared";
 import { Archive } from "lucide-react";
 
 // Merge stored scholarship data with static config defaults
@@ -58,63 +59,69 @@ export function ScholarshipsSection({ showAll = false }: { showAll?: boolean }) 
   useEffect(() => {
     const API = process.env.NEXT_PUBLIC_API_BASE_URL || "https://skillbridge-backend2.onrender.com/api";
 
-    // Re-read localStorage first (covers same-browser admin edits) — honor empty lists
-    const localWinners = getStoredWinners();
-    if (isWinnersInitialized()) {
-      setWinners(localWinners);
-    }
+    (async () => {
+      // Pull admin-published data from the shared store so ALL devices see the
+      // same scholarships/winners (adds/edits/deletes by the admin anywhere).
+      await syncSharedScholarshipsToLocal();
 
-    const stored = getStoredScholarships();
-    if (isScholarshipsInitialized()) {
-      setScholarships(stored.map(mergeWithConfig));
-    }
+      // Re-read localStorage first (covers same-browser admin edits) — honor empty lists
+      const localWinners = getStoredWinners();
+      if (isWinnersInitialized()) {
+        setWinners(localWinners);
+      }
 
-    // Then try the backend — if it responds, it is authoritative, including an empty list
-    fetch(`${API}/scholarships`)
-      .then(r => r.ok ? r.json() : Promise.reject())
-      .then(d => {
-        const list: any[] = Array.isArray(d) ? d : d.data ?? [];
-        const mapped: StoredScholarship[] = list.map((s: any) => ({
-          id:                 s.id || s._id || "",
-          name:               s.name || s.title || "",
-          courseId:           s.courseId || s.course?.id || "",
-          course:             s.course?.title || s.courseName || s.courseId || "",
-          applicationsCount:  s.applicationsCount || 0,
-          winnersCount:       s.winnersCount || 0,
-          deadline:           s.deadline || s.endDate || "",
-          eligibility:        s.eligibility || s.requirements || "",
-          status:             (s.status || "active").toLowerCase(),
-          fundingType:        s.fundingType || "full",
-          tuitionAmount:      s.tuitionAmount || 0,
-          applicationFormUrl: s.applicationFormUrl || "",
-        }));
-        // Persist so the next page load is instant
-        saveScholarships(mapped);
-        setScholarships(mapped.map(mergeWithConfig));
-      })
-      .catch(() => {
-        // API unavailable — localStorage/static config already applied above
-      });
+      const stored = getStoredScholarships();
+      if (isScholarshipsInitialized()) {
+        setScholarships(stored.map(mergeWithConfig));
+      }
 
-    // Try winners API — if it responds, it overrides localStorage, including an empty list
-    fetch(`${API}/scholarship-winners`)
-      .then(r => r.ok ? r.json() : Promise.reject())
-      .then(d => {
-        const list: any[] = Array.isArray(d) ? d : d.data ?? [];
-        const mapped: StoredWinner[] = list.map((w: any) => ({
-          id:         w.id || w._id || "",
-          name:       w.name || w.studentName || "",
-          image:      w.image || w.photo || "",
-          scholarship: w.scholarship || w.scholarshipName || "",
-          year:       w.year || new Date(w.awardedAt || Date.now()).getFullYear(),
-          status:     ((w.status || "active").toLowerCase()) as "active" | "inactive",
-        }));
-        saveWinners(mapped);
-        setWinners(mapped);
-      })
-      .catch(() => {
-        // API unavailable — localStorage data already applied above
-      });
+      // Then try the backend — if it responds, it is authoritative, including an empty list
+      fetch(`${API}/scholarships`)
+        .then(r => r.ok ? r.json() : Promise.reject())
+        .then(d => {
+          const list: any[] = Array.isArray(d) ? d : d.data ?? [];
+          const mapped: StoredScholarship[] = list.map((s: any) => ({
+            id:                 s.id || s._id || "",
+            name:               s.name || s.title || "",
+            courseId:           s.courseId || s.course?.id || "",
+            course:             s.course?.title || s.courseName || s.courseId || "",
+            applicationsCount:  s.applicationsCount || 0,
+            winnersCount:       s.winnersCount || 0,
+            deadline:           s.deadline || s.endDate || "",
+            eligibility:        s.eligibility || s.requirements || "",
+            status:             (s.status || "active").toLowerCase(),
+            fundingType:        s.fundingType || "full",
+            tuitionAmount:      s.tuitionAmount || 0,
+            applicationFormUrl: s.applicationFormUrl || "",
+          }));
+          // Persist so the next page load is instant
+          saveScholarships(mapped);
+          setScholarships(mapped.map(mergeWithConfig));
+        })
+        .catch(() => {
+          // API unavailable — localStorage/static config already applied above
+        });
+
+      // Try winners API — if it responds, it overrides localStorage, including an empty list
+      fetch(`${API}/scholarship-winners`)
+        .then(r => r.ok ? r.json() : Promise.reject())
+        .then(d => {
+          const list: any[] = Array.isArray(d) ? d : d.data ?? [];
+          const mapped: StoredWinner[] = list.map((w: any) => ({
+            id:         w.id || w._id || "",
+            name:       w.name || w.studentName || "",
+            image:      w.image || w.photo || "",
+            scholarship: w.scholarship || w.scholarshipName || "",
+            year:       w.year || new Date(w.awardedAt || Date.now()).getFullYear(),
+            status:     ((w.status || "active").toLowerCase()) as "active" | "inactive",
+          }));
+          saveWinners(mapped);
+          setWinners(mapped);
+        })
+        .catch(() => {
+          // API unavailable — localStorage data already applied above
+        });
+    })();
   }, []);
 
   const active  = scholarships.filter(s => !isClosed(s.deadline));

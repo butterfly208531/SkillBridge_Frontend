@@ -9,6 +9,7 @@ import {
 import AdminHeader from "../../components/AdminHeader";
 import { cn } from "@/lib/utils";
 import { getStoredScholarships, saveScholarships, type StoredScholarship } from "@/lib/scholarship-store";
+import { pushSharedScholarships } from "@/lib/scholarship-shared";
 
 const API = process.env.NEXT_PUBLIC_API_BASE_URL || "https://skillbridge-backend2.onrender.com/api";
 
@@ -96,6 +97,7 @@ export default function AddScholarshipPage() {
     // without waiting for the API or a page-reload.
     const existing = getStoredScholarships();
     saveScholarships([...existing, newStored]);
+    pushSharedScholarships();
 
     try {
       const res = await fetch(`${API}/scholarships`, {

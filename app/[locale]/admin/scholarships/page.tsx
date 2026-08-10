@@ -6,6 +6,7 @@ import AdminHeader from "../components/AdminHeader";
 import { cn } from "@/lib/utils";
 import { scholarshipsConfig, scholarshipWinnersConfig } from "@/lib/scholarships-config";
 import { getStoredScholarships, saveScholarships, getStoredWinners, saveWinners, isScholarshipsInitialized, isWinnersInitialized, type StoredScholarship, type StoredWinner } from "@/lib/scholarship-store";
+import { pushSharedScholarships } from "@/lib/scholarship-shared";
 
 const API = process.env.NEXT_PUBLIC_API_BASE_URL || "https://skillbridge-backend2.onrender.com/api";
 
@@ -170,6 +171,7 @@ export default function ScholarshipsPage() {
     const updated = scholarships.filter(s => s.id !== id);
     setScholarships(updated);
     saveScholarships(updated as any);
+    pushSharedScholarships();
     setDeleteId(null);
   };
 
@@ -207,6 +209,7 @@ export default function ScholarshipsPage() {
     }));
     saveScholarships(toStore);
     setScholarships(updated);
+    pushSharedScholarships();
 
     try {
       await fetch(url, {
@@ -255,6 +258,7 @@ export default function ScholarshipsPage() {
 
     setWinners(updated);
     saveWinners(updated.map(w => ({ ...w, status: w.status as "active" | "inactive" })));
+    pushSharedScholarships();
 
     // ── Sync to backend ──────────────────────────────────────────────────────
     try {
@@ -283,6 +287,7 @@ export default function ScholarshipsPage() {
     const updated = winners.filter(w => w.id !== id);
     setWinners(updated);
     saveWinners(updated.map(w => ({ ...w, status: w.status as "active" | "inactive" })));
+    pushSharedScholarships();
     setDeleteWinnerId(null);
   };
 

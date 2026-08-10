@@ -7,6 +7,7 @@ import AdminHeader from "../../../components/AdminHeader";
 import { cn } from "@/lib/utils";
 import { JOB_CATEGORIES, JOB_TYPES, JOB_LEVELS, type Job, type JobType, type JobLevel } from "@/lib/jobs-config";
 import { getStoredJobs, saveJobs } from "@/lib/jobs-store";
+import { pushSharedJobs } from "@/lib/jobs-shared";
 
 const API = process.env.NEXT_PUBLIC_API_BASE_URL || "https://skillbridge-backend2.onrender.com/api";
 
@@ -113,6 +114,7 @@ export default function EditJobPage({ params }: { params: Promise<{ id: string }
     // If the job wasn't in localStorage (came from static config), append it
     if (!existing.find(j => j.id === jobId)) updated.push(payload);
     saveJobs(updated);
+    pushSharedJobs(updated);
 
     if (isDemoToken) {
       setSuccess(true);

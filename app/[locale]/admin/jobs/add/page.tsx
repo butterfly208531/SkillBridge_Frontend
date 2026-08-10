@@ -7,6 +7,7 @@ import AdminHeader from "../../components/AdminHeader";
 import { cn } from "@/lib/utils";
 import { JOB_CATEGORIES, JOB_TYPES, JOB_LEVELS, type JobType, type JobLevel } from "@/lib/jobs-config";
 import { getStoredJobs, saveJobs } from "@/lib/jobs-store";
+import { pushSharedJobs } from "@/lib/jobs-shared";
 
 const API = process.env.NEXT_PUBLIC_API_BASE_URL || "https://skillbridge-backend2.onrender.com/api";
 
@@ -60,6 +61,7 @@ export default function AddJobPage() {
     if (isDemoToken) {
       const existing = getStoredJobs();
       saveJobs([payload as any, ...existing]);
+      pushSharedJobs(getStoredJobs());
       setSuccess(true);
       setTimeout(() => { window.location.href = `/${locale}/admin/jobs`; }, 1500);
       setSaving(false);
@@ -82,10 +84,12 @@ export default function AddJobPage() {
       const newJob = saved?.data ?? saved ?? payload;
       const existing = getStoredJobs();
       saveJobs([newJob as any, ...existing]);
+      pushSharedJobs(getStoredJobs());
     } catch (e: any) {
       // On API failure, still save locally so the admin list reflects the new job
       const existing = getStoredJobs();
       saveJobs([payload as any, ...existing]);
+      pushSharedJobs(getStoredJobs());
       setError(e.message || "Saved locally — could not reach server.");
     }
     setSuccess(true);

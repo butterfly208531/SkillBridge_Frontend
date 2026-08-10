@@ -6,6 +6,7 @@ import AdminHeader from "../components/AdminHeader";
 import { cn } from "@/lib/utils";
 import { jobsConfig, categoryColor, typeColor, isJobClosed, type Job } from "@/lib/jobs-config";
 import { getStoredJobs, saveJobs, isJobsInitialized } from "@/lib/jobs-store";
+import { pushSharedJobs } from "@/lib/jobs-shared";
 
 const API = process.env.NEXT_PUBLIC_API_BASE_URL || "https://skillbridge-backend2.onrender.com/api";
 
@@ -34,6 +35,7 @@ export default function AdminJobsPage() {
         // API is authoritative — even an empty list means all jobs were deleted
         setJobs(list);
         saveJobs(list); // persist so public page stays in sync
+        pushSharedJobs(list); // publish to shared store so ALL devices see it
       })
       .catch(() => {
         const stored = getStoredJobs();
@@ -57,6 +59,7 @@ export default function AdminJobsPage() {
     setJobs(prev => {
       const updated = prev.map(j => j.id === job.id ? { ...j, status: newStatus as any } : j);
       saveJobs(updated);
+      pushSharedJobs(updated);
       return updated;
     });
   };
@@ -72,6 +75,7 @@ export default function AdminJobsPage() {
     setJobs(prev => {
       const updated = prev.filter(j => j.id !== id);
       saveJobs(updated);
+      pushSharedJobs(updated);
       return updated;
     });
     setDeleteId(null);

@@ -11,6 +11,7 @@ import {
   isJobClosed, type Job, type JobType, type JobLevel,
 } from "@/lib/jobs-config";
 import { getStoredJobs, saveJobs, isJobsInitialized } from "@/lib/jobs-store";
+import { syncSharedJobsToLocal } from "@/lib/jobs-shared";
 import { cn } from "@/lib/utils";
 
 const API = process.env.NEXT_PUBLIC_API_BASE_URL || "https://skillbridge-backend2.onrender.com/api";
@@ -28,16 +29,24 @@ export default function JobsPage() {
 
   // Fetch from API on mount — API is authoritative, including an empty list
   useEffect(() => {
-    fetch(`${API}/jobs`)
-      .then(r => r.ok ? r.json() : Promise.reject())
-      .then(d => {
-        const list: Job[] = Array.isArray(d) ? d : d.data ?? [];
-        saveJobs(list);
-        setAllJobs(list);
-      })
-      .catch(() => {
-        // API unavailable — state already initialised from localStorage/static config
-      });
+    (async () => {
+      // Pull admin-published jobs from the shared store so ALL devices see the
+      // same list (adds/edits/deletes made by the admin on any device).
+      await syncSharedJobsToLocal();
+      const stored = isJobsInitialized() ? getStoredJobs() : jobsConfig;
+      setAllJobs(stored);
+
+      fetch(`${API}/jobs`)
+        .then(r => r.ok ? r.json() : Promise.reject())
+        .then(d => {
+          const list: Job[] = Array.isArray(d) ? d : d.data ?? [];
+          saveJobs(list);
+          setAllJobs(list);
+        })
+        .catch(() => {
+          // API unavailable — shared store / localStorage / static config already applied
+        });
+    })();
   }, []);
 
   const open   = allJobs.filter(j => !isJobClosed(j));
