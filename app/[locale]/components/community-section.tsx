@@ -12,6 +12,7 @@ import { Button } from "@/app/[locale]/components/ui/button";
 import { CountUp } from "@/app/[locale]/components/ui/count-up";
 import { communityFeatures } from "@/lib/community-config";
 import { getEffectiveCommunityConfig } from "@/lib/community-stats-store";
+import { syncSharedCommunityStatsToLocal } from "@/lib/community-shared";
 import { cn } from "@/lib/utils";
 import type { LucideIcon } from "lucide-react";
 
@@ -54,7 +55,12 @@ export function CommunitySection() {
 
   // Re-read overrides on mount (localStorage is only available client-side)
   useEffect(() => {
-    setCommunityConfig(getEffectiveCommunityConfig());
+    (async () => {
+      // Pull the latest admin-published overrides from the shared store so ALL
+      // devices show the same stats/links.
+      await syncSharedCommunityStatsToLocal();
+      setCommunityConfig(getEffectiveCommunityConfig());
+    })();
   }, []);
 
   const telegramUrl = communityConfig.find((p) => p.key === "telegram")?.url ?? "#";

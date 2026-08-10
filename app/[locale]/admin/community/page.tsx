@@ -12,6 +12,7 @@ import {
   saveCommunityStatsOverrides,
   type CommunityStatOverride,
 } from "@/lib/community-stats-store";
+import { pushSharedCommunityStats, syncSharedCommunityStatsToLocal } from "@/lib/community-shared";
 
 // ── Platform metadata ────────────────────────────────────────────────────────
 
@@ -37,7 +38,12 @@ export default function AdminCommunityPage() {
 
   // Load from localStorage on mount
   useEffect(() => {
-    setStats(loadCommunityStatsOverrides());
+    (async () => {
+      // Pull the latest admin-published overrides from the shared store so this
+      // admin panel shows what every device sees.
+      await syncSharedCommunityStatsToLocal();
+      setStats(loadCommunityStatsOverrides());
+    })();
   }, []);
 
   const updateField = (
@@ -55,6 +61,7 @@ export default function AdminCommunityPage() {
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
     saveCommunityStatsOverrides(stats);
+    pushSharedCommunityStats(stats);
     setDirty(false);
     setSaved(true);
     setTimeout(() => setSaved(false), 3500);
@@ -66,6 +73,7 @@ export default function AdminCommunityPage() {
       localStorage.removeItem("communityStatsOverrides");
     }
     setStats(loadCommunityStatsOverrides());
+    pushSharedCommunityStats([]);
     setDirty(false);
     setSaved(false);
   };

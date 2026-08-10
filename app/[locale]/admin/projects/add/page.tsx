@@ -14,6 +14,7 @@ import {
   type ProjectSubCategory,
 } from "@/lib/projects-config";
 import { getStoredProjects, saveProjects, type StoredProject } from "@/lib/project-store";
+import { pushSharedProjects } from "@/lib/projects-shared";
 
 const API = process.env.NEXT_PUBLIC_API_BASE_URL || "https://skillbridge-backend2.onrender.com/api";
 
@@ -130,6 +131,7 @@ export default function AddProjectPage() {
     // Persist to localStorage immediately so the public page and admin list update
     const existing = getStoredProjects();
     saveProjects([...existing, newProject]);
+    pushSharedProjects(getStoredProjects());
 
     try {
       const res = await fetch(`${API}/projects`, {

@@ -11,6 +11,7 @@ import { projectsConfig, CATEGORY_MAP, type ProjectCategory, type ProjectSubCate
 import {
   getStoredProjects, saveProjects, seedProjectsIfEmpty, type StoredProject,
 } from "@/lib/project-store";
+import { pushSharedProjects } from "@/lib/projects-shared";
 
 const API = process.env.NEXT_PUBLIC_API_BASE_URL || "https://skillbridge-backend2.onrender.com/api";
 
@@ -76,6 +77,7 @@ export default function ProjectsAdminPage() {
           }));
           setProjects(mapped);
           saveProjects(mapped);
+          pushSharedProjects(mapped);
           setLoading(false);
           return;
         }
@@ -102,6 +104,7 @@ export default function ProjectsAdminPage() {
     const updated = projects.filter(p => p.id !== id);
     setProjects(updated);
     saveProjects(updated);
+    pushSharedProjects(updated);
     setDeleteId(null);
   };
 
@@ -120,6 +123,7 @@ export default function ProjectsAdminPage() {
 
     setProjects(updated);
     saveProjects(updated);
+    pushSharedProjects(updated);
 
     try {
       await fetch(isEdit ? `${API}/projects/${data.id}` : `${API}/projects`, {

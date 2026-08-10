@@ -9,6 +9,7 @@ import ProjectCard from "@/app/[locale]/components/ui/project-card";
 import { SectionHeading } from "@/app/[locale]/components/ui/section-heading";
 import { projectsConfig, CATEGORY_MAP, type ProjectCategory, type ProjectConfig } from "@/lib/projects-config";
 import { getStoredProjects, saveProjects, type StoredProject } from "@/lib/project-store";
+import { syncSharedProjectsToLocal } from "@/lib/projects-shared";
 import { cn } from "@/lib/utils";
 
 const PAGE_SIZE = 50;
@@ -38,34 +39,39 @@ export default function ProjectsPage() {
   const [projects, setProjects] = useState<ProjectConfig[]>(projectsConfig);
 
   useEffect(() => {
-    // Tier 1: localStorage
-    const stored = getStoredProjects();
-    if (stored.length > 0) {
-      setProjects(stored.filter(p => p.status === "active").map(storedToConfig));
-    }
+    (async () => {
+      // Tier 0: shared store — admin edits on ANY device land here first
+      await syncSharedProjectsToLocal();
 
-    // Tier 2: API (authoritative)
-    fetch(`${API}/projects`)
-      .then(r => r.ok ? r.json() : Promise.reject())
-      .then(d => {
-        const list: any[] = Array.isArray(d) ? d : d.data ?? [];
-        if (list.length === 0) return;
-        const mapped: StoredProject[] = list.map((p: any) => ({
-          id:           p.id || p._id || "",
-          title:        p.title || p.name || "",
-          description:  p.description || "",
-          technologies: Array.isArray(p.technologies) ? p.technologies : [],
-          category:     p.category || "Web Development",
-          subCategory:  p.subCategory || p.sub_category || "",
-          studentName:  p.studentName || p.student || "",
-          demoUrl:      p.demoUrl || p.demo || "",
-          githubUrl:    p.githubUrl || p.github || "",
-          status:       (p.status || "active").toLowerCase(),
-        }));
-        saveProjects(mapped);
-        setProjects(mapped.filter(p => p.status === "active").map(storedToConfig));
-      })
-      .catch(() => {});
+      // Tier 1: localStorage
+      const stored = getStoredProjects();
+      if (stored.length > 0) {
+        setProjects(stored.filter(p => p.status === "active").map(storedToConfig));
+      }
+
+      // Tier 2: API (authoritative)
+      fetch(`${API}/projects`)
+        .then(r => r.ok ? r.json() : Promise.reject())
+        .then(d => {
+          const list: any[] = Array.isArray(d) ? d : d.data ?? [];
+          if (list.length === 0) return;
+          const mapped: StoredProject[] = list.map((p: any) => ({
+            id:           p.id || p._id || "",
+            title:        p.title || p.name || "",
+            description:  p.description || "",
+            technologies: Array.isArray(p.technologies) ? p.technologies : [],
+            category:     p.category || "Web Development",
+            subCategory:  p.subCategory || p.sub_category || "",
+            studentName:  p.studentName || p.student || "",
+            demoUrl:      p.demoUrl || p.demo || "",
+            githubUrl:    p.githubUrl || p.github || "",
+            status:       (p.status || "active").toLowerCase(),
+          }));
+          saveProjects(mapped);
+          setProjects(mapped.filter(p => p.status === "active").map(storedToConfig));
+        })
+        .catch(() => {});
+    })();
   }, []);
 
   const subCategories =
