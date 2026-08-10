@@ -91,7 +91,7 @@ export function ProjectsSection() {
   return (
     <section className="py-16">
       <div className="container mx-auto px-4">
-        <SectionHeading title={t("heading")} subtitle={t("subheading")} center />
+        <SectionHeading title={t("heading")} subtitle={t("subheading")} center titleHex="#1E90FF" />
 
         {/* Top-level category filter */}
         <div className="flex flex-wrap gap-2 justify-center mb-4">

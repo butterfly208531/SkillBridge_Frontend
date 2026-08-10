@@ -7,9 +7,10 @@ interface SectionHeadingProps {
   subtitle?: string
   center?: boolean
   titleColor?: string
+  titleHex?: string
 }
 
-export function SectionHeading({ title, subtitle, center = false, titleColor = "text-[#2196F3]" }: SectionHeadingProps) {
+export function SectionHeading({ title, subtitle, center = false, titleColor = "text-[#2196F3]", titleHex }: SectionHeadingProps) {
   return (
     <div className={`mb-12 ${center ? "text-center" : ""}`}>
       <motion.h2
@@ -17,7 +18,8 @@ export function SectionHeading({ title, subtitle, center = false, titleColor = "
         whileInView={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
         viewport={{ once: true }}
-        className={`${titleColor} font-inter text-2xl sm:text-3xl lg:text-4xl font-bold mb-2`}
+        className={`${titleHex ? "" : titleColor} font-inter text-2xl sm:text-3xl lg:text-4xl font-bold mb-2`}
+        style={titleHex ? { color: titleHex } : undefined}
       >
         {title}
       </motion.h2>
