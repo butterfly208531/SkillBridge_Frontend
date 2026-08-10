@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Image from "next/image";
-import { User, ExternalLink, Github, MapPin, Mail } from "lucide-react";
+import { User, ExternalLink, Github, MapPin, Mail, Figma } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface ProjectCardProps {
@@ -15,6 +15,7 @@ interface ProjectCardProps {
   studentName?: string;
   demoUrl?: string;
   githubUrl?: string;
+  figmaUrl?: string;
 }
 
 export default function ProjectCard({
@@ -26,6 +27,7 @@ export default function ProjectCard({
   studentName,
   demoUrl,
   githubUrl,
+  figmaUrl,
 }: ProjectCardProps) {
   return (
     <div className="flex flex-col h-full rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 bg-white border border-blue-100 group">
@@ -154,6 +156,19 @@ export default function ProjectCard({
             </span>
           )}
         </div>
+
+        {/* Figma button — only shown when figmaUrl is present */}
+        {figmaUrl && (
+          <a
+            href={figmaUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-2 flex items-center justify-center gap-1.5 py-2 rounded-xl text-sm font-bold text-white bg-[#9B59B6] hover:bg-purple-600 transition-colors shadow-sm"
+          >
+            <Figma className="h-3.5 w-3.5" aria-hidden="true" />
+            Figma Design
+          </a>
+        )}
 
         {/* Footer */}
         <div className="flex items-center justify-between pt-2.5 border-t border-blue-100 text-[10px] text-gray-400 gap-2">

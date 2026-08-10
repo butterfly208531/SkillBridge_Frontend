@@ -34,6 +34,7 @@ export interface ProjectConfig {
   studentName?: string;
   demoUrl?: string;
   githubUrl?: string;
+  figmaUrl?: string;
 }
 
 export const CATEGORY_MAP: Record<ProjectCategory, ProjectSubCategory[]> = {
@@ -66,6 +67,7 @@ export const projectsConfig: ProjectConfig[] = [
     studentName: "Dagim Mengestu",
     demoUrl: "https://skillbridge-ecomers-git-main-dagi-s-projects.vercel.app/",
     githubUrl: "https://github.com/Dagimmengestu5/skillbridge_ecomers",
+    figmaUrl: "https://www.figma.com/design/DF86BqoGDxOpsLLGOG1fDY/work-1?node-id=252-246&p=f&t=i3zkddVODaxtSDzb-0",
   },
   {
     id: "semira-shop-fullstack",
@@ -108,5 +110,86 @@ export const projectsConfig: ProjectConfig[] = [
     subCategory: "Business Websites",
     studentName: "Amare Tilaye",
     githubUrl: "https://github.com/Amaretilaye/property_managment",
+  },
+  {
+    id: "portfolio-website-brook",
+    title: "Personal Portfolio Website",
+    technologies: ["HTML", "CSS", "JavaScript", "React"],
+    description: "A modern personal portfolio showcasing projects, skills, and professional experience with smooth animations.",
+    category: "Web Development",
+    subCategory: "Portfolio Websites",
+    studentName: "Brook Alemu",
+  },
+  {
+    id: "task-automation-n8n",
+    title: "Business Task Automation with n8n",
+    technologies: ["n8n", "Webhooks", "REST API", "Notion"],
+    description: "Automated business workflows using n8n, connecting Notion, Gmail, and Slack for seamless task management.",
+    category: "Automation",
+    subCategory: "n8n Workflows",
+    studentName: "Yonas Bekele",
+  },
+  {
+    id: "ai-chatbot-support",
+    title: "AI Customer Support Chatbot",
+    technologies: ["Python", "OpenAI API", "FastAPI", "React"],
+    description: "An AI-powered customer support chatbot that handles FAQs, order tracking, and escalation to human agents.",
+    category: "AI",
+    subCategory: "Chatbots",
+    studentName: "Hana Tesfaye",
+  },
+  {
+    id: "odoo-hr-module",
+    title: "Odoo HR Management Module",
+    technologies: ["Odoo", "Python", "XML", "PostgreSQL"],
+    description: "Custom Odoo module for HR management including employee records, leave tracking, and payroll integration.",
+    category: "ERP",
+    subCategory: "Odoo Modules",
+    studentName: "Biruk Getachew",
+  },
+  {
+    id: "flutter-expense-tracker",
+    title: "Expense Tracker Mobile App",
+    technologies: ["Flutter", "Dart", "Firebase", "Hive"],
+    description: "Cross-platform mobile application for tracking daily expenses, budgeting, and generating spending reports.",
+    category: "Mobile",
+    subCategory: "Flutter Applications",
+    studentName: "Tigist Haile",
+  },
+  {
+    id: "python-data-analysis",
+    title: "Sales Data Analysis Dashboard",
+    technologies: ["Python", "Pandas", "Matplotlib", "Streamlit"],
+    description: "Interactive data analysis dashboard built with Streamlit to visualize sales trends and key business metrics.",
+    category: "Python",
+    subCategory: "Data Analysis Projects",
+    studentName: "Nahom Girma",
+  },
+  {
+    id: "api-integration-automation",
+    title: "CRM & Email Marketing Integration",
+    technologies: ["Python", "HubSpot API", "Mailchimp", "FastAPI"],
+    description: "Automated pipeline that syncs CRM contacts with Mailchimp for targeted email marketing campaigns.",
+    category: "Automation",
+    subCategory: "API Integrations",
+    studentName: "Meron Desta",
+  },
+  {
+    id: "ml-price-prediction",
+    title: "House Price Prediction Model",
+    technologies: ["Python", "Scikit-learn", "Pandas", "Flask"],
+    description: "Machine learning model that predicts house prices based on location, size, and amenities using regression algorithms.",
+    category: "AI",
+    subCategory: "Machine Learning Applications",
+    studentName: "Abel Worku",
+  },
+  {
+    id: "erp-inventory-system",
+    title: "ERP Inventory Management System",
+    technologies: ["Odoo", "Python", "XML", "JavaScript"],
+    description: "Full ERP inventory implementation for a retail business with stock tracking, reorder alerts, and supplier management.",
+    category: "ERP",
+    subCategory: "ERP Implementations",
+    studentName: "Selam Kebede",
   },
 ];
