@@ -10,12 +10,15 @@ import { SectionHeading } from "@/app/[locale]/components/ui/section-heading";
 import { projectsConfig, CATEGORY_MAP, type ProjectCategory } from "@/lib/projects-config";
 import { cn } from "@/lib/utils";
 
+const PAGE_SIZE = 50;
+
 const TOP_CATEGORIES = ["All", "ERP", "Web Development", "AI", "Automation", "Python", "Mobile"] as const;
 
 export default function ProjectsPage() {
   const t = useTranslations("projectsPage");
   const [activeCategory, setActiveCategory] = useState<string>("All");
   const [activeSubCategory, setActiveSubCategory] = useState<string>("All");
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
 
   const subCategories =
     activeCategory !== "All"
@@ -31,6 +34,7 @@ export default function ProjectsPage() {
   const handleCategoryClick = (cat: string) => {
     setActiveCategory(cat);
     setActiveSubCategory("All");
+    setVisibleCount(PAGE_SIZE);
   };
 
   return (
@@ -38,7 +42,7 @@ export default function ProjectsPage() {
       <Navbar />
       <main className="pt-8 pb-20">
         <div className="container mx-auto px-4">
-          <SectionHeading title={t("heading")} subtitle={t("subtitle")} center />
+          <SectionHeading title={t("heading")} subtitle={t("subtitle")} center titleHex="#1E90FF" />
 
           {/* Top-level categories */}
           <div className="flex flex-wrap gap-2 justify-center mb-4">
@@ -92,18 +96,31 @@ export default function ProjectsPage() {
           {filtered.length === 0 ? (
             <p className="text-center text-gray-500 dark:text-gray-400 py-16">{t("noProjects")}</p>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filtered.map((project, i) => (
-                <motion.div
-                  key={project.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.4, delay: i * 0.05 }}
-                >
-                  <ProjectCard {...project} />
-                </motion.div>
-              ))}
-            </div>
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {filtered.slice(0, visibleCount).map((project, i) => (
+                  <motion.div
+                    key={project.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.4, delay: Math.min(i, 9) * 0.05 }}
+                  >
+                    <ProjectCard {...project} />
+                  </motion.div>
+                ))}
+              </div>
+
+              {visibleCount < filtered.length && (
+                <div className="flex justify-center mt-10">
+                  <button
+                    onClick={() => setVisibleCount((prev) => prev + PAGE_SIZE)}
+                    className="px-8 py-3 rounded-xl text-sm font-bold text-white bg-[#F57C00] hover:bg-orange-500 transition-colors shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#F57C00]"
+                  >
+                    Load More ({filtered.length - visibleCount} remaining)
+                  </button>
+                </div>
+              )}
+            </>
           )}
         </div>
       </main>
