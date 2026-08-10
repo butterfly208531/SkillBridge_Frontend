@@ -55,7 +55,7 @@ export interface Course extends CourseBase {
 
 export interface CoursesConfig {
   key: number;
-  image: string;
+  image?: string;
   instructorImage?: string;
   title?: string;
   category?: string;

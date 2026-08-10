@@ -26,7 +26,7 @@ export const coursesConfig: CoursesConfig[] = [
     rating: 0,
     students: 0,
     status: "Active",
-    image: COURSE_IMAGES.python,
+    //image: COURSE_IMAGES.python,
     slug: "python-programming",
   },
   {
@@ -38,7 +38,7 @@ export const coursesConfig: CoursesConfig[] = [
     rating: 0,
     students: 0,
     status: "Active",
-    image: COURSE_IMAGES.computerBasics,
+   // image: COURSE_IMAGES.computerBasics,
     slug: "basic-computer-skills",
   },
   {
@@ -50,7 +50,7 @@ export const coursesConfig: CoursesConfig[] = [
     rating: 0,
     students: 0,
     status: "Active",
-    image: COURSE_IMAGES.flutter,
+    //image: COURSE_IMAGES.flutter,
     slug: "flutter-mobile-dev",
   },
   {
@@ -62,7 +62,7 @@ export const coursesConfig: CoursesConfig[] = [
     rating: 0,
     students: 0,
     status: "Active",
-    image: COURSE_IMAGES.fullstack,
+    //image: COURSE_IMAGES.fullstack,
     slug: "full-stack-web-dev",
   },
   {
@@ -74,7 +74,7 @@ export const coursesConfig: CoursesConfig[] = [
     rating: 0,
     students: 0,
     status: "Active",
-    image: COURSE_IMAGES.datascience,
+    //image: COURSE_IMAGES.datascience,
     slug: "data-science-ml",
   },
   {

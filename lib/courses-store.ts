@@ -1,17 +1,14 @@
 /**
  * Client-side courses store using localStorage.
  * Admin writes → public pages read.
- * Falls back to coursesConfig static data if no admin data saved yet.
  *
- * Image priority (highest → lowest):
- *   1. adminImageUrl  — explicitly uploaded/saved by admin in the modal
- *   2. config image   — curated Unsplash image from coursesConfig (matched by slug/title)
- *   3. imageUrl       — whatever the backend API returned
+ * No hardcoded fallback: if the admin has never saved any courses, this
+ * returns an empty array. Images only come from what the admin uploaded
+ * (adminImageUrl) or the backend API (imageUrl) — never from config.
  */
 
-import { coursesConfig } from "./courses-config";
-
 const STORAGE_KEY = "sb_courses_v1";
+const INIT_KEY    = "sb_courses_init_v1";
 
 export interface StoredCourse {
   id: string;
@@ -33,33 +30,10 @@ export interface StoredCourse {
   priority: number;
 }
 
-// ── config image lookups ───────────────────────────────────
-
-const configImageBySlug: Record<string, string> = {};
-const configImageByTitle: Record<string, string> = {};
-coursesConfig.forEach(c => {
-  if (c.slug  && c.image) configImageBySlug[c.slug.toLowerCase()]              = c.image;
-  if (c.title && c.image) configImageByTitle[c.title.toLowerCase().trim()]     = c.image;
-});
-
-/**
- * Look up our curated config image for any course by slug or title
- * (also handles partial/keyword mismatches like "Odoo Functional ERP" → "Odoo Functional").
- */
-export function getConfigImage(title: string, slugOrId: string): string | null {
-  const s = slugOrId.toLowerCase();
-  const t = title.toLowerCase().trim();
-  if (configImageBySlug[s])  return configImageBySlug[s];
-  if (configImageByTitle[t]) return configImageByTitle[t];
-  for (const [ct, img] of Object.entries(configImageByTitle)) {
-    if (t.includes(ct) || ct.includes(t)) return img;
-  }
-  return null;
-}
-
 /**
  * Resolve the best image for a course to show on public pages.
- * Call this everywhere instead of reading imageUrl directly.
+ * Admin-uploaded image wins; otherwise fall back to the API image.
+ * Config/static images are never used.
  */
 export function getEffectiveImage(course: {
   id?: string;
@@ -68,84 +42,44 @@ export function getEffectiveImage(course: {
   imageUrl?: string;
   adminImageUrl?: string;
 }): string {
-  // 1. Admin-uploaded image always wins
   if (course.adminImageUrl) return course.adminImageUrl;
-  // 2. Curated config image (consistent branding)
-  const configImg = getConfigImage(course.title || "", course.slug || course.id || "");
-  if (configImg) return configImg;
-  // 3. Whatever the API/store has
   return course.imageUrl || "";
-}
-
-// ── helpers ────────────────────────────────────────────────
-
-function defaultCourses(): StoredCourse[] {
-  return coursesConfig.map((c, index) => ({
-    id:               c.slug ?? String(c.key),
-    title:            c.title ?? "",
-    duration:         c.duration || "—",
-    category:         c.category ?? "",
-    categoryId:       c.category ?? "",
-    status:           (c.status?.toLowerCase() === "active" ? "active" : "draft") as "active" | "draft",
-    imageUrl:         c.image || "",
-    adminImageUrl:    undefined,
-    rating:           c.rating ?? 0,
-    shortDescription: "",
-    learningOutcomes: [],
-    priceOriginal:    0,
-    priceDiscounted:  0,
-    startDate:        "",
-    createdAt:        new Date().toISOString(),
-    priority:         index,
-  }));
-}
-
-/**
- * Patch stale imageUrls: only replace the old default placeholder.
- * Never overwrite adminImageUrl or real external URLs the admin set.
- */
-function patchImages(courses: StoredCourse[]): StoredCourse[] {
-  return courses.map(c => {
-    if (c.adminImageUrl) return c; // admin image — never touch
-    const isPlaceholder = !c.imageUrl || c.imageUrl === "/images/courses/default.jpg";
-    if (isPlaceholder) {
-      const fresh = configImageBySlug[c.id] || getConfigImage(c.title, c.id);
-      if (fresh) return { ...c, imageUrl: fresh };
-    }
-    return c;
-  });
 }
 
 // ── public API ─────────────────────────────────────────────
 
-/** Read all courses saved by admin, or fall back to static config */
+/** Read all courses saved by admin — returns the raw saved array (may be empty) */
 export function getStoredCourses(): StoredCourse[] {
-  if (typeof window === "undefined") return defaultCourses();
+  if (typeof window === "undefined") return [];
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) {
       const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed) && parsed.length > 0) {
-        // Backfill priority for older entries that pre-date this field
-        const withPriority = parsed.map((c: StoredCourse, index: number) => ({
-          ...c,
-          priority: c.priority ?? index,
-        }));
-        const patched = patchImages(withPriority);
-        if (patched.some((c, i) => c.imageUrl !== parsed[i].imageUrl || c.priority !== parsed[i].priority)) {
-          localStorage.setItem(STORAGE_KEY, JSON.stringify(patched));
-        }
-        return patched;
-      }
+      if (Array.isArray(parsed)) return parsed;
     }
   } catch {}
-  return defaultCourses();
+  return [];
+}
+
+/**
+ * True once admin has published courses data (even an empty list).
+ * Used to distinguish "no data yet" from "admin deleted everything".
+ */
+export function isCoursesInitialized(): boolean {
+  if (typeof window === "undefined") return false;
+  try {
+    if (localStorage.getItem(INIT_KEY) === "1") return true;
+    return getStoredCourses().length > 0;
+  } catch {
+    return false;
+  }
 }
 
 /** Save the full courses array to localStorage */
 export function saveCourses(data: StoredCourse[]): void {
   if (typeof window === "undefined") return;
   localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  localStorage.setItem(INIT_KEY, "1");
 }
 
 /** Add a new course and persist */

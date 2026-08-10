@@ -13,6 +13,7 @@ import {
   addCourse,
   saveCourses,
   moveCourse,
+  isCoursesInitialized,
   getEffectiveImage,
   type StoredCourse,
 } from "@/lib/courses-store";
@@ -33,7 +34,10 @@ const categoryColor: Record<string, string> = {
 
 // ─── Page ──────────────────────────────────────────────────────────────────
 export default function CoursesAdminPage() {
-  const [courses, setCourses]   = useState<StoredCourse[]>([]);
+  const [courses, setCourses]   = useState<StoredCourse[]>(() => {
+    // Pre-populate from localStorage so the table isn't empty before the API responds
+    return isCoursesInitialized() ? getStoredCourses() : [];
+  });
   const [search, setSearch]     = useState("");
   const [category, setCategory] = useState("All");
   const [categories, setCategories] = useState<string[]>(["All"]);
@@ -50,7 +54,7 @@ export default function CoursesAdminPage() {
     const cats = ["All", ...Array.from(new Set(local.map(c => c.category)))];
     setCategories(cats);
 
-    // Then try to refresh from the live API
+    // Then try to refresh from the live API — API is authoritative, including an empty list
     try {
       const token = sessionStorage.getItem("adminToken") || localStorage.getItem("adminToken") || "";
       const res = await fetch(`${API}/courses`, {
@@ -59,52 +63,56 @@ export default function CoursesAdminPage() {
       if (res.ok) {
         const d = await res.json();
         const list: any[] = Array.isArray(d) ? d : d.data ?? [];
-        if (list.length > 0) {
-          // Merge: keep adminImageUrl and admin-set prices from localStorage,
-          // API wins for everything else
-          const localMap = Object.fromEntries(local.map(s => [s.id, s]));
-          const merged: StoredCourse[] = list.map((c: any, index: number) => {
-            const stored = localMap[c.id] || localMap[c.slug] || null;
-            // Resolve price: API may return camelCase, snake_case, or other variants.
-            // If the API gives a non-zero value, use it; otherwise fall back to the
-            // admin-set value already in localStorage so it is never silently zeroed out.
-            const apiPriceOriginal =
-              c.priceOriginal ?? c.price_original ?? c.originalPrice ?? c.price ?? null;
-            const apiPriceDiscounted =
-              c.priceDiscounted ?? c.price_discounted ?? c.discountedPrice ?? c.monthlyPrice ?? null;
-            return {
-              id:               c.id || c._id || "",
-              title:            c.title || "",
-              duration:         c.duration || "—",
-              category:         c.category?.name || c.category || "",
-              categoryId:       c.categoryId || c.category?.id || "",
-              status:           (c.status?.toLowerCase() === "active" ? "active" : "draft") as "active" | "draft",
-              imageUrl:         c.imageUrl || "",
-              adminImageUrl:    stored?.adminImageUrl || undefined,
-              rating:           c.rating ?? 0,
-              shortDescription: c.shortDescription || "",
-              learningOutcomes: stored?.learningOutcomes ?? [],
-              // Prefer API value if non-zero; otherwise keep what admin set locally
-              priceOriginal:    (apiPriceOriginal != null && apiPriceOriginal > 0)
-                                  ? apiPriceOriginal
-                                  : (stored?.priceOriginal ?? 0),
-              priceDiscounted:  (apiPriceDiscounted != null && apiPriceDiscounted > 0)
-                                  ? apiPriceDiscounted
-                                  : (stored?.priceDiscounted ?? 0),
-              startDate:        c.startDate || "",
-              createdAt:        c.createdAt || new Date().toISOString(),
-              // Preserve admin-set priority; fall back to current list order
-              priority:         stored?.priority ?? index,
-            };
-          });
-          saveCourses(merged);
-          setCourses(merged);
-          const freshCats = ["All", ...Array.from(new Set(merged.map(c => c.category)))];
-          setCategories(freshCats);
-        }
+        // Merge: keep adminImageUrl and admin-set prices from localStorage,
+        // API wins for everything else
+        const localMap = Object.fromEntries(local.map(s => [s.id, s]));
+        const merged: StoredCourse[] = list.map((c: any, index: number) => {
+          const stored = localMap[c.id] || localMap[c.slug] || null;
+          // Resolve price: API may return camelCase, snake_case, or other variants.
+          // If the API gives a non-zero value, use it; otherwise fall back to the
+          // admin-set value already in localStorage so it is never silently zeroed out.
+          const apiPriceOriginal =
+            c.priceOriginal ?? c.price_original ?? c.originalPrice ?? c.price ?? null;
+          const apiPriceDiscounted =
+            c.priceDiscounted ?? c.price_discounted ?? c.discountedPrice ?? c.monthlyPrice ?? null;
+          return {
+            id:               c.id || c._id || "",
+            title:            c.title || "",
+            duration:         c.duration || "—",
+            category:         c.category?.name || c.category || "",
+            categoryId:       c.categoryId || c.category?.id || "",
+            status:           (c.status?.toLowerCase() === "active" ? "active" : "draft") as "active" | "draft",
+            imageUrl:         c.imageUrl || "",
+            adminImageUrl:    stored?.adminImageUrl || undefined,
+            rating:           c.rating ?? 0,
+            shortDescription: c.shortDescription || "",
+            learningOutcomes: stored?.learningOutcomes ?? [],
+            // Prefer API value if non-zero; otherwise keep what admin set locally
+            priceOriginal:    (apiPriceOriginal != null && apiPriceOriginal > 0)
+                                ? apiPriceOriginal
+                                : (stored?.priceOriginal ?? 0),
+            priceDiscounted:  (apiPriceDiscounted != null && apiPriceDiscounted > 0)
+                                ? apiPriceDiscounted
+                                : (stored?.priceDiscounted ?? 0),
+            startDate:        c.startDate || "",
+            createdAt:        c.createdAt || new Date().toISOString(),
+            // Preserve admin-set priority; fall back to current list order
+            priority:         stored?.priority ?? index,
+          };
+        });
+        saveCourses(merged);
+        setCourses(merged);
+        const freshCats = ["All", ...Array.from(new Set(merged.map(c => c.category)))];
+        setCategories(freshCats);
+      } else if (isCoursesInitialized()) {
+        // API down/unauthenticated — keep admin-saved localStorage data
+        setCourses(local);
+      } else {
+        setCourses([]);
       }
     } catch {
-      // Network error — localStorage data already shown, no-op
+      // Network error — keep what's already in state/localStorage
+      if (isCoursesInitialized()) setCourses(local);
     }
   };
 

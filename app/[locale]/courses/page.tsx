@@ -9,7 +9,7 @@ import BootcampCard from "@/app/[locale]/components/ui/bootcamp-card";
 import { Button } from "@/app/[locale]/components/ui/button";
 import { Input } from "@/app/[locale]/components/ui/input";
 import { fetchCourses } from "@/lib/api";
-import { getStoredCourses, getEffectiveImage } from "@/lib/courses-store";
+import { getStoredCourses, getEffectiveImage, isCoursesInitialized } from "@/lib/courses-store";
 import { cn } from "@/lib/utils";
 
 function courseToCardProps(c: any) {
@@ -47,7 +47,7 @@ export default function CoursesPage() {
 
   useEffect(() => {
     // Always show local store data first (admin-managed courses)
-    const stored = getStoredCourses();
+    const stored = isCoursesInitialized() ? getStoredCourses() : [];
     setCourses(stored.map(c => ({
       id:               c.id,
       slug:             c.id,
@@ -64,24 +64,23 @@ export default function CoursesPage() {
     })));
     setLoading(false);
 
-    // Refresh from API in background — merge adminImageUrl from store
+    // Refresh from API in background — API is authoritative, including an empty list
     fetchCourses()
       .then(data => {
-        if (Array.isArray(data) && data.length > 0) {
-          const storedMap = Object.fromEntries(getStoredCourses().map(s => [s.id, s]));
-          const merged = data.map((apiCourse: any) => {
-            const storedMatch = storedMap[apiCourse.slug || apiCourse.id]
-              || Object.values(storedMap).find(s =>
-                  s.title.toLowerCase() === (apiCourse.title || "").toLowerCase()
-                );
-            return {
-              ...apiCourse,
-              adminImageUrl: storedMatch?.adminImageUrl || undefined,
-              priority:      storedMatch?.priority ?? 999,
-            };
-          });
-          setCourses(merged);
-        }
+        const list = Array.isArray(data) ? data : [];
+        const storedMap = Object.fromEntries(getStoredCourses().map(s => [s.id, s]));
+        const merged = list.map((apiCourse: any) => {
+          const storedMatch = storedMap[apiCourse.slug || apiCourse.id]
+            || Object.values(storedMap).find(s =>
+                s.title.toLowerCase() === (apiCourse.title || "").toLowerCase()
+              );
+          return {
+            ...apiCourse,
+            adminImageUrl: storedMatch?.adminImageUrl || undefined,
+            priority:      storedMatch?.priority ?? 999,
+          };
+        });
+        setCourses(merged);
       })
       .catch(() => {/* keep stored data */});
   }, []);

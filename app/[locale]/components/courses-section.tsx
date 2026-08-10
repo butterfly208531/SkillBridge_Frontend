@@ -87,6 +87,12 @@ export function CoursesSection() {
         />
 
         <div className='w-full mb-8'>
+          {topCourses.length === 0 ? (
+            <div className="flex flex-col items-center justify-center gap-3 py-16 text-gray-400">
+              <Clock className="h-12 w-12 opacity-20" />
+              <p className="text-sm font-medium">We don&apos;t have any courses right now. Please check back soon.</p>
+            </div>
+          ) : (
           <div className='grid min-[840px]:grid-cols-3 gap-8 xl:gap-10 2xl:gap-12'>
             {topCourses.map((course, index) => (
               <AnimatedCard key={course.id} delay={0.1 * index}>
@@ -180,6 +186,7 @@ export function CoursesSection() {
               </AnimatedCard>
             ))}
           </div>
+          )}
         </div>
       </div>
     </section>
