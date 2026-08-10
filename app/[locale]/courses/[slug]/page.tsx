@@ -23,6 +23,7 @@ import { Navbar } from "../../components/navbar";
 import { useEffect, useState } from "react";
 import { fetchCourses, fetchCourseById, fetchCourseBySlug } from "@/lib/api";
 import { getStoredCourses } from "@/lib/courses-store";
+import { syncSharedCoursesToLocal } from "@/lib/courses-shared";
 
 /** Normalise a string to a URL slug for loose matching */
 function toSlug(str: string): string {
@@ -67,6 +68,7 @@ export default function CourseDetailPage() {
 
         // 3. Try localStorage store (admin-added courses use slug as id)
         // Also resolve any admin-set prices that may have been lost in the API merge
+        await syncSharedCoursesToLocal();
         const stored = getStoredCourses();
         const idSlug = toSlug(id);
         const storedMatch = stored.find(

@@ -10,6 +10,7 @@ import { Button } from "@/app/[locale]/components/ui/button";
 import { Input } from "@/app/[locale]/components/ui/input";
 import { fetchCourses } from "@/lib/api";
 import { getStoredCourses, getEffectiveImage, isCoursesInitialized } from "@/lib/courses-store";
+import { syncSharedCoursesToLocal } from "@/lib/courses-shared";
 import { cn } from "@/lib/utils";
 
 function courseToCardProps(c: any) {
@@ -46,30 +47,37 @@ export default function CoursesPage() {
   const [sortBy, setSortBy] = useState("rating");
 
   useEffect(() => {
-    // Always show local store data first (admin-managed courses)
-    const stored = isCoursesInitialized() ? getStoredCourses() : [];
-    setCourses(stored.map(c => ({
-      id:               c.id,
-      slug:             c.id,
-      title:            c.title,
-      shortDescription: c.shortDescription || "",
-      duration:         c.duration,
-      category:         { name: c.category },
-      rating:           c.rating,
-      imageUrl:         c.imageUrl,
-      adminImageUrl:    c.adminImageUrl,   // carry through so getEffectiveImage works
-      startDate:        c.startDate || undefined,
-      status:           c.status,
-      priority:         c.priority ?? 0,
-    })));
-    setLoading(false);
+    let cancelled = false;
 
-    // Refresh from API in background — merge, never drop admin-saved local courses
-    fetchCourses()
-      .then(data => {
+    (async () => {
+      // Pull admin-published courses from the shared cloud store into localStorage
+      await syncSharedCoursesToLocal();
+
+      // Always show local store data first (admin-managed courses)
+      const stored = isCoursesInitialized() ? getStoredCourses() : [];
+      if (cancelled) return;
+      setCourses(stored.map(c => ({
+        id:               c.id,
+        slug:             c.id,
+        title:            c.title,
+        shortDescription: c.shortDescription || "",
+        duration:         c.duration,
+        category:         { name: c.category },
+        rating:           c.rating,
+        imageUrl:         c.imageUrl,
+        adminImageUrl:    c.adminImageUrl,   // carry through so getEffectiveImage works
+        startDate:        c.startDate || undefined,
+        status:           c.status,
+        priority:         c.priority ?? 0,
+      })));
+      setLoading(false);
+
+      // Refresh from API in background — merge, never drop admin-saved local courses
+      try {
+        const data = await fetchCourses();
         const list = Array.isArray(data) ? data : [];
-        const stored = getStoredCourses();
-        const storedMap = Object.fromEntries(stored.map(s => [s.id, s]));
+        const storedNow = getStoredCourses();
+        const storedMap = Object.fromEntries(storedNow.map(s => [s.id, s]));
 
         const toDisplay = (c: any) => ({
           id:               c.id,
@@ -101,15 +109,19 @@ export default function CoursesPage() {
 
         // Keep admin-added local courses the backend doesn't have (including when API is empty)
         const matchedKeys = new Set(list.map((a: any) => (a.slug || a.id)));
-        stored.forEach(s => {
+        storedNow.forEach(s => {
           const alreadyInApi = matchedKeys.has(s.id)
             || list.some((a: any) => (a.title || "").toLowerCase() === (s.title || "").toLowerCase());
           if (!alreadyInApi) merged.push(toDisplay(s));
         });
 
-        setCourses(merged);
-      })
-      .catch(() => {/* keep stored data */});
+        if (!cancelled) setCourses(merged);
+      } catch {
+        /* keep stored data */
+      }
+    })();
+
+    return () => { cancelled = true; };
   }, []);
 
   // Build dynamic categories from real data

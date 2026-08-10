@@ -10,6 +10,7 @@ import BootcampCard from "@/app/[locale]/components/ui/bootcamp-card";
 import { Button } from "@/app/[locale]/components/ui/button";
 import { fetchCourses } from "@/lib/api";
 import { getStoredCourses, getEffectiveImage, isCoursesInitialized } from "@/lib/courses-store";
+import { syncSharedCoursesToLocal } from "@/lib/courses-shared";
 
 function courseToCardProps(c: any) {
   return {
@@ -34,31 +35,37 @@ export function BootcampsSection() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Start with locally-stored courses (includes admin uploads) immediately
-    const stored = getStoredCourses();
-    if (isCoursesInitialized()) {
-      setCourses(stored.map(c => ({
-        id:              c.id,
-        slug:            c.id,
-        title:           c.title,
-        shortDescription: c.shortDescription || "",
-        duration:        c.duration,
-        category:        { name: c.category },
-        rating:          c.rating,
-        imageUrl:        c.imageUrl,
-        adminImageUrl:   c.adminImageUrl,
-        status:          c.status,
-        priority:        c.priority ?? 0,
-      })));
-    }
-    setLoading(false);
+    let cancelled = false;
 
-    // Fetch from API — merge, never drop admin-saved local courses
-    fetchCourses()
-      .then(data => {
+    (async () => {
+      // Pull admin-published courses from the shared cloud store into localStorage
+      await syncSharedCoursesToLocal();
+
+      // Start with locally-stored courses (includes admin uploads) immediately
+      const stored = getStoredCourses();
+      if (isCoursesInitialized() && !cancelled) {
+        setCourses(stored.map(c => ({
+          id:              c.id,
+          slug:            c.id,
+          title:           c.title,
+          shortDescription: c.shortDescription || "",
+          duration:        c.duration,
+          category:        { name: c.category },
+          rating:          c.rating,
+          imageUrl:        c.imageUrl,
+          adminImageUrl:   c.adminImageUrl,
+          status:          c.status,
+          priority:        c.priority ?? 0,
+        })));
+      }
+      setLoading(false);
+
+      // Fetch from API — merge, never drop admin-saved local courses
+      try {
+        const data = await fetchCourses();
         if (Array.isArray(data)) {
-          const stored = getStoredCourses();
-          const storedMap = Object.fromEntries(stored.map(s => [s.id, s]));
+          const storedNow = getStoredCourses();
+          const storedMap = Object.fromEntries(storedNow.map(s => [s.id, s]));
 
           const toDisplay = (c: any) => ({
             id:               c.id,
@@ -90,18 +97,20 @@ export function BootcampsSection() {
 
           // Keep admin-added local courses the backend doesn't have (including when API is empty)
           const matchedKeys = new Set(data.map((a: any) => (a.slug || a.id)));
-          stored.forEach(s => {
+          storedNow.forEach(s => {
             const alreadyInApi = matchedKeys.has(s.id)
               || data.some((a: any) => (a.title || "").toLowerCase() === (s.title || "").toLowerCase());
             if (!alreadyInApi) merged.push(toDisplay(s));
           });
 
-          setCourses(merged);
+          if (!cancelled) setCourses(merged);
         }
-      })
-      .catch(() => {
+      } catch {
         // API unavailable — localStorage data already applied above
-      });
+      }
+    })();
+
+    return () => { cancelled = true; };
   }, []);
 
   // Sort by priority (admin-set) first, then by rating as tiebreaker

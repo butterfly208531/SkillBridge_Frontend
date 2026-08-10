@@ -17,6 +17,7 @@ import { Button } from "./ui/button";
 import { useEffect, useState } from "react";
 import { fetchCourses } from "@/lib/api";
 import { getStoredCourses, getEffectiveImage } from "@/lib/courses-store";
+import { syncSharedCoursesToLocal } from "@/lib/courses-shared";
 
 // Remove old per-component lookup — getEffectiveImage handles all matching in courses-store
 
@@ -28,6 +29,9 @@ export function CoursesSection() {
   useEffect(() => {
     const loadCourses = async () => {
       try {
+        // Pull admin-published courses from the shared cloud store into localStorage
+        await syncSharedCoursesToLocal();
+
         // Build a map of stored courses so adminImageUrl survives the API merge
         const stored = getStoredCourses();
         const storedMap = Object.fromEntries(stored.map(s => [s.id, s]));

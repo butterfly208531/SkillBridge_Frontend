@@ -17,6 +17,7 @@ import {
   getEffectiveImage,
   type StoredCourse,
 } from "@/lib/courses-store";
+import { pushSharedCourses } from "@/lib/courses-shared";
 import AdminHeader from "../components/AdminHeader";
 import { cn } from "@/lib/utils";
 
@@ -114,6 +115,11 @@ export default function CoursesAdminPage() {
       // Network error — keep what's already in state/localStorage
       if (isCoursesInitialized()) setCourses(local);
     }
+
+    // Publish the authoritative list to the shared cloud store (best-effort) so
+    // other devices see admin changes too. Runs on every refresh/mutation.
+    const pushed = await pushSharedCourses(getStoredCourses());
+    if (!pushed) console.warn("[courses] Could not sync courses to the shared store");
   };
 
   useEffect(() => { loadCourses(); }, []);

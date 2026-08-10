@@ -6,7 +6,8 @@ import { ArrowLeft, CheckCircle, Loader2, Upload, X } from "lucide-react";
 import AdminHeader from "../../components/AdminHeader";
 import { uploadImage } from "@/lib/uploadImage";
 import { getAllCategories } from "@/lib/courses-config";
-import { addCourse } from "@/lib/courses-store";
+import { addCourse, getStoredCourses, type StoredCourse } from "@/lib/courses-store";
+import { pushSharedCourses } from "@/lib/courses-shared";
 import { adminApi } from "@/lib/api";
 
 export default function AddCoursePage() {
@@ -99,7 +100,7 @@ export default function AddCoursePage() {
     setError("");
 
     const selectedCat = categories.find(c => c.id === basic.categoryId);
-    const courseData = {
+    const courseData: Omit<StoredCourse, "id" | "createdAt"> = {
       title:            basic.title.trim(),
       duration:         basic.duration || "—",
       category:         selectedCat?.name || basic.categoryId,
@@ -119,10 +120,9 @@ export default function AddCoursePage() {
       // 1. Try to save to backend — this makes it visible to everyone
       await adminApi.createCourse({
         title:            courseData.title,
-        category:         courseData.category,
         categoryId:       courseData.categoryId,
         duration:         courseData.duration,
-        status:           basic.status,
+        status:           (basic.status === "PUBLISHED" ? "Active" : "Draft") as "Active" | "Draft",
         imageUrl:         courseData.imageUrl,
         shortDescription: courseData.shortDescription,
         priceOriginal:    courseData.priceOriginal,
@@ -137,6 +137,14 @@ export default function AddCoursePage() {
     // 2. Always save to localStorage so it shows immediately in this browser too
     try {
       addCourse(courseData);
+
+      // 3. Publish the full list to the shared cloud store so OTHER devices see it.
+      //    This is the fix for "shows on my browser but not on other devices".
+      const pushed = await pushSharedCourses(getStoredCourses());
+      if (!pushed) {
+        setError("Course saved in this browser only. The shared store could not be reached, so other devices may not see it yet.");
+      }
+
       setSuccess(true);
       setTimeout(() => window.location.href = `/${locale}/admin/courses`, 1200);
     } catch (err: any) {
