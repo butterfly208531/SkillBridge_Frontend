@@ -53,7 +53,6 @@ function toStoredCourse(c: Course) {
     priceDiscounted:  c.priceDiscounted || 0,
     startDate:        c.startDate || "",
     createdAt:        c.createdAt || new Date().toISOString(),
-    priority:         0,
   };
 }
 
