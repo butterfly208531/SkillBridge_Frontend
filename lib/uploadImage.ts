@@ -10,9 +10,6 @@
  *      NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET=your_preset_name
  */
 
-const CLOUD_NAME   = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
-const UPLOAD_PRESET = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
-
 export interface UploadResult {
   url: string;       // secure HTTPS URL
   publicId: string;  // Cloudinary public_id (useful for deletions)
@@ -27,6 +24,10 @@ export async function uploadImage(
   folder = "courses",
   onProgress?: (percent: number) => void,
 ): Promise<UploadResult> {
+  // Read at call-time so Vercel env vars are always picked up after a redeploy
+  const CLOUD_NAME    = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
+  const UPLOAD_PRESET = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
+
   if (!CLOUD_NAME || !UPLOAD_PRESET) {
     throw new Error(
       "Cloudinary is not configured. Add NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME and " +
