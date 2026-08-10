@@ -29,7 +29,7 @@ export default function ProjectCard({
   figmaUrl,
 }: ProjectCardProps) {
   return (
-    <div className="flex flex-col h-full rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 bg-white border border-[#1E90FF]/20 group">
+    <div className="flex flex-col h-full rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 bg-white group" style={{ border: "1px solid rgba(30,144,255,0.2)" }}>
 
       {/* ── Header banner ── */}
       <div className="relative bg-[#1E90FF] px-5 pt-5 pb-8">
@@ -91,7 +91,7 @@ export default function ProjectCard({
         </p>
 
         {/* Divider */}
-        <div className="h-px w-full bg-gradient-to-r from-transparent via-[#1E90FF]/20 to-transparent" />
+        <div className="h-px w-full" style={{ background: "linear-gradient(to right, transparent, rgba(30,144,255,0.2), transparent)" }} />
 
         {/* Tech stack */}
         {technologies.length > 0 && (
@@ -103,7 +103,8 @@ export default function ProjectCard({
               {technologies.slice(0, 5).map((tech) => (
                 <span
                   key={tech}
-                  className="px-2 py-0.5 rounded-md text-[11px] font-semibold bg-[#1E90FF]/8 text-[#1E90FF] border border-[#1E90FF]/25"
+                  className="px-2 py-0.5 rounded-md text-[11px] font-semibold text-[#1E90FF]"
+                  style={{ background: "rgba(30,144,255,0.08)", border: "1px solid rgba(30,144,255,0.25)" }}
                 >
                   {tech}
                 </span>
@@ -143,7 +144,10 @@ export default function ProjectCard({
               href={githubUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-sm font-bold text-[#1E90FF] bg-white border-2 border-[#1E90FF] hover:bg-[#1E90FF]/8 transition-colors"
+              className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-sm font-bold text-[#1E90FF] bg-white border-2 border-[#1E90FF] transition-colors"
+              style={{}}
+              onMouseEnter={e => (e.currentTarget.style.background = "rgba(30,144,255,0.08)")}
+              onMouseLeave={e => (e.currentTarget.style.background = "white")}
             >
               <Github className="h-3.5 w-3.5" aria-hidden="true" />
               GitHub
@@ -170,7 +174,7 @@ export default function ProjectCard({
         )}
 
         {/* Footer */}
-        <div className="flex items-center justify-between pt-2.5 border-t border-[#1E90FF]/15 text-[10px] text-[#1E90FF]/45 gap-2">
+        <div className="flex items-center justify-between pt-2.5 text-[10px] gap-2" style={{ borderTop: "1px solid rgba(30,144,255,0.15)", color: "rgba(30,144,255,0.45)" }}>
           <span className="flex items-center gap-1">
             <MapPin className="h-3 w-3 text-[#F57C00]" />
             Addis Ababa, Ethiopia
