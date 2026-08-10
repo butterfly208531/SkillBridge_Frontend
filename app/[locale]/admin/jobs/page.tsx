@@ -5,7 +5,7 @@ import { Plus, Pencil, Trash2, Briefcase, MapPin, Clock, RefreshCw, Eye, EyeOff 
 import AdminHeader from "../components/AdminHeader";
 import { cn } from "@/lib/utils";
 import { jobsConfig, categoryColor, typeColor, isJobClosed, type Job } from "@/lib/jobs-config";
-import { getStoredJobs, saveJobs } from "@/lib/jobs-store";
+import { getStoredJobs, saveJobs, isJobsInitialized } from "@/lib/jobs-store";
 
 const API = process.env.NEXT_PUBLIC_API_BASE_URL || "https://skillbridge-backend2.onrender.com/api";
 
@@ -17,8 +17,7 @@ function formatDate(iso: string) {
 export default function AdminJobsPage() {
   const [jobs,      setJobs]      = useState<Job[]>(() => {
     // Pre-populate from localStorage so the table isn't empty before the API responds
-    const stored = getStoredJobs();
-    return stored.length > 0 ? stored : jobsConfig;
+    return isJobsInitialized() ? getStoredJobs() : jobsConfig;
   });
   const [loading,   setLoading]   = useState(false);
   const [deleteId,  setDeleteId]  = useState<string | null>(null);
@@ -32,18 +31,13 @@ export default function AdminJobsPage() {
       .then(r => r.ok ? r.json() : Promise.reject())
       .then(d => {
         const list: Job[] = Array.isArray(d) ? d : d.data ?? [];
-        if (list.length > 0) {
-          setJobs(list);
-          saveJobs(list); // persist so public page stays in sync
-        } else {
-          // API returned empty — keep localStorage / static
-          const stored = getStoredJobs();
-          setJobs(stored.length > 0 ? stored : jobsConfig);
-        }
+        // API is authoritative — even an empty list means all jobs were deleted
+        setJobs(list);
+        saveJobs(list); // persist so public page stays in sync
       })
       .catch(() => {
         const stored = getStoredJobs();
-        setJobs(stored.length > 0 ? stored : jobsConfig);
+        setJobs(isJobsInitialized() ? stored : jobsConfig);
       })
       .finally(() => setLoading(false));
   };

@@ -168,11 +168,9 @@ export default function DashboardPage() {
         const data = await res.json();
         const list = Array.isArray(data) ? data : data.data ?? [];
         setJobs(list.length);
-        // Persist for public page
-        if (list.length > 0) {
-          const { saveJobs } = await import("@/lib/jobs-store");
-          saveJobs(list);
-        }
+        // Persist for public page (even an empty list = all jobs deleted)
+        const { saveJobs } = await import("@/lib/jobs-store");
+        saveJobs(list);
       } else {
         setJobs(getStoredJobs().length);
       }

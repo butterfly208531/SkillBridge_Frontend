@@ -9,7 +9,7 @@ import { Button } from "@/app/[locale]/components/ui/button";
 import { SectionHeading } from "@/app/[locale]/components/ui/section-heading";
 import ScholarshipCard from "@/app/[locale]/components/ui/scholarship-card";
 import { scholarshipsConfig, scholarshipWinnersConfig, isClosed, type ScholarshipConfig } from "@/lib/scholarships-config";
-import { getStoredScholarships, saveScholarships, getStoredWinners, saveWinners, type StoredScholarship, type StoredWinner } from "@/lib/scholarship-store";
+import { getStoredScholarships, saveScholarships, getStoredWinners, saveWinners, isScholarshipsInitialized, isWinnersInitialized, type StoredScholarship, type StoredWinner } from "@/lib/scholarship-store";
 import { Archive } from "lucide-react";
 
 // Merge stored scholarship data with static config defaults
@@ -34,45 +34,46 @@ function mergeWithConfig(stored: StoredScholarship): ScholarshipConfig & { nameO
 export function ScholarshipsSection({ showAll = false }: { showAll?: boolean }) {
   const t = useTranslations("scholarshipsSection");
 
-  // Always initialise from static config so server and client render the same HTML.
-  // localStorage is loaded in useEffect (client-only) to avoid hydration mismatches.
-  const [scholarships, setScholarships] = useState<ReturnType<typeof mergeWithConfig>[]>(
-    () => scholarshipsConfig.map(s => ({ ...s, nameOverride: "", eligibilityOverride: "" }))
+  // Initialise from localStorage when the admin has published data (even if empty),
+  // otherwise fall back to static config so server and client render the same HTML.
+  const [scholarships, setScholarships] = useState<ReturnType<typeof mergeWithConfig>[]>(() =>
+    isScholarshipsInitialized()
+      ? getStoredScholarships().map(mergeWithConfig)
+      : scholarshipsConfig.map(s => ({ ...s, nameOverride: "", eligibilityOverride: "" }))
   );
 
-  // Winners: seed from static config so the first render matches SSR, then
-  // swap in localStorage data (and optionally the API) on the client.
-  const [winners, setWinners] = useState<StoredWinner[]>(
-    () => scholarshipWinnersConfig.map(w => ({
-      id:         w.id,
-      name:       w.name,
-      image:      w.image,
-      scholarship: w.scholarshipKey.replace(/([A-Z])/g, " $1").trim() + " Scholarship",
-      year:       w.year,
-      status:     "active" as const,
-    }))
+  // Winners: seed from stored data once admin has saved any (even empty), else static config.
+  const [winners, setWinners] = useState<StoredWinner[]>(() =>
+    isWinnersInitialized()
+      ? getStoredWinners()
+      : scholarshipWinnersConfig.map(w => ({
+          id:         w.id,
+          name:       w.name,
+          image:      w.image,
+          scholarship: w.scholarshipKey.replace(/([A-Z])/g, " $1").trim() + " Scholarship",
+          year:       w.year,
+          status:     "active" as const,
+        }))
   );
   useEffect(() => {
     const API = process.env.NEXT_PUBLIC_API_BASE_URL || "https://skillbridge-backend2.onrender.com/api";
 
-    // Load winners from localStorage first (admin-saved data)
+    // Re-read localStorage first (covers same-browser admin edits) — honor empty lists
     const localWinners = getStoredWinners();
-    if (localWinners.length > 0) {
+    if (isWinnersInitialized()) {
       setWinners(localWinners);
     }
 
-    // Re-read localStorage first (covers same-browser admin edits)
     const stored = getStoredScholarships();
-    if (stored.length > 0) {
+    if (isScholarshipsInitialized()) {
       setScholarships(stored.map(mergeWithConfig));
     }
 
-    // Then try the backend — if it has data, it is authoritative
+    // Then try the backend — if it responds, it is authoritative, including an empty list
     fetch(`${API}/scholarships`)
       .then(r => r.ok ? r.json() : Promise.reject())
       .then(d => {
         const list: any[] = Array.isArray(d) ? d : d.data ?? [];
-        if (list.length === 0) return;
         const mapped: StoredScholarship[] = list.map((s: any) => ({
           id:                 s.id || s._id || "",
           name:               s.name || s.title || "",
@@ -95,12 +96,11 @@ export function ScholarshipsSection({ showAll = false }: { showAll?: boolean }) 
         // API unavailable — localStorage/static config already applied above
       });
 
-    // Try winners API — if it returns data, it overrides localStorage
+    // Try winners API — if it responds, it overrides localStorage, including an empty list
     fetch(`${API}/scholarship-winners`)
       .then(r => r.ok ? r.json() : Promise.reject())
       .then(d => {
         const list: any[] = Array.isArray(d) ? d : d.data ?? [];
-        if (list.length === 0) return;
         const mapped: StoredWinner[] = list.map((w: any) => ({
           id:         w.id || w._id || "",
           name:       w.name || w.studentName || "",
@@ -127,8 +127,14 @@ export function ScholarshipsSection({ showAll = false }: { showAll?: boolean }) 
         <SectionHeading title={t("heading")} subtitle={t("subheading")} center />
 
         {/* Active cards */}
-        <div className={`grid grid-cols-1 md:grid-cols-2 ${showAll ? "lg:grid-cols-4" : "lg:grid-cols-3"} gap-6 mb-8 items-stretch`}>
-          {visible.map((scholarship, i) => (
+        {scholarships.length === 0 ? (
+          <div className="flex flex-col items-center justify-center gap-3 py-16 text-gray-400">
+            <Archive className="h-12 w-12 opacity-20" />
+            <p className="text-sm font-medium">We don&apos;t have any scholarships right now. Please check back soon.</p>
+          </div>
+        ) : (
+        <>
+        <div className={`grid grid-cols-1 md:grid-cols-2 ${showAll ? "lg:grid-cols-4" : "lg:grid-cols-3"} gap-6 mb-8 items-stretch`}>          {visible.map((scholarship, i) => (
             <motion.div
               key={scholarship.id}
               initial={{ opacity: 0, y: 20 }}
@@ -196,6 +202,8 @@ export function ScholarshipsSection({ showAll = false }: { showAll?: boolean }) 
               ))}
             </div>
           </div>
+        )}
+        </>
         )}
 
         {/* Previous winners */}

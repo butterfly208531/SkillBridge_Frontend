@@ -5,7 +5,7 @@ import { Plus, Pencil, Trash2, Award, Users, Calendar, CheckCircle, RefreshCw, L
 import AdminHeader from "../components/AdminHeader";
 import { cn } from "@/lib/utils";
 import { scholarshipsConfig, scholarshipWinnersConfig } from "@/lib/scholarships-config";
-import { getStoredScholarships, saveScholarships, getStoredWinners, saveWinners, type StoredScholarship, type StoredWinner } from "@/lib/scholarship-store";
+import { getStoredScholarships, saveScholarships, getStoredWinners, saveWinners, isScholarshipsInitialized, isWinnersInitialized, type StoredScholarship, type StoredWinner } from "@/lib/scholarship-store";
 
 const API = process.env.NEXT_PUBLIC_API_BASE_URL || "https://skillbridge-backend2.onrender.com/api";
 
@@ -60,8 +60,13 @@ const FALLBACK_WINNERS: Winner[] = scholarshipWinnersConfig.map(w => ({
 }));
 
 export default function ScholarshipsPage() {
-  const [scholarships, setScholarships] = useState<Scholarship[]>([]);
-  const [winners, setWinners] = useState<Winner[]>([]);
+  const [scholarships, setScholarships] = useState<Scholarship[]>(() => {
+    // Pre-populate from localStorage so the table isn't empty before the API responds
+    return isScholarshipsInitialized() ? (getStoredScholarships() as unknown as Scholarship[]) : [];
+  });
+  const [winners, setWinners] = useState<Winner[]>(() => {
+    return isWinnersInitialized() ? getStoredWinners() : [];
+  });
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<"programs" | "winners">("programs");
   const [showModal, setShowModal] = useState(false);
@@ -94,73 +99,65 @@ export default function ScholarshipsPage() {
       if (schRes.ok) {
         const d = await schRes.json();
         const data = Array.isArray(d) ? d : d.data ?? [];
-        if (data.length > 0) {
-          const mapped = data.map((s: any) => ({
-            id: s.id || s._id,
-            name: s.name || s.title || "",
-            courseId: s.courseId || s.course?.id || "",
-            course: s.course?.title || s.courseName || s.courseId || "",
-            applicationsCount: s.applicationsCount || 0,
-            winnersCount: s.winnersCount || 0,
-            deadline: s.deadline || s.endDate || "",
-            eligibility: s.eligibility || s.requirements || "",
-            status: (s.status || "active").toLowerCase(),
-            applicationFormUrl: s.applicationFormUrl || "",
-          }));
-          setScholarships(mapped);
-          saveScholarships(mapped);
-        } else if (localData.length > 0) {
-          setScholarships(localData);
-        } else {
-          setScholarships(FALLBACK_SCHOLARSHIPS);
-        }
-      } else if (localData.length > 0) {
-        setScholarships(localData);
+        // API is authoritative — even an empty list means all scholarships were deleted
+        const mapped: Scholarship[] = data.map((s: any) => ({
+          id: s.id || s._id,
+          name: s.name || s.title || "",
+          courseId: s.courseId || s.course?.id || "",
+          course: s.course?.title || s.courseName || s.courseId || "",
+          applicationsCount: s.applicationsCount || 0,
+          winnersCount: s.winnersCount || 0,
+          deadline: s.deadline || s.endDate || "",
+          eligibility: s.eligibility || s.requirements || "",
+          status: (s.status || "active").toLowerCase(),
+          applicationFormUrl: s.applicationFormUrl || "",
+        }));
+        setScholarships(mapped);
+        const toStore: StoredScholarship[] = mapped.map(s => ({
+          id:                 s.id,
+          name:               s.name,
+          courseId:           s.courseId,
+          course:             s.course,
+          applicationsCount:  s.applicationsCount,
+          winnersCount:       s.winnersCount,
+          deadline:           s.deadline,
+          eligibility:        s.eligibility,
+          status:             s.status,
+          fundingType:        (s as any).fundingType  ?? "full",
+          tuitionAmount:      (s as any).tuitionAmount ?? 0,
+          applicationFormUrl: s.applicationFormUrl    ?? "",
+        }));
+        saveScholarships(toStore);
       } else {
-        setScholarships(FALLBACK_SCHOLARSHIPS);
+        setScholarships(isScholarshipsInitialized() ? localData as unknown as Scholarship[] : FALLBACK_SCHOLARSHIPS);
       }
 
       if (winRes.ok) {
         const d = await winRes.json();
         const data = Array.isArray(d) ? d : d.data ?? [];
-        if (data.length > 0) {
-          const mapped: Winner[] = data.map((w: any) => ({
-            id: w.id || w._id,
-            name: w.name || w.studentName || "",
-            image: w.image || w.photo || "",
-            scholarship: w.scholarship || w.scholarshipName || "",
-            year: w.year || new Date(w.awardedAt || Date.now()).getFullYear(),
-            status: (w.status || "active").toLowerCase(),
-          }));
-          setWinners(mapped);
-          saveWinners(mapped.map(w => ({ ...w, status: w.status as "active" | "inactive" })));
-        } else {
-          setWinners(localWinners);
-        }
+        // API is authoritative — even an empty list means all winners were deleted
+        const mapped: Winner[] = data.map((w: any) => ({
+          id: w.id || w._id,
+          name: w.name || w.studentName || "",
+          image: w.image || w.photo || "",
+          scholarship: w.scholarship || w.scholarshipName || "",
+          year: w.year || new Date(w.awardedAt || Date.now()).getFullYear(),
+          status: (w.status || "active").toLowerCase(),
+        }));
+        setWinners(mapped);
+        saveWinners(mapped.map(w => ({ ...w, status: w.status as "active" | "inactive" })));
       } else {
-        setWinners(localWinners);
+        setWinners(isWinnersInitialized() ? localWinners : FALLBACK_WINNERS);
       }
     } catch {
-      setScholarships(localData.length > 0 ? localData : FALLBACK_SCHOLARSHIPS);
-      setWinners(localWinners);
+      setScholarships(isScholarshipsInitialized() ? localData as unknown as Scholarship[] : FALLBACK_SCHOLARSHIPS);
+      setWinners(isWinnersInitialized() ? localWinners : FALLBACK_WINNERS);
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => { 
-    // Initialize store with fallback data if empty
-    const local = getStoredScholarships();
-    if (local.length === 0) {
-      saveScholarships(FALLBACK_SCHOLARSHIPS as any);
-    }
-    // Seed winners store if empty
-    const localW = getStoredWinners();
-    if (localW.length === 0) {
-      saveWinners(FALLBACK_WINNERS.map(w => ({ ...w, status: w.status as "active" | "inactive" })));
-    }
-    fetchData(); 
-  }, []);
+  useEffect(() => { fetchData(); }, []);
 
   const handleDelete = async (id: string) => {
     const token = sessionStorage.getItem("adminToken");

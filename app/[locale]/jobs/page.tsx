@@ -10,7 +10,7 @@ import {
   jobsConfig, JOB_CATEGORIES, JOB_TYPES, JOB_LEVELS,
   isJobClosed, type Job, type JobType, type JobLevel,
 } from "@/lib/jobs-config";
-import { getStoredJobs, saveJobs } from "@/lib/jobs-store";
+import { getStoredJobs, saveJobs, isJobsInitialized } from "@/lib/jobs-store";
 import { cn } from "@/lib/utils";
 
 const API = process.env.NEXT_PUBLIC_API_BASE_URL || "https://skillbridge-backend2.onrender.com/api";
@@ -18,8 +18,7 @@ const API = process.env.NEXT_PUBLIC_API_BASE_URL || "https://skillbridge-backend
 export default function JobsPage() {
   const [allJobs,     setAllJobs]     = useState<Job[]>(() => {
     // Sync init from localStorage so first render isn't empty
-    const stored = getStoredJobs();
-    return stored.length > 0 ? stored : jobsConfig;
+    return isJobsInitialized() ? getStoredJobs() : jobsConfig;
   });
   const [search,      setSearch]      = useState("");
   const [category,    setCategory]    = useState("All");
@@ -27,18 +26,14 @@ export default function JobsPage() {
   const [level,       setLevel]       = useState<JobLevel | "All">("All");
   const [showFilters, setShowFilters] = useState(false);
 
-  // Fetch from API on mount — same smart-merge logic as jobs-section.tsx
+  // Fetch from API on mount — API is authoritative, including an empty list
   useEffect(() => {
     fetch(`${API}/jobs`)
       .then(r => r.ok ? r.json() : Promise.reject())
       .then(d => {
         const list: Job[] = Array.isArray(d) ? d : d.data ?? [];
-        if (list.length === 0) return;
-        const local = getStoredJobs();
-        if (list.length >= local.length) {
-          saveJobs(list);
-          setAllJobs(list);
-        }
+        saveJobs(list);
+        setAllJobs(list);
       })
       .catch(() => {
         // API unavailable — state already initialised from localStorage/static config
@@ -171,7 +166,12 @@ export default function JobsPage() {
         </div>
 
         {/* Open jobs */}
-        {filteredOpen.length === 0 && filteredClosed.length === 0 ? (
+        {allJobs.length === 0 ? (
+          <div className="text-center py-20 text-gray-400">
+            <Briefcase className="h-14 w-14 mx-auto mb-3 opacity-20" />
+            <p className="text-base font-medium">We don&apos;t have any job openings right now. Please check back soon.</p>
+          </div>
+        ) : filteredOpen.length === 0 && filteredClosed.length === 0 ? (
           <div className="text-center py-20 text-gray-400">
             <Briefcase className="h-14 w-14 mx-auto mb-3 opacity-20" />
             <p className="text-base font-medium">No jobs found matching your search</p>
