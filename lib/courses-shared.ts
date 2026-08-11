@@ -89,7 +89,9 @@ export async function syncSharedCoursesToLocal(): Promise<void> {
     return {
       ...c,
       adminImageUrl: l.adminImageUrl || c.adminImageUrl,
-      priority: l.priority ?? c.priority,
+      // The shared store is the published truth — its priority order wins so a
+      // device holding stale priorities can't clobber another device's reorder.
+      priority: c.priority ?? l.priority,
     };
   });
   saveCourses(merged);

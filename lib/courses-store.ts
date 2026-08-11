@@ -125,7 +125,9 @@ export function toggleCourseStatus(id: string): boolean {
 
 /**
  * Move a course one position up (lower priority number) or down.
- * Re-normalises the full list so priorities stay contiguous after the swap.
+ * Operates on the same priority-sorted sequence the public page shows, then
+ * re-normalises priorities to 0..n-1 so a move always has a visible effect
+ * even when courses share the same priority value.
  */
 export function moveCourse(id: string, direction: "up" | "down"): boolean {
   const all = [...getStoredCourses()].sort((a, b) => (a.priority ?? 0) - (b.priority ?? 0));
@@ -133,10 +135,12 @@ export function moveCourse(id: string, direction: "up" | "down"): boolean {
   if (idx === -1) return false;
   const swapIdx = direction === "up" ? idx - 1 : idx + 1;
   if (swapIdx < 0 || swapIdx >= all.length) return false;
-  // Swap priority values
-  const tmp = all[idx].priority;
-  all[idx].priority = all[swapIdx].priority;
-  all[swapIdx].priority = tmp;
+  // Swap the actual courses, not just their priority values
+  const tmp = all[idx];
+  all[idx] = all[swapIdx];
+  all[swapIdx] = tmp;
+  // Re-normalise so the new order is fully reflected in the priority field
+  all.forEach((c, i) => { c.priority = i; });
   saveCourses(all);
   return true;
 }
