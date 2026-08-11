@@ -65,6 +65,22 @@ async function httpJson(
 }
 
 /**
+ * Remove duplicate courses by id before they are stored or re-published.
+ * A duplicate that ever enters the shared store is otherwise re-published on
+ * every admin page load and is never cleaned up. Keeps the first occurrence,
+ * but a later copy that carries an admin-set image wins over one that does not.
+ */
+export function dedupeCourses(courses: StoredCourse[]): StoredCourse[] {
+  const byId = new Map<string, StoredCourse>();
+  for (const course of courses) {
+    const prev = byId.get(course.id);
+    if (!prev) byId.set(course.id, course);
+    else if (course.adminImageUrl && !prev.adminImageUrl) byId.set(course.id, course);
+  }
+  return [...byId.values()];
+}
+
+/**
  * Split the courses list into chunks that each fit under jsonblob's 10 KB
  * request-body limit, keeping the global order intact.
  */
@@ -90,7 +106,8 @@ function chunkCourses(courses: StoredCourse[]): StoredCourse[][] {
  * list needs more blobs than we currently have.
  */
 export async function pushSharedCourses(courses: StoredCourse[]): Promise<boolean> {
-  const chunks = chunkCourses(courses);
+  const deduped = dedupeCourses(courses);
+  const chunks = chunkCourses(deduped);
   if (chunks.length > SHARED_COURSES_URLS.length) {
     return false; // list outgrew the blob set — add another SHARED_COURSES_URLS entry
   }
@@ -124,9 +141,11 @@ export async function syncSharedCoursesToLocal(): Promise<void> {
       const results = await Promise.all(
         SHARED_COURSES_URLS.map((url) => httpJson(url, "GET").catch(() => null)),
       );
-      shared = results
-        .filter((r): r is SharedPayload => r !== null)
-        .flatMap((r) => (Array.isArray(r.courses) ? r.courses : []));
+      shared = dedupeCourses(
+        results
+          .filter((r): r is SharedPayload => r !== null)
+          .flatMap((r) => (Array.isArray(r.courses) ? r.courses : [])),
+      );
       cached = { at: Date.now(), courses: shared };
     }
   } catch {

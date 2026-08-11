@@ -44,12 +44,23 @@ async function httpJson(method: "GET" | "PUT", body?: SharedPayload): Promise<Sh
 }
 
 /**
+ * Remove duplicate projects by id before they are stored or re-published.
+ */
+export function dedupeProjects(projects: StoredProject[]): StoredProject[] {
+  const byId = new Map<string, StoredProject>();
+  for (const project of projects) {
+    if (!byId.has(project.id)) byId.set(project.id, project);
+  }
+  return [...byId.values()];
+}
+
+/**
  * Write the full projects list to the shared cloud store.
  * Returns true on success, false if the store is unreachable.
  */
 export async function pushSharedProjects(projects: StoredProject[]): Promise<boolean> {
   try {
-    await httpJson("PUT", { projects });
+    await httpJson("PUT", { projects: dedupeProjects(projects) });
     return true;
   } catch {
     return false;
@@ -64,7 +75,7 @@ export async function pushSharedProjects(projects: StoredProject[]): Promise<boo
 export async function syncSharedProjectsToLocal(): Promise<void> {
   try {
     const data = await httpJson("GET");
-    if (Array.isArray(data.projects)) saveProjects(data.projects);
+    if (Array.isArray(data.projects)) saveProjects(dedupeProjects(data.projects));
   } catch {
     // store unreachable — keep local data as-is
   }

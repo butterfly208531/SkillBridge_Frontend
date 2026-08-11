@@ -11,7 +11,7 @@ import { projectsConfig, CATEGORY_MAP, type ProjectCategory, type ProjectSubCate
 import {
   getStoredProjects, saveProjects, seedProjectsIfEmpty, type StoredProject,
 } from "@/lib/project-store";
-import { pushSharedProjects, syncSharedProjectsToLocal } from "@/lib/projects-shared";
+import { pushSharedProjects, syncSharedProjectsToLocal, dedupeProjects } from "@/lib/projects-shared";
 
 const API = process.env.NEXT_PUBLIC_API_BASE_URL || "https://skillbridge-backend2.onrender.com/api";
 
@@ -92,9 +92,10 @@ export default function ProjectsAdminPage() {
           // Union with local so a partial API response can't drop projects.
           const apiIds = new Set(mapped.map(p => p.id));
           for (const s of local) if (!apiIds.has(s.id)) mapped.push(s);
-          setProjects(mapped);
-          saveProjects(mapped);
-          pushSharedProjects(mapped);
+          const finalMapped = dedupeProjects(mapped);
+          setProjects(finalMapped);
+          saveProjects(finalMapped);
+          pushSharedProjects(finalMapped);
           setLoading(false);
           return;
         }

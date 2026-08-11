@@ -17,7 +17,7 @@ import {
   getEffectiveImage,
   type StoredCourse,
 } from "@/lib/courses-store";
-import { pushSharedCourses, syncSharedCoursesToLocal } from "@/lib/courses-shared";
+import { pushSharedCourses, syncSharedCoursesToLocal, dedupeCourses } from "@/lib/courses-shared";
 import AdminHeader from "../components/AdminHeader";
 import { cn } from "@/lib/utils";
 
@@ -85,50 +85,53 @@ export default function CoursesAdminPage() {
           const localByTitle = new Map(local.map(s => [norm(s.title), s]));
           const localMax = local.length ? Math.max(0, ...local.map(s => s.priority ?? 0)) : 0;
           let offset = 1;
-          const merged: StoredCourse[] = list.map((c: any) => {
-            const stored = localMap[c.id] || localMap[c.slug] || localByTitle.get(norm(c.title)) || null;
-            // Resolve price: API may return camelCase, snake_case, or other variants.
-            // If the API gives a non-zero value, use it; otherwise fall back to the
-            // admin-set value already in localStorage so it is never silently zeroed out.
-            const apiPriceOriginal =
-              c.priceOriginal ?? c.price_original ?? c.originalPrice ?? c.price ?? null;
-            const apiPriceDiscounted =
-              c.priceDiscounted ?? c.price_discounted ?? c.discountedPrice ?? c.monthlyPrice ?? null;
-            return {
-              id:               c.id || c._id || "",
-              title:            c.title || "",
-              duration:         c.duration || "—",
-              category:         c.category?.name || c.category || "",
-              categoryId:       c.categoryId || c.category?.id || "",
-              status:           (c.status?.toLowerCase() === "active" ? "active" : "draft") as "active" | "draft",
-              imageUrl:         c.imageUrl || "",
-              adminImageUrl:    stored?.adminImageUrl || undefined,
-              rating:           c.rating ?? 0,
-              shortDescription: c.shortDescription || "",
-              learningOutcomes: stored?.learningOutcomes ?? [],
-              // Prefer API value if non-zero; otherwise keep what admin set locally
-              priceOriginal:    (apiPriceOriginal != null && apiPriceOriginal > 0)
-                                  ? apiPriceOriginal
-                                  : (stored?.priceOriginal ?? 0),
-              priceDiscounted:  (apiPriceDiscounted != null && apiPriceDiscounted > 0)
-                                  ? apiPriceDiscounted
-                                  : (stored?.priceDiscounted ?? 0),
-              startDate:        c.startDate || "",
-              createdAt:        c.createdAt || new Date().toISOString(),
-              // Preserve admin-set priority; new API-only courses go to the END
-              // of the published order instead of jumping to the front.
-              priority:         stored?.priority ?? localMax + (offset++),
-            };
-          });
+          const merged = dedupeCourses([
+            ...list.map((c: any) => {
+              const stored = localMap[c.id] || localMap[c.slug] || localByTitle.get(norm(c.title)) || null;
+              // Resolve price: API may return camelCase, snake_case, or other variants.
+              // If the API gives a non-zero value, use it; otherwise fall back to the
+              // admin-set value already in localStorage so it is never silently zeroed out.
+              const apiPriceOriginal =
+                c.priceOriginal ?? c.price_original ?? c.originalPrice ?? c.price ?? null;
+              const apiPriceDiscounted =
+                c.priceDiscounted ?? c.price_discounted ?? c.discountedPrice ?? c.monthlyPrice ?? null;
+              return {
+                id:               c.id || c._id || "",
+                title:            c.title || "",
+                duration:         c.duration || "—",
+                category:         c.category?.name || c.category || "",
+                categoryId:       c.categoryId || c.category?.id || "",
+                status:           (c.status?.toLowerCase() === "active" ? "active" : "draft") as "active" | "draft",
+                imageUrl:         c.imageUrl || "",
+                adminImageUrl:    stored?.adminImageUrl || undefined,
+                rating:           c.rating ?? 0,
+                shortDescription: c.shortDescription || "",
+                learningOutcomes: stored?.learningOutcomes ?? [],
+                // Prefer API value if non-zero; otherwise keep what admin set locally
+                priceOriginal:    (apiPriceOriginal != null && apiPriceOriginal > 0)
+                                    ? apiPriceOriginal
+                                    : (stored?.priceOriginal ?? 0),
+                priceDiscounted:  (apiPriceDiscounted != null && apiPriceDiscounted > 0)
+                                    ? apiPriceDiscounted
+                                    : (stored?.priceDiscounted ?? 0),
+                startDate:        c.startDate || "",
+                createdAt:        c.createdAt || new Date().toISOString(),
+                // Preserve admin-set priority; new API-only courses go to the END
+                // of the published order instead of jumping to the front.
+                priority:         stored?.priority ?? localMax + (offset++),
+              };
+            }),
+          ]);
           // Keep local courses the API didn't return (union by id or title).
           const apiIds = new Set(merged.map(c => c.id));
           const apiTitles = new Set(merged.map(c => norm(c.title)));
           for (const s of local) {
             if (!apiIds.has(s.id) && !apiTitles.has(norm(s.title))) merged.push(s);
           }
-          saveCourses(merged);
-          setCourses(merged);
-          const freshCats = ["All", ...Array.from(new Set(merged.map(c => c.category)))];
+          const finalMerged = dedupeCourses(merged);
+          saveCourses(finalMerged);
+          setCourses(finalMerged);
+          const freshCats = ["All", ...Array.from(new Set(finalMerged.map(c => c.category)))];
           setCategories(freshCats);
         }
         // else: API returned an empty list — keep the shared/local data as-is
