@@ -48,10 +48,16 @@ export default function CoursesAdminPage() {
   const [deleteId, setDeleteId]   = useState<string | null>(null);
 
   // ── load from store + API ──
-  const loadCourses = async () => {
-    // Pull the latest published list from the shared store so this admin panel
-    // shows changes made by admins on other devices.
-    await syncSharedCoursesToLocal();
+  // opts.sync === false means "this call follows a local mutation" — do NOT
+  // pull the shared store first, or it would overwrite the edit we just saved.
+  // opts.sync !== false pulls the latest list from the shared store (initial
+  // load / manual refresh).
+  const loadCourses = async (opts?: { sync?: boolean }) => {
+    if (opts?.sync !== false) {
+      // Pull the latest published list from the shared store so this admin panel
+      // shows changes made by admins on other devices.
+      await syncSharedCoursesToLocal();
+    }
 
     // Always show localStorage data immediately for instant paint
     const local = getStoredCourses();
@@ -142,7 +148,7 @@ export default function CoursesAdminPage() {
   const handleDelete = async (id: string) => {
     // Optimistic: remove from localStorage + UI immediately
     deleteCourse(id);
-    loadCourses();
+    loadCourses({ sync: false });
     setDeleteId(null);
 
     // Best-effort API delete (fire and forget — token may not exist on demo)
@@ -160,13 +166,13 @@ export default function CoursesAdminPage() {
   // ── toggle status ──
   const handleToggleStatus = (id: string) => {
     toggleCourseStatus(id);
-    loadCourses();
+    loadCourses({ sync: false });
   };
 
   // ── move priority ──
   const handleMove = (id: string, direction: "up" | "down") => {
     moveCourse(id, direction);
-    loadCourses();
+    loadCourses({ sync: false });
   };
 
   return (
@@ -193,7 +199,7 @@ export default function CoursesAdminPage() {
           </div>
           <div className="flex gap-2">
             <button
-              onClick={loadCourses}
+              onClick={() => loadCourses()}
               title="Refresh"
               className="p-1.5 rounded-lg border border-gray-200 text-gray-400 hover:text-[#1E90FF] hover:border-[#1E90FF] transition-colors"
             >
@@ -348,7 +354,7 @@ export default function CoursesAdminPage() {
         <CourseModal
           course={editing}
           onClose={() => { setShowModal(false); setEditing(null); }}
-          onSaved={loadCourses}
+          onSaved={() => loadCourses({ sync: false })}
         />
       )}
 
