@@ -10,6 +10,7 @@ const STORAGE_KEY = "sb_projects_v1";
 
 export interface StoredProject {
   id: string;
+  priority: number;
   title: string;
   description: string;
   technologies: string[];
@@ -24,6 +25,7 @@ export interface StoredProject {
 function configToStored(p: ProjectConfig): StoredProject {
   return {
     id:          p.id,
+    priority:    p.priority ?? 0,
     title:       p.title,
     description: p.description,
     technologies: p.technologies,

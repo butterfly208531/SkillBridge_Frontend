@@ -30,6 +30,7 @@ const categoryColors: Record<ProjectCategory, string> = {
 
 const FALLBACK: StoredProject[] = projectsConfig.map(p => ({
   id:           p.id,
+  priority:     p.priority ?? 0,
   title:        p.title,
   description:  p.description,
   technologies: p.technologies,
@@ -68,6 +69,7 @@ export default function ProjectsAdminPage() {
         if (data.length > 0) {
           const mapped: StoredProject[] = data.map((p: any) => ({
             id:           p.id || p._id,
+            priority:     Number(p.priority) || 0,
             title:        p.title || p.name || "",
             description:  p.description || "",
             technologies: Array.isArray(p.technologies) ? p.technologies : [],
@@ -141,9 +143,10 @@ export default function ProjectsAdminPage() {
     setEditing(null);
   };
 
-  const displayed = filterCat === "All"
+  const displayed = (filterCat === "All"
     ? projects
-    : projects.filter(p => p.category === filterCat);
+    : projects.filter(p => p.category === filterCat))
+    .sort((a, b) => (a.priority ?? 999) - (b.priority ?? 999));
 
   const activeCount   = projects.filter(p => p.status === "active").length;
   const withDemo      = projects.filter(p => p.demoUrl).length;
@@ -240,14 +243,19 @@ export default function ProjectsAdminPage() {
                         )}>
                           {project.category}
                         </span>
-                        <span className={cn(
-                          "px-2 py-0.5 rounded-full text-[10px] font-bold",
-                          project.status === "active"
-                            ? "bg-emerald-100 text-emerald-700"
-                            : "bg-gray-100 text-gray-500"
-                        )}>
-                          {project.status}
-                        </span>
+                        <div className="flex items-center gap-1.5">
+                          <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-gray-100 text-gray-600">
+                            #{project.priority ?? 0}
+                          </span>
+                          <span className={cn(
+                            "px-2 py-0.5 rounded-full text-[10px] font-bold",
+                            project.status === "active"
+                              ? "bg-emerald-100 text-emerald-700"
+                              : "bg-gray-100 text-gray-500"
+                          )}>
+                            {project.status}
+                          </span>
+                        </div>
                       </div>
                       <h3 className="font-bold text-sm text-gray-800 leading-snug line-clamp-2">{project.title}</h3>
                       {project.studentName && (
@@ -349,6 +357,7 @@ function ProjectModal({ project, saving, error, onClose, onSave }: {
 }) {
   const [form, setForm] = useState<StoredProject>({
     id:           project?.id           ?? "",
+    priority:     project?.priority     ?? 0,
     title:        project?.title        ?? "",
     description:  project?.description  ?? "",
     technologies: project?.technologies ?? [],
@@ -489,6 +498,15 @@ function ProjectModal({ project, saving, error, onClose, onSave }: {
               <option value="active">Active</option>
               <option value="archived">Archived</option>
             </select>
+          </div>
+
+          {/* Priority */}
+          <div>
+            <label className="block text-xs font-medium text-gray-600 mb-1">Priority</label>
+            <input type="number" min={0} value={form.priority}
+              onChange={e => set("priority", Math.max(0, Math.floor(Number(e.target.value) || 0)))}
+              className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1E90FF]/30" />
+            <p className="mt-1 text-[10px] text-gray-400">Lower number = shown first on the public page. 0 is the highest priority.</p>
           </div>
         </div>
 

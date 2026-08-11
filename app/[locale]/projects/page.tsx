@@ -20,6 +20,7 @@ const TOP_CATEGORIES = ["All", "ERP", "Web Development", "AI", "Automation", "Py
 function storedToConfig(p: StoredProject): ProjectConfig {
   return {
     id:           p.id,
+    priority:     p.priority ?? 999,
     title:        p.title,
     description:  p.description,
     technologies: p.technologies,
@@ -57,6 +58,7 @@ export default function ProjectsPage() {
           if (list.length === 0) return;
           const mapped: StoredProject[] = list.map((p: any) => ({
             id:           p.id || p._id || "",
+            priority:     Number(p.priority) || 0,
             title:        p.title || p.name || "",
             description:  p.description || "",
             technologies: Array.isArray(p.technologies) ? p.technologies : [],
@@ -79,7 +81,9 @@ export default function ProjectsPage() {
       ? ["All", ...(CATEGORY_MAP[activeCategory as ProjectCategory] ?? [])]
       : [];
 
-  const filtered = projects.filter((p) => {
+  const sorted = [...projects].sort((a, b) => (a.priority ?? 999) - (b.priority ?? 999));
+
+  const filtered = sorted.filter((p) => {
     if (activeCategory !== "All" && p.category !== activeCategory) return false;
     if (activeSubCategory !== "All" && p.subCategory !== activeSubCategory) return false;
     return true;

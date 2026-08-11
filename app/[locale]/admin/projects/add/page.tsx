@@ -61,6 +61,7 @@ export default function AddProjectPage() {
     demoUrl:      "",
     githubUrl:    "",
     status:       "active" as "active" | "archived",
+    priority:     "",
   });
 
   const set = <K extends keyof typeof form>(field: K, value: (typeof form)[K]) =>
@@ -117,6 +118,7 @@ export default function AddProjectPage() {
 
     const newProject: StoredProject = {
       id:           `proj-${Date.now()}`,
+      priority:     Number(form.priority) || 0,
       title:        form.title,
       description:  form.description,
       technologies: form.technologies,
@@ -248,6 +250,14 @@ export default function AddProjectPage() {
                   <option value="active">Active</option>
                   <option value="archived">Archived</option>
                 </select>
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-700 mb-1">Priority</label>
+                <input type="number" min={0} value={form.priority}
+                  onChange={e => set("priority", e.target.value)}
+                  placeholder="0"
+                  className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1E90FF]/30" />
+                <p className="mt-1 text-[10px] text-gray-400">Lower number = shown first. 0 is the highest priority.</p>
               </div>
             </div>
 
@@ -441,6 +451,7 @@ export default function AddProjectPage() {
                 { label: "Title",        value: form.title        || "—" },
                 { label: "Student",      value: form.studentName  || "—" },
                 { label: "Status",       value: form.status },
+                { label: "Priority",     value: form.priority     || "—" },
                 { label: "Category",     value: form.category },
                 { label: "Sub-Category", value: form.subCategory  || "—" },
               ].map(({ label, value }) => (
