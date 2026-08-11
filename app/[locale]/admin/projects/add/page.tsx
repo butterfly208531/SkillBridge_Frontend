@@ -14,7 +14,7 @@ import {
   type ProjectSubCategory,
 } from "@/lib/projects-config";
 import { getStoredProjects, saveProjects, type StoredProject } from "@/lib/project-store";
-import { pushSharedProjects } from "@/lib/projects-shared";
+import { pushSharedProjects, syncSharedProjectsToLocal } from "@/lib/projects-shared";
 
 const API = process.env.NEXT_PUBLIC_API_BASE_URL || "https://skillbridge-backend2.onrender.com/api";
 
@@ -116,9 +116,20 @@ export default function AddProjectPage() {
     setError("");
     const token = sessionStorage.getItem("adminToken");
 
+    // Pull the latest published list from the shared store BEFORE writing, so we
+    // never push a stale or empty local list over it.
+    await syncSharedProjectsToLocal();
+
+    // Persist to localStorage immediately so the public page and admin list update
+    const existing = getStoredProjects();
+    const maxPriority = existing.length
+      ? Math.max(0, ...existing.map(p => p.priority ?? 0))
+      : 0;
+
     const newProject: StoredProject = {
       id:           `proj-${Date.now()}`,
-      priority:     Number(form.priority) || 0,
+      // Blank priority = add at the END of the published order.
+      priority:     form.priority === "" ? maxPriority + 1 : Number(form.priority) || 0,
       title:        form.title,
       description:  form.description,
       technologies: form.technologies,
@@ -130,8 +141,6 @@ export default function AddProjectPage() {
       status:       form.status,
     };
 
-    // Persist to localStorage immediately so the public page and admin list update
-    const existing = getStoredProjects();
     saveProjects([...existing, newProject]);
     pushSharedProjects(getStoredProjects());
 

@@ -56,19 +56,31 @@ export default function ProjectsPage() {
         .then(d => {
           const list: any[] = Array.isArray(d) ? d : d.data ?? [];
           if (list.length === 0) return;
-          const mapped: StoredProject[] = list.map((p: any) => ({
-            id:           p.id || p._id || "",
-            priority:     Number(p.priority) || 0,
-            title:        p.title || p.name || "",
-            description:  p.description || "",
-            technologies: Array.isArray(p.technologies) ? p.technologies : [],
-            category:     p.category || "Web Development",
-            subCategory:  p.subCategory || p.sub_category || "",
-            studentName:  p.studentName || p.student || "",
-            demoUrl:      p.demoUrl || p.demo || "",
-            githubUrl:    p.githubUrl || p.github || "",
-            status:       (p.status || "active").toLowerCase(),
-          }));
+          // Keep the ordering published in the shared/local store — the API must
+          // never re-scramble it. New API-only projects go to the END.
+          const stored = getStoredProjects();
+          const localMap = Object.fromEntries(stored.map(s => [s.id, s]));
+          const localMax = stored.length ? Math.max(0, ...stored.map(s => s.priority ?? 0)) : 0;
+          let offset = 1;
+          const mapped: StoredProject[] = list.map((p: any) => {
+            const existing = localMap[p.id] || localMap[p._id] || null;
+            return {
+              id:           p.id || p._id || "",
+              priority:     existing?.priority ?? localMax + (offset++),
+              title:        p.title || p.name || "",
+              description:  p.description || "",
+              technologies: Array.isArray(p.technologies) ? p.technologies : [],
+              category:     p.category || "Web Development",
+              subCategory:  p.subCategory || p.sub_category || "",
+              studentName:  p.studentName || p.student || "",
+              demoUrl:      p.demoUrl || p.demo || "",
+              githubUrl:    p.githubUrl || p.github || "",
+              status:       (p.status || "active").toLowerCase(),
+            };
+          });
+          // Union with local so a partial API response can't drop projects.
+          const apiIds = new Set(mapped.map(p => p.id));
+          for (const s of stored) if (!apiIds.has(s.id)) mapped.push(s);
           saveProjects(mapped);
           setProjects(mapped.filter(p => p.status === "active").map(storedToConfig));
         })

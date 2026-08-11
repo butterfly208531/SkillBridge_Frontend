@@ -65,7 +65,9 @@ export default function CoursesAdminPage() {
     const cats = ["All", ...Array.from(new Set(local.map(c => c.category)))];
     setCategories(cats);
 
-    // Then try to refresh from the live API — API is authoritative, including an empty list
+    // Then try to refresh from the live API. The API is NOT authoritative over
+    // the published shared store: an empty or partial API response must never
+    // wipe the courses admins have already published.
     try {
       const token = sessionStorage.getItem("adminToken") || localStorage.getItem("adminToken") || "";
       const res = await fetch(`${API}/courses`, {
@@ -74,47 +76,63 @@ export default function CoursesAdminPage() {
       if (res.ok) {
         const d = await res.json();
         const list: any[] = Array.isArray(d) ? d : d.data ?? [];
-        // Merge: keep adminImageUrl and admin-set prices from localStorage,
-        // API wins for everything else
-        const localMap = Object.fromEntries(local.map(s => [s.id, s]));
-        const merged: StoredCourse[] = list.map((c: any, index: number) => {
-          const stored = localMap[c.id] || localMap[c.slug] || null;
-          // Resolve price: API may return camelCase, snake_case, or other variants.
-          // If the API gives a non-zero value, use it; otherwise fall back to the
-          // admin-set value already in localStorage so it is never silently zeroed out.
-          const apiPriceOriginal =
-            c.priceOriginal ?? c.price_original ?? c.originalPrice ?? c.price ?? null;
-          const apiPriceDiscounted =
-            c.priceDiscounted ?? c.price_discounted ?? c.discountedPrice ?? c.monthlyPrice ?? null;
-          return {
-            id:               c.id || c._id || "",
-            title:            c.title || "",
-            duration:         c.duration || "—",
-            category:         c.category?.name || c.category || "",
-            categoryId:       c.categoryId || c.category?.id || "",
-            status:           (c.status?.toLowerCase() === "active" ? "active" : "draft") as "active" | "draft",
-            imageUrl:         c.imageUrl || "",
-            adminImageUrl:    stored?.adminImageUrl || undefined,
-            rating:           c.rating ?? 0,
-            shortDescription: c.shortDescription || "",
-            learningOutcomes: stored?.learningOutcomes ?? [],
-            // Prefer API value if non-zero; otherwise keep what admin set locally
-            priceOriginal:    (apiPriceOriginal != null && apiPriceOriginal > 0)
-                                ? apiPriceOriginal
-                                : (stored?.priceOriginal ?? 0),
-            priceDiscounted:  (apiPriceDiscounted != null && apiPriceDiscounted > 0)
-                                ? apiPriceDiscounted
-                                : (stored?.priceDiscounted ?? 0),
-            startDate:        c.startDate || "",
-            createdAt:        c.createdAt || new Date().toISOString(),
-            // Preserve admin-set priority; fall back to current list order
-            priority:         stored?.priority ?? index,
-          };
-        });
-        saveCourses(merged);
-        setCourses(merged);
-        const freshCats = ["All", ...Array.from(new Set(merged.map(c => c.category)))];
-        setCategories(freshCats);
+        if (list.length > 0) {
+          // Merge: keep adminImageUrl and admin-set prices from localStorage,
+          // API wins for everything else. Local-only courses are kept (union)
+          // so a partial backend list can't drop published courses.
+          const norm = (s: string) => (s || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+          const localMap = Object.fromEntries(local.map(s => [s.id, s]));
+          const localByTitle = new Map(local.map(s => [norm(s.title), s]));
+          const localMax = local.length ? Math.max(0, ...local.map(s => s.priority ?? 0)) : 0;
+          let offset = 1;
+          const merged: StoredCourse[] = list.map((c: any) => {
+            const stored = localMap[c.id] || localMap[c.slug] || localByTitle.get(norm(c.title)) || null;
+            // Resolve price: API may return camelCase, snake_case, or other variants.
+            // If the API gives a non-zero value, use it; otherwise fall back to the
+            // admin-set value already in localStorage so it is never silently zeroed out.
+            const apiPriceOriginal =
+              c.priceOriginal ?? c.price_original ?? c.originalPrice ?? c.price ?? null;
+            const apiPriceDiscounted =
+              c.priceDiscounted ?? c.price_discounted ?? c.discountedPrice ?? c.monthlyPrice ?? null;
+            return {
+              id:               c.id || c._id || "",
+              title:            c.title || "",
+              duration:         c.duration || "—",
+              category:         c.category?.name || c.category || "",
+              categoryId:       c.categoryId || c.category?.id || "",
+              status:           (c.status?.toLowerCase() === "active" ? "active" : "draft") as "active" | "draft",
+              imageUrl:         c.imageUrl || "",
+              adminImageUrl:    stored?.adminImageUrl || undefined,
+              rating:           c.rating ?? 0,
+              shortDescription: c.shortDescription || "",
+              learningOutcomes: stored?.learningOutcomes ?? [],
+              // Prefer API value if non-zero; otherwise keep what admin set locally
+              priceOriginal:    (apiPriceOriginal != null && apiPriceOriginal > 0)
+                                  ? apiPriceOriginal
+                                  : (stored?.priceOriginal ?? 0),
+              priceDiscounted:  (apiPriceDiscounted != null && apiPriceDiscounted > 0)
+                                  ? apiPriceDiscounted
+                                  : (stored?.priceDiscounted ?? 0),
+              startDate:        c.startDate || "",
+              createdAt:        c.createdAt || new Date().toISOString(),
+              // Preserve admin-set priority; new API-only courses go to the END
+              // of the published order instead of jumping to the front.
+              priority:         stored?.priority ?? localMax + (offset++),
+            };
+          });
+          // Keep local courses the API didn't return (union by id or title).
+          const apiIds = new Set(merged.map(c => c.id));
+          const apiTitles = new Set(merged.map(c => norm(c.title)));
+          for (const s of local) {
+            if (!apiIds.has(s.id) && !apiTitles.has(norm(s.title))) merged.push(s);
+          }
+          saveCourses(merged);
+          setCourses(merged);
+          const freshCats = ["All", ...Array.from(new Set(merged.map(c => c.category)))];
+          setCategories(freshCats);
+        }
+        // else: API returned an empty list — keep the shared/local data as-is
+        // so an empty backend can't wipe the published store.
       } else if (isCoursesInitialized()) {
         // API down/unauthenticated — keep admin-saved localStorage data
         setCourses(local);
@@ -127,9 +145,13 @@ export default function CoursesAdminPage() {
     }
 
     // Publish the authoritative list to the shared cloud store (best-effort) so
-    // other devices see admin changes too. Runs on every refresh/mutation.
-    const pushed = await pushSharedCourses(getStoredCourses());
-    if (!pushed) console.warn("[courses] Could not sync courses to the shared store");
+    // other devices see admin changes too. Never publish an empty list here — an
+    // empty or failed API response on this device must not wipe the shared store.
+    const published = getStoredCourses();
+    if (published.length > 0) {
+      const pushed = await pushSharedCourses(published);
+      if (!pushed) console.warn("[courses] Could not sync courses to the shared store");
+    }
   };
 
   useEffect(() => { loadCourses(); }, []);
@@ -398,7 +420,12 @@ function CourseModal({ course, onClose, onSaved }: {
     rating:            course?.rating            ?? 0,
     shortDescription:  course?.shortDescription  ?? "",
     learningOutcomes:  course?.learningOutcomes  ?? [] as string[],
-    priority:          course?.priority          ?? 0,
+    // New courses default to the END of the published order (max+1) instead of
+    // priority 0 which would land them at the top.
+    priority:          course?.priority ?? (() => {
+      const all = getStoredCourses();
+      return all.length ? Math.max(0, ...all.map(c => c.priority ?? 0)) + 1 : 0;
+    })(),
   });
 
   const [categories] = useState<{ id: string; name: string }[]>(

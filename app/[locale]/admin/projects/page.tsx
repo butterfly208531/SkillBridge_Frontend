@@ -67,19 +67,31 @@ export default function ProjectsAdminPage() {
         const d = await res.json();
         const data: any[] = Array.isArray(d) ? d : d.data ?? [];
         if (data.length > 0) {
-          const mapped: StoredProject[] = data.map((p: any) => ({
-            id:           p.id || p._id,
-            priority:     Number(p.priority) || 0,
-            title:        p.title || p.name || "",
-            description:  p.description || "",
-            technologies: Array.isArray(p.technologies) ? p.technologies : [],
-            category:     p.category || "Web Development",
-            subCategory:  p.subCategory || p.sub_category || "",
-            studentName:  p.studentName || p.student || "",
-            demoUrl:      p.demoUrl || p.demo || "",
-            githubUrl:    p.githubUrl || p.github || "",
-            status:       (p.status || "active").toLowerCase(),
-          }));
+          // The API must never re-scramble admin ordering: keep the priority
+          // already published in the shared/local store; new API-only projects
+          // go to the END instead of jumping to the front.
+          const localMap = Object.fromEntries(local.map(s => [s.id, s]));
+          const localMax = local.length ? Math.max(0, ...local.map(s => s.priority ?? 0)) : 0;
+          let offset = 1;
+          const mapped: StoredProject[] = data.map((p: any) => {
+            const stored = localMap[p.id] || localMap[p._id] || null;
+            return {
+              id:           p.id || p._id,
+              priority:     stored?.priority ?? localMax + (offset++),
+              title:        p.title || p.name || "",
+              description:  p.description || "",
+              technologies: Array.isArray(p.technologies) ? p.technologies : [],
+              category:     p.category || "Web Development",
+              subCategory:  p.subCategory || p.sub_category || "",
+              studentName:  p.studentName || p.student || "",
+              demoUrl:      p.demoUrl || p.demo || "",
+              githubUrl:    p.githubUrl || p.github || "",
+              status:       (p.status || "active").toLowerCase(),
+            };
+          });
+          // Union with local so a partial API response can't drop projects.
+          const apiIds = new Set(mapped.map(p => p.id));
+          for (const s of local) if (!apiIds.has(s.id)) mapped.push(s);
           setProjects(mapped);
           saveProjects(mapped);
           pushSharedProjects(mapped);
@@ -357,7 +369,12 @@ function ProjectModal({ project, saving, error, onClose, onSave }: {
 }) {
   const [form, setForm] = useState<StoredProject>({
     id:           project?.id           ?? "",
-    priority:     project?.priority     ?? 0,
+    // New projects default to the END of the published order (max+1) instead of
+    // priority 0 which would land them at the top.
+    priority:     project?.priority ?? (() => {
+      const all = getStoredProjects();
+      return all.length ? Math.max(0, ...all.map(p => p.priority ?? 0)) + 1 : 0;
+    })(),
     title:        project?.title        ?? "",
     description:  project?.description  ?? "",
     technologies: project?.technologies ?? [],

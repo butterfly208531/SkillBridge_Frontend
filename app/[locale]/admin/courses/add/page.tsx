@@ -7,7 +7,7 @@ import AdminHeader from "../../components/AdminHeader";
 import { uploadImage } from "@/lib/uploadImage";
 import { getAllCategories } from "@/lib/courses-config";
 import { addCourse, getStoredCourses, type StoredCourse } from "@/lib/courses-store";
-import { pushSharedCourses } from "@/lib/courses-shared";
+import { pushSharedCourses, syncSharedCoursesToLocal } from "@/lib/courses-shared";
 import { adminApi } from "@/lib/api";
 
 export default function AddCoursePage() {
@@ -99,7 +99,15 @@ export default function AddCoursePage() {
     setSaving(true);
     setError("");
 
+    // Pull the latest published list from the shared store BEFORE writing, so we
+    // never push a stale or empty local list over it (that's what wiped the store).
+    await syncSharedCoursesToLocal();
+
     const selectedCat = categories.find(c => c.id === basic.categoryId);
+    const allCourses = getStoredCourses();
+    const maxPriority = allCourses.length
+      ? Math.max(0, ...allCourses.map(c => c.priority ?? 0))
+      : 0;
     const courseData: Omit<StoredCourse, "id" | "createdAt"> = {
       title:            basic.title.trim(),
       duration:         basic.duration || "—",
@@ -113,7 +121,8 @@ export default function AddCoursePage() {
       priceOriginal:    Number(basic.priceOriginal)   || 0,
       priceDiscounted:  Number(basic.priceDiscounted) || 0,
       startDate:        basic.startDate || "",
-      priority:         Number(basic.priority)        || 0,
+      // Blank priority = add at the END of the published order.
+      priority:         basic.priority === "" ? maxPriority + 1 : Number(basic.priority) || 0,
     };
 
     try {
