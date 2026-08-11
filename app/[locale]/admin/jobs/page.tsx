@@ -6,7 +6,7 @@ import AdminHeader from "../components/AdminHeader";
 import { cn } from "@/lib/utils";
 import { jobsConfig, categoryColor, typeColor, isJobClosed, type Job } from "@/lib/jobs-config";
 import { getStoredJobs, saveJobs, isJobsInitialized } from "@/lib/jobs-store";
-import { pushSharedJobs } from "@/lib/jobs-shared";
+import { pushSharedJobs, syncSharedJobsToLocal } from "@/lib/jobs-shared";
 
 const API = process.env.NEXT_PUBLIC_API_BASE_URL || "https://skillbridge-backend2.onrender.com/api";
 
@@ -25,9 +25,12 @@ export default function AdminJobsPage() {
   const [search,    setSearch]    = useState("");
   const [statusTab, setStatusTab] = useState<"all" | "open" | "closed" | "draft">("all");
 
-  const fetchJobs = () => {
+  const fetchJobs = async () => {
     const token = sessionStorage.getItem("adminToken");
     setLoading(true);
+    // Pull the latest published list from the shared store so this admin panel
+    // shows changes made by admins on other devices.
+    await syncSharedJobsToLocal();
     fetch(`${API}/jobs`, { headers: { Authorization: `Bearer ${token}` } })
       .then(r => r.ok ? r.json() : Promise.reject())
       .then(d => {

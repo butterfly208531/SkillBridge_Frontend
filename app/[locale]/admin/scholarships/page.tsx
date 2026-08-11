@@ -6,7 +6,7 @@ import AdminHeader from "../components/AdminHeader";
 import { cn } from "@/lib/utils";
 import { scholarshipsConfig, scholarshipWinnersConfig } from "@/lib/scholarships-config";
 import { getStoredScholarships, saveScholarships, getStoredWinners, saveWinners, isScholarshipsInitialized, isWinnersInitialized, type StoredScholarship, type StoredWinner } from "@/lib/scholarship-store";
-import { pushSharedScholarships } from "@/lib/scholarship-shared";
+import { pushSharedScholarships, syncSharedScholarshipsToLocal } from "@/lib/scholarship-shared";
 
 const API = process.env.NEXT_PUBLIC_API_BASE_URL || "https://skillbridge-backend2.onrender.com/api";
 
@@ -86,6 +86,10 @@ export default function ScholarshipsPage() {
     setLoading(true);
     const token = sessionStorage.getItem("adminToken");
     const headers = { Authorization: `Bearer ${token}` };
+
+    // Pull the latest published list from the shared store so this admin panel
+    // shows changes made by admins on other devices.
+    await syncSharedScholarshipsToLocal();
 
     // Load from localStorage first (admin-saved data)
     const localData    = getStoredScholarships();

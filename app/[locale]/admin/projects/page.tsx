@@ -11,7 +11,7 @@ import { projectsConfig, CATEGORY_MAP, type ProjectCategory, type ProjectSubCate
 import {
   getStoredProjects, saveProjects, seedProjectsIfEmpty, type StoredProject,
 } from "@/lib/project-store";
-import { pushSharedProjects } from "@/lib/projects-shared";
+import { pushSharedProjects, syncSharedProjectsToLocal } from "@/lib/projects-shared";
 
 const API = process.env.NEXT_PUBLIC_API_BASE_URL || "https://skillbridge-backend2.onrender.com/api";
 
@@ -55,6 +55,9 @@ export default function ProjectsAdminPage() {
     setLoading(true);
     const token = sessionStorage.getItem("adminToken");
     const headers = { Authorization: `Bearer ${token}` };
+    // Pull the latest published list from the shared store so this admin panel
+    // shows changes made by admins on other devices.
+    await syncSharedProjectsToLocal();
     const local = getStoredProjects();
 
     try {

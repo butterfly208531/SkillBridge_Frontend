@@ -17,7 +17,7 @@ import {
   getEffectiveImage,
   type StoredCourse,
 } from "@/lib/courses-store";
-import { pushSharedCourses } from "@/lib/courses-shared";
+import { pushSharedCourses, syncSharedCoursesToLocal } from "@/lib/courses-shared";
 import AdminHeader from "../components/AdminHeader";
 import { cn } from "@/lib/utils";
 
@@ -49,6 +49,10 @@ export default function CoursesAdminPage() {
 
   // ── load from store + API ──
   const loadCourses = async () => {
+    // Pull the latest published list from the shared store so this admin panel
+    // shows changes made by admins on other devices.
+    await syncSharedCoursesToLocal();
+
     // Always show localStorage data immediately for instant paint
     const local = getStoredCourses();
     setCourses(local);
