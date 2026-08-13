@@ -8,6 +8,17 @@ import { getStoredProjects, saveProjects, type StoredProject } from "./project-s
 import { getProjectsSupabase, pushProjectsSupabase } from "./projects-supabase";
 
 /**
+ * Remove duplicate projects by id before they are stored or re-published.
+ */
+export function dedupeProjects(projects: StoredProject[]): StoredProject[] {
+  const byId = new Map<string, StoredProject>();
+  for (const project of projects) {
+    if (!byId.has(project.id)) byId.set(project.id, project);
+  }
+  return [...byId.values()];
+}
+
+/**
  * Write the full projects list to Supabase.
  * Returns true on success, false if Supabase is unreachable/not configured.
  */
