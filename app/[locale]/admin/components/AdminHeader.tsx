@@ -10,6 +10,8 @@ import {
   saveLocalContactMessages,
   type LocalContactMessage,
 } from "@/lib/contact-api";
+import { getApplicationsSupabase, updateApplicationSupabase } from "@/lib/applications-supabase";
+import { getContactMessagesSupabase, updateContactMessageSupabase } from "@/lib/contact-supabase";
 
 // ── Application notifications (existing) ────────────────────────────────────
 
@@ -81,33 +83,74 @@ export default function AdminHeader({ title }: { title: string }) {
     }
   }, []);
 
-  // Load & merge both notification sources, poll every 5 s
+  // Load & merge all notification sources (localStorage + Supabase for
+  // cross-device notifications), poll every 5 s
   useEffect(() => {
-    const load = () => {
-      const appNotifs: UnifiedNotification[] = getAppNotifications().map((n) => ({
-        kind: "application" as const,
-        ...n,
-      }));
-      const contactNotifs: UnifiedNotification[] = getLocalContactMessages().map((m) => ({
-        kind: "contact" as const,
-        ...m,
-      }));
-      // Merge and sort newest first
-      const all = [...appNotifs, ...contactNotifs].sort(
-        (a, b) =>
-          new Date(
-            a.kind === "application" ? a.submittedAt : a.createdAt
-          ).getTime() -
-          new Date(
-            b.kind === "application" ? b.submittedAt : b.createdAt
-          ).getTime()
-      ).reverse();
-      setNotifications(all);
+    let cancelled = false;
+    let inFlight = false;
+
+    const load = async () => {
+      if (inFlight) return;
+      inFlight = true;
+      try {
+        const appNotifs: UnifiedNotification[] = getAppNotifications().map((n) => ({
+          kind: "application" as const,
+          ...n,
+        }));
+        const contactNotifs: UnifiedNotification[] = getLocalContactMessages().map((m) => ({
+          kind: "contact" as const,
+          ...m,
+        }));
+
+        // Pull from Supabase too, so submissions made on ANY device reach the
+        // admin's notification bell — not only the browser where they happened.
+        const [sbApps, sbContacts] = await Promise.all([
+          getApplicationsSupabase().catch(() => []),
+          getContactMessagesSupabase().catch(() => []),
+        ]);
+        if (cancelled) return;
+
+        const supabaseApps: UnifiedNotification[] = sbApps.map((a) => ({
+          kind: "application" as const,
+          id: a.id,
+          fullName: a.fullName,
+          email: a.email,
+          courseId: a.courseSlug,
+          courseSlug: a.courseSlug,
+          courseName: a.courseName,
+          submittedAt: a.submittedAt,
+          read: a.read,
+        }));
+        const supabaseContacts: UnifiedNotification[] = sbContacts.map((m) => ({
+          kind: "contact" as const,
+          ...m,
+        }));
+
+        // Merge + dedupe by kind+id. Supabase wins over the local copy so a read
+        // state set on one device is respected everywhere.
+        const merged = new Map<string, UnifiedNotification>();
+        [...appNotifs, ...supabaseApps].forEach((n) => merged.set(`application-${n.id}`, n));
+        [...contactNotifs, ...supabaseContacts].forEach((n) => merged.set(`contact-${n.id}`, n));
+
+        const all = Array.from(merged.values()).sort(
+          (a, b) =>
+            new Date(b.kind === "application" ? b.submittedAt : b.createdAt).getTime() -
+            new Date(a.kind === "application" ? a.submittedAt : a.createdAt).getTime()
+        );
+        setNotifications(all);
+      } catch {
+        // keep previous list on failure
+      } finally {
+        inFlight = false;
+      }
     };
 
     load();
     const interval = setInterval(load, 5000);
-    return () => clearInterval(interval);
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+    };
   }, []);
 
   // Close on outside click
@@ -129,11 +172,13 @@ export default function AdminHeader({ title }: { title: string }) {
         a.id === n.id ? { ...a, read: true } : a
       );
       saveAppNotifications(updated);
+      updateApplicationSupabase(n.id, { read: true });
     } else {
       const updated = getLocalContactMessages().map((m) =>
-        m.id === n.id ? { ...m, read: true } : m
+        m.id === n.id ? { ...m, read: true, status: "read" as const } : m
       );
       saveLocalContactMessages(updated);
+      updateContactMessageSupabase(n.id, { read: true, status: "read" });
     }
     setNotifications((prev) =>
       prev.map((item) => (item.id === n.id ? { ...item, read: true } : item))
@@ -142,13 +187,27 @@ export default function AdminHeader({ title }: { title: string }) {
 
   const markAllRead = () => {
     saveAppNotifications(getAppNotifications().map((a) => ({ ...a, read: true })));
-    saveLocalContactMessages(getLocalContactMessages().map((m) => ({ ...m, read: true })));
+    saveLocalContactMessages(getLocalContactMessages().map((m) => ({ ...m, read: true, status: "read" as const })));
+    getApplicationsSupabase()
+      .then((list) => Promise.all(list.map((a) => updateApplicationSupabase(a.id, { read: true }))))
+      .catch(() => {});
+    getContactMessagesSupabase()
+      .then((list) => Promise.all(list.map((m) => updateContactMessageSupabase(m.id, { read: true, status: "read" as const }))))
+      .catch(() => {});
     setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
   };
 
   const clearAll = () => {
     saveAppNotifications([]);
     saveLocalContactMessages([]);
+    // Non-destructive: never delete real applications/messages — mark them read
+    // so they stop showing as new on every device.
+    getApplicationsSupabase()
+      .then((list) => Promise.all(list.map((a) => updateApplicationSupabase(a.id, { read: true }))))
+      .catch(() => {});
+    getContactMessagesSupabase()
+      .then((list) => Promise.all(list.map((m) => updateContactMessageSupabase(m.id, { read: true, status: "read" as const }))))
+      .catch(() => {});
     setNotifications([]);
   };
 

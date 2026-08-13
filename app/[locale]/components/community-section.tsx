@@ -7,6 +7,7 @@ import {
   Send, Youtube, Linkedin, Globe, Instagram, Facebook,
   Calendar, Trophy, Gift, LayoutGrid,
 } from "lucide-react";
+import { SiX } from "react-icons/si";
 import { SectionHeading } from "@/app/[locale]/components/ui/section-heading";
 import { Button } from "@/app/[locale]/components/ui/button";
 import { CountUp } from "@/app/[locale]/components/ui/count-up";
@@ -15,8 +16,9 @@ import { getEffectiveCommunityConfig } from "@/lib/community-stats-store";
 import { syncSharedCommunityStatsToLocal } from "@/lib/community-shared";
 import { cn } from "@/lib/utils";
 import type { LucideIcon } from "lucide-react";
+import type { IconType } from "react-icons";
 
-const platformIcons: Record<string, LucideIcon> = {
+const platformIcons: Record<string, LucideIcon | IconType> = {
   telegram:  Send,
   youtube:   Youtube,
   linkedin:  Linkedin,
@@ -24,6 +26,7 @@ const platformIcons: Record<string, LucideIcon> = {
   instagram: Instagram,
   facebook:  Facebook,
   tiktok:    Globe,
+  twitter:   SiX,
 };
 
 // Alternate blue/orange per card for visual rhythm
@@ -35,6 +38,7 @@ const platformAccent: Record<string, { icon: string; bar: string; count: string;
   instagram: { icon: "text-[#F57C00]", iconBg: "bg-orange-50 dark:bg-orange-900/20", bar: "bg-[#F57C00]", count: "text-[#F57C00]" },
   facebook:  { icon: "text-[#2196F3]", iconBg: "bg-blue-50 dark:bg-blue-900/20",   bar: "bg-[#2196F3]",  count: "text-[#2196F3]"  },
   tiktok:    { icon: "text-[#2196F3]", iconBg: "bg-blue-50 dark:bg-blue-900/20",   bar: "bg-[#2196F3]",  count: "text-[#2196F3]"  },
+  twitter:   { icon: "text-[#1E90FF]", iconBg: "bg-blue-50 dark:bg-blue-900/20",   bar: "bg-[#1E90FF]",  count: "text-[#1E90FF]"  },
 };
 
 const featureIcons: Record<string, LucideIcon> = {
@@ -118,7 +122,7 @@ export function CommunitySection() {
                   <Icon className={cn("h-5 w-5", accent.icon)} aria-hidden="true" />
                 </div>
                 <p className="text-xs font-bold text-gray-800 dark:text-gray-100 leading-tight">
-                  {t(`platforms.${platform.key}.label`)}
+                  {platform.label || t(`platforms.${platform.key}.label`)}
                 </p>
                 {platform.statsValue && (
                   <>
@@ -129,7 +133,7 @@ export function CommunitySection() {
                       className={cn("text-2xl font-black leading-none", accent.count)}
                     />
                     <span className="text-[11px] text-gray-400 dark:text-gray-500 -mt-1">
-                      {t(`platforms.${platform.key}.stat`)}
+                      {platform.statLabel || t(`platforms.${platform.key}.stat`)}
                     </span>
                   </>
                 )}

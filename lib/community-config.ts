@@ -3,6 +3,8 @@ export interface CommunityPlatform {
   url: string;
   statsValue?: string;
   statsSuffix?: string;
+  label?: string;
+  statLabel?: string;
 }
 
 export interface CommunityFeature {
@@ -15,9 +17,10 @@ export const communityConfig: CommunityPlatform[] = [
   { key: "youtube",   url: "https://www.youtube.com/@SkillBridgeInstituteOfTech",                        statsValue: "20",   statsSuffix: "+" },
   { key: "linkedin",  url: "https://www.linkedin.com/company/skillbridge-institute-of-technology",       statsValue: "50",   statsSuffix: "+" },
   { key: "hub",       url: "https://t.me/skillbridgeinstituteoftech",                                    statsValue: "500",  statsSuffix: "+" },
-  { key: "instagram", url: "https://www.instagram.com/skillbridgeinstituteoftech",                       statsValue: "100",  statsSuffix: "+" },
-  { key: "facebook",  url: "https://www.facebook.com/profile.php?id=61574189453702",                     statsValue: "50",   statsSuffix: "+" },
-  { key: "tiktok",    url: "https://www.tiktok.com/@skillbridge417",                                     statsValue: "30",   statsSuffix: "+" },
+  { key: "instagram", url: "https://www.instagram.com/skill.bridge.institute",                      statsValue: "100",  statsSuffix: "+" },
+  { key: "facebook",  url: "https://www.facebook.com/share/1BdDExr4ZH/",                            statsValue: "50",   statsSuffix: "+" },
+  { key: "tiktok",    url: "https://www.tiktok.com/@skillbridge_institute",                         statsValue: "30",   statsSuffix: "+" },
+  { key: "twitter",   url: "https://x.com/Skillbridgedu",                                           statsValue: "50",   statsSuffix: "+" },
 ];
 
 // Extra community engagement features shown as highlight cards

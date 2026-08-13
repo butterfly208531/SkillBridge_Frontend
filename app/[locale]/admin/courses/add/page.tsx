@@ -6,6 +6,7 @@ import { ArrowLeft, CheckCircle, Loader2, Upload, X } from "lucide-react";
 import AdminHeader from "../../components/AdminHeader";
 import { uploadImage } from "@/lib/uploadImage";
 import { getAllCategories } from "@/lib/courses-config";
+import { getStoredCategories } from "@/lib/categories-store";
 import { addCourse, getStoredCourses, type StoredCourse } from "@/lib/courses-store";
 import { pushSharedCourses, syncSharedCoursesToLocal } from "@/lib/courses-shared";
 import { adminApi } from "@/lib/api";
@@ -19,10 +20,15 @@ export default function AddCoursePage() {
   const [error, setError]                 = useState("");
   const [uploadingImage, setUploadingImage] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
-  // Pre-populate with local categories so the dropdown is never empty
-  const [categories, setCategories] = useState<{ id: string; name: string }[]>(
-    () => (getAllCategories().filter((name): name is string => name !== undefined)).map(name => ({ id: name, name }))
-  );
+  // Pre-populate with managed categories (admin CRUD) so the dropdown is never empty
+  const [categories, setCategories] = useState<{ id: string; name: string }[]>(() => {
+    const managed = getStoredCategories().map(c => ({ id: c.id, name: c.name }));
+    const ids = new Set(managed.map(c => c.id));
+    const extra = (getAllCategories().filter((name): name is string => name !== undefined))
+      .filter(name => !ids.has(name))
+      .map(name => ({ id: name, name }));
+    return [...managed, ...extra];
+  });
 
   const [basic, setBasic] = useState({
     title:            "",

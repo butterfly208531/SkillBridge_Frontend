@@ -1,10 +1,14 @@
+import { SEED_COURSES } from "./courses-seed";
+
 /**
  * Client-side courses store using localStorage.
  * Admin writes → public pages read.
  *
- * No hardcoded fallback: if the admin has never saved any courses, this
- * returns an empty array. Images only come from what the admin uploaded
- * (adminImageUrl) or the backend API (imageUrl) — never from config.
+ * Public pages should prefer getPublicCourses(): it starts from the built-in
+ * SEED_COURSES so a device with empty/corrupt localStorage still shows the 15
+ * courses, then overlays admin edits (from the shared store / localStorage).
+ * Images only come from what the admin uploaded (adminImageUrl) or the backend
+ * API (imageUrl) — never from config.
  */
 
 const STORAGE_KEY = "sb_courses_v1";
@@ -28,6 +32,9 @@ export interface StoredCourse {
   createdAt: string;
   /** Display order on public pages. Lower number = higher position. Default 0. */
   priority: number;
+  /** Optional extra fields carried in stored/shared data. */
+  level?: string;
+  mode?: string;
 }
 
 /**
@@ -47,6 +54,53 @@ export function getEffectiveImage(course: {
 }
 
 // ── public API ─────────────────────────────────────────────
+
+/**
+ * Read all courses for the public site. Always returns a non-empty list:
+ * it starts from the built-in seed courses, then overlays any admin-saved
+ * localStorage data (matched by id or title) so edits/prices/images win.
+ * Admin-added courses that aren't in the seed are appended too.
+ */
+export function getPublicCourses(): StoredCourse[] {
+  const stored = getStoredCourses();
+  if (stored.length === 0) return [...SEED_COURSES];
+
+  const storedMap = new Map(stored.map((c) => [c.id, c]));
+  const byTitle = new Map(
+    stored.map((c) => [c.title.toLowerCase().trim(), c]),
+  );
+
+  const merged: StoredCourse[] = SEED_COURSES.map((seed) => {
+    const override =
+      storedMap.get(seed.id) ||
+      byTitle.get(seed.title.toLowerCase().trim()) ||
+      null;
+    if (!override) return seed;
+    return {
+      ...seed,
+      ...override,
+      // id must stay stable across devices; title-matched overrides may carry
+      // a different local id — keep the seed id for consistent routing.
+      id: seed.id,
+    };
+  });
+
+  // Append admin-created courses that don't match any seed course.
+  // (Previously this loop was dead code: storedMap.has(s.id) is always true
+  // for the very courses being iterated, so admin-added courses never showed.)
+  for (const s of stored) {
+    const matchesSeed =
+      SEED_COURSES.some((c) => c.id === s.id) ||
+      SEED_COURSES.some(
+        (c) => c.title.toLowerCase().trim() === s.title.toLowerCase().trim()
+      );
+    if (!matchesSeed) {
+      merged.push(s);
+    }
+  }
+
+  return merged;
+}
 
 /** Read all courses saved by admin — returns the raw saved array (may be empty) */
 export function getStoredCourses(): StoredCourse[] {

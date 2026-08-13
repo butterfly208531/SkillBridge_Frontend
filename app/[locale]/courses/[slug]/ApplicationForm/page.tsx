@@ -14,6 +14,8 @@ import { Navbar } from "@/app/[locale]/components/navbar";
 import Footer from "@/app/[locale]/components/footer";
 import { fetchCourses, fetchCourseById, fetchCourseBySlug } from "@/lib/api";
 import { coursesConfig, getCourseBySlug } from "@/lib/courses-config";
+import { getSeedCourseBySlug } from "@/lib/courses-seed";
+import { addApplicationSupabase } from "@/lib/applications-supabase";
 
 const ApplicationForm = () => {
   const t = useTranslations("applicationForm");
@@ -34,6 +36,7 @@ const ApplicationForm = () => {
     university: "",
     address: "",
     courseId: "",          // always starts empty — filled by UUID lookup below
+    courseType: "",        // VIP | One to One | Other
     marketingSource: "",
     agreeTerms: false,
     confirmAccuracy: false,
@@ -189,6 +192,17 @@ const ApplicationForm = () => {
           }
         }
 
+        // Step 3.5: Built-in seed fallback — always available even when store/API are down
+        if (!resolvedName) {
+          const seedMatch = getSeedCourseBySlug(slug);
+          if (seedMatch) {
+            resolvedName     = seedMatch.title || "";
+            resolvedCategory = seedMatch.category || "";
+            resolvedId       = seedMatch.id;
+            resolvedPrice    = seedMatch.priceDiscounted > 0 ? seedMatch.priceDiscounted : seedMatch.priceOriginal;
+          }
+        }
+
         if (resolvedName)     setCourseName(resolvedName);
         if (resolvedCategory) setCourseCategory(resolvedCategory);
         if (resolvedPrice !== null) setCoursePrice(resolvedPrice);
@@ -241,6 +255,7 @@ const ApplicationForm = () => {
     }
     if (!form.agreeTerms) errors.push("You must agree to the Terms and Conditions.");
     if (!form.confirmAccuracy) errors.push("You must confirm the accuracy of the information.");
+    if (!form.courseType) errors.push("Please select a course type.");
     if (errors.length > 0) { setValidationErrors(errors); return false; }
     return true;
   };
@@ -312,6 +327,7 @@ const ApplicationForm = () => {
           university: form.university,
           courseSlug: form.courseId,
           courseName: courseName,
+          courseType: form.courseType,
           marketingSource: form.marketingSource || "Direct",
           submittedAt: new Date().toISOString(),
           status: "pending_sync",
@@ -323,6 +339,25 @@ const ApplicationForm = () => {
           localApp,
           ...JSON.parse(localStorage.getItem("pendingApplications") || "[]"),
         ]));
+        addApplicationSupabase({
+          id: localApp.id,
+          fullName: localApp.fullName,
+          email: localApp.email,
+          phone: localApp.phone,
+          telegramHandle: localApp.telegramHandle,
+          address: localApp.address,
+          gender: localApp.gender,
+          nationality: localApp.nationality,
+          university: localApp.university,
+          dateOfBirth: form.dateOfBirth || "",
+          courseSlug: localApp.courseSlug,
+          courseName: localApp.courseName,
+          courseType: form.courseType,
+          marketingSource: localApp.marketingSource,
+          submittedAt: localApp.submittedAt,
+          status: "new",
+          read: false,
+        });
         // ── mark as applied so future attempts are blocked ───────────────
         markAsApplied(form.email, effectiveCourseId);
         // ─────────────────────────────────────────────────────────────────
@@ -343,6 +378,7 @@ const ApplicationForm = () => {
     try {
       const formData = new FormData();
       formData.append("courseId", form.courseId);
+      formData.append("courseType", form.courseType);
       formData.append("marketingSource", form.marketingSource || "Direct");
       formData.append("fullName", form.fullName);
       if (form.dateOfBirth) formData.append("dateOfBirth", new Date(form.dateOfBirth).toISOString());
@@ -387,6 +423,27 @@ const ApplicationForm = () => {
         const existing = JSON.parse(localStorage.getItem("adminNotifications") || "[]");
         localStorage.setItem("adminNotifications", JSON.stringify([notification, ...existing]));
       } catch (_) {}
+
+      // Also persist to Supabase so the admin panel/bell on ANY device sees it
+      addApplicationSupabase({
+        id: responseData.id || `local-${Date.now()}`,
+        fullName: form.fullName,
+        email: form.email,
+        phone: form.phone,
+        telegramHandle: form.telegramHandle,
+        address: form.address,
+        gender: form.gender,
+        nationality: form.nationality,
+        university: form.university,
+        dateOfBirth: form.dateOfBirth || "",
+        courseSlug: form.courseId,
+        courseName: courseName,
+        courseType: form.courseType,
+        marketingSource: form.marketingSource || "Direct",
+        submittedAt: new Date().toISOString(),
+        status: "new",
+        read: false,
+      });
 
       // ── mark as applied on successful API submission ─────────────────
       markAsApplied(form.email, effectiveCourseId);
@@ -598,6 +655,20 @@ const ApplicationForm = () => {
                             </div>
                           )}
                         </div>
+                      </div>
+
+                      {/* Course type — VIP / One to One / Other */}
+                      <div className="relative mt-5">
+                        <label htmlFor="courseType" className="block text-sm font-medium mb-1.5 text-gray-700 dark:text-gray-300">
+                          Course Type <span className="text-red-500">*</span>
+                        </label>
+                        <select id="courseType" name="courseType" value={form.courseType} onChange={handleChange} className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-900 dark:text-gray-100 appearance-none pr-12 focus:ring-2 focus:ring-[#2196F3] focus:border-transparent transition-all duration-200 text-sm">
+                          <option value="">Select course type</option>
+                          <option value="VIP">VIP</option>
+                          <option value="One to One">One to One</option>
+                          <option value="Other">Other</option>
+                        </select>
+                        <ArrowDown className="absolute right-3 top-[42px] text-gray-400 dark:text-gray-500 pointer-events-none w-4 h-4" />
                       </div>
 
                       <div className="relative mt-5">

@@ -935,7 +935,11 @@
          "youtube": { "label": "የዩቲዩብ ቻናል", "stat": "ደንበኞች" },
          "linkedin": { "label": "LinkedIn ገጽ", "stat": "ተከታዮች" },
          "hub": { "label": "ስኪልብሪጅ ሃብ", "stat": "አባላት" },
-         "discussions": { "label": "የውይይት ቡድኖች", "stat": "ንቁ ቡድኖች" }
+         "discussions": { "label": "የውይይት ቡድኖች", "stat": "ንቁ ቡድኖች" },
+         "tiktok": { "label": "ቲክቶክ", "stat": "ተከታዮች" },
+         "instagram": { "label": "ኢንስታግራም", "stat": "ተከታዮች" },
+         "facebook": { "label": "ፌስቡክ", "stat": "ተከታዮች" },
+         "twitter": { "label": "ትዊተር (X)", "stat": "ተከታዮች" }
       }
    },
    "videosSection": {

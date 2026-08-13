@@ -5,6 +5,7 @@ import Footer from "@/app/[locale]/components/footer";
 import React, { useState } from "react";
 import { useTranslations } from "next-intl";
 import { submitContactForm, addLocalContactMessage } from "@/lib/contact-api";
+import { addContactMessageSupabase } from "@/lib/contact-supabase";
 
 const Contact = () => {
   const [form, setForm] = useState({
@@ -31,11 +32,23 @@ const Contact = () => {
     setSubmitError("");
 
     // Always save to localStorage so admin sees it regardless of backend status
-    addLocalContactMessage({
+    const msg = addLocalContactMessage({
       name: form.name,
       email: form.email,
       phone: form.phone,
       message: form.message,
+    });
+
+    // Also persist to Supabase so the admin panel on any device can read it
+    addContactMessageSupabase({
+      id: msg.id,
+      name: msg.name,
+      email: msg.email,
+      phone: msg.phone,
+      message: msg.message,
+      status: msg.status,
+      createdAt: msg.createdAt,
+      read: msg.read,
     });
 
     // Also try the real backend (best effort)

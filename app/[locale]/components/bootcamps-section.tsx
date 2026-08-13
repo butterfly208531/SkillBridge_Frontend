@@ -9,7 +9,7 @@ import { SectionHeading } from "@/app/[locale]/components/ui/section-heading";
 import BootcampCard from "@/app/[locale]/components/ui/bootcamp-card";
 import { Button } from "@/app/[locale]/components/ui/button";
 import { fetchCourses } from "@/lib/api";
-import { getStoredCourses, getEffectiveImage, isCoursesInitialized } from "@/lib/courses-store";
+import { getStoredCourses, getEffectiveImage, getPublicCourses } from "@/lib/courses-store";
 import { syncSharedCoursesToLocal } from "@/lib/courses-shared";
 
 function courseToCardProps(c: any) {
@@ -41,9 +41,9 @@ export function BootcampsSection() {
       // Pull admin-published courses from the shared cloud store into localStorage
       await syncSharedCoursesToLocal();
 
-      // Start with locally-stored courses (includes admin uploads) immediately
-      const stored = getStoredCourses();
-      if (isCoursesInitialized() && !cancelled) {
+      // Start with seed + locally-stored courses (includes admin uploads) immediately
+      const stored = getPublicCourses();
+      if (!cancelled) {
         setCourses(stored.map(c => ({
           id:              c.id,
           slug:            c.id,
@@ -64,7 +64,7 @@ export function BootcampsSection() {
       try {
         const data = await fetchCourses();
         if (Array.isArray(data)) {
-          const storedNow = getStoredCourses();
+          const storedNow = getPublicCourses();
           const storedMap = Object.fromEntries(storedNow.map(s => [s.id, s]));
 
           const toDisplay = (c: any) => ({

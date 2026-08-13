@@ -27,13 +27,13 @@ const fadeInUp: Variants = {
 };
 
 const socials = [
-  { Icon: Facebook,    url: "https://www.facebook.com/profile.php?id=61574189453702",            label: "Facebook" },
-  { Icon: Instagram,   url: "https://www.instagram.com/skillbridgeinstituteoftech",              label: "Instagram" },
+  { Icon: Facebook,    url: "https://www.facebook.com/share/1BdDExr4ZH/",             label: "Facebook" },
+  { Icon: Instagram,   url: "https://www.instagram.com/skill.bridge.institute",        label: "Instagram" },
   { Icon: Linkedin,    url: "https://www.linkedin.com/company/skillbridge-institute-of-technology", label: "LinkedIn" },
-  { Icon: SiTelegram,  url: "https://t.me/skillbridgeinstituteoftech",                           label: "Telegram" },
-  { Icon: SiYoutube,   url: "https://www.youtube.com/@SkillBridgeInstituteOfTech",               label: "YouTube" },
-  { Icon: SiTiktok,    url: "https://www.tiktok.com/@skillbridge417",                            label: "TikTok" },
-  { Icon: SiX,         url: "https://x.com",                                                     label: "X" },
+  { Icon: SiTelegram,  url: "https://t.me/skillbridgeinstituteoftech",                 label: "Telegram" },
+  { Icon: SiYoutube,   url: "https://www.youtube.com/@SkillBridgeInstituteOfTech",     label: "YouTube" },
+  { Icon: SiTiktok,    url: "https://www.tiktok.com/@skillbridge_institute",           label: "TikTok" },
+  { Icon: SiX,         url: "https://x.com/Skillbridgedu",                             label: "X" },
 ];
 
 export default function Footer() {

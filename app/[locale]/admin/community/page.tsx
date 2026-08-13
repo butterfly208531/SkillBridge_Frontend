@@ -3,8 +3,9 @@
 import { useEffect, useState } from "react";
 import {
   Send, Youtube, Linkedin, Globe, Instagram, Facebook,
-  LayoutGrid, Save, RotateCcw, Users, CheckCircle2,
+  LayoutGrid, Save, RotateCcw, Users, CheckCircle2, Plus, Trash2,
 } from "lucide-react";
+import { SiX } from "react-icons/si";
 import AdminHeader from "../components/AdminHeader";
 import { cn } from "@/lib/utils";
 import {
@@ -27,6 +28,7 @@ const PLATFORM_META: Record<
   instagram: { label: "Instagram", icon: Instagram,   color: "text-[#F57C00]", bg: "bg-[#F57C00]/10", statLabel: "Followers"   },
   facebook:  { label: "Facebook",  icon: Facebook,    color: "text-[#1E90FF]", bg: "bg-[#1E90FF]/10", statLabel: "Followers"   },
   tiktok:    { label: "TikTok",    icon: Globe,       color: "text-[#1E90FF]", bg: "bg-[#1E90FF]/10", statLabel: "Followers"   },
+  twitter:   { label: "Twitter",   icon: SiX,         color: "text-[#1E90FF]", bg: "bg-[#1E90FF]/10", statLabel: "Followers"   },
 };
 
 // ── Page ─────────────────────────────────────────────────────────────────────
@@ -75,6 +77,29 @@ export default function AdminCommunityPage() {
     setStats(loadCommunityStatsOverrides());
     pushSharedCommunityStats([]);
     setDirty(false);
+    setSaved(false);
+  };
+
+  const handleAddPlatform = () => {
+    const newKey = `platform-${Date.now()}`;
+    setStats((prev) => [
+      ...prev,
+      {
+        key: newKey,
+        label: "New Platform",
+        statLabel: "followers",
+        url: "https://",
+        statsValue: "0",
+        statsSuffix: "+",
+      },
+    ]);
+    setDirty(true);
+    setSaved(false);
+  };
+
+  const handleRemovePlatform = (key: string) => {
+    setStats((prev) => prev.filter((s) => s.key !== key));
+    setDirty(true);
     setSaved(false);
   };
 
@@ -161,18 +186,51 @@ export default function AdminCommunityPage() {
                 return (
                   <div
                     key={stat.key}
-                    className="grid grid-cols-1 md:grid-cols-[200px_1fr_120px_100px] gap-4 items-center px-6 py-4 hover:bg-gray-50/50 transition-colors"
+                    className="grid grid-cols-1 md:grid-cols-[220px_1fr_120px_100px_40px] gap-4 items-center px-6 py-4 hover:bg-gray-50/50 transition-colors"
                   >
                     {/* Platform identity */}
                     <div className="flex items-center gap-3">
                       <div className={cn("w-9 h-9 rounded-xl flex items-center justify-center shrink-0", meta.bg)}>
                         <Icon className={cn("h-4 w-4", meta.color)} aria-hidden="true" />
                       </div>
-                      <div>
-                        <p className="text-sm font-semibold text-gray-800">{meta.label}</p>
-                        <p className="text-[11px] text-gray-400">{meta.statLabel}</p>
+                      <div className="flex-1">
+                        {PLATFORM_META[stat.key] ? (
+                          <>
+                            <p className="text-sm font-semibold text-gray-800">{meta.label}</p>
+                            <p className="text-[11px] text-gray-400">{meta.statLabel}</p>
+                          </>
+                        ) : (
+                          <div className="space-y-1">
+                            <input
+                              type="text"
+                              value={stat.label ?? ""}
+                              onChange={(e) => updateField(stat.key, "label", e.target.value)}
+                              className="w-full px-2 py-1 text-sm font-semibold border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1E90FF]/30 bg-white"
+                              placeholder="Platform name"
+                            />
+                            <input
+                              type="text"
+                              value={stat.statLabel ?? ""}
+                              onChange={(e) => updateField(stat.key, "statLabel", e.target.value)}
+                              className="w-full px-2 py-1 text-[11px] border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1E90FF]/30 bg-white"
+                              placeholder="Stat label (e.g. followers)"
+                            />
+                          </div>
+                        )}
                       </div>
                     </div>
+
+                    {/* Remove (custom platforms only) */}
+                    {!PLATFORM_META[stat.key] && (
+                      <button
+                        type="button"
+                        onClick={() => handleRemovePlatform(stat.key)}
+                        title="Remove platform"
+                        className="flex items-center justify-center w-8 h-8 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors"
+                      >
+                        <Trash2 size={15} />
+                      </button>
+                    )}
 
                     {/* URL */}
                     <div>
@@ -224,7 +282,7 @@ export default function AdminCommunityPage() {
           </div>
 
           {/* Actions */}
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-3">
             <button
               type="submit"
               className="flex items-center gap-2 px-6 py-2.5 bg-[#1E90FF] hover:bg-blue-500 text-white text-sm font-semibold rounded-xl transition-colors shadow-sm"
@@ -239,6 +297,14 @@ export default function AdminCommunityPage() {
             >
               <RotateCcw size={14} />
               Reset to Defaults
+            </button>
+            <button
+              type="button"
+              onClick={handleAddPlatform}
+              className="flex items-center gap-2 px-5 py-2.5 bg-[#F57C00] hover:bg-orange-500 text-white text-sm font-semibold rounded-xl transition-colors shadow-sm"
+            >
+              <Plus size={15} />
+              Add Platform
             </button>
           </div>
         </form>

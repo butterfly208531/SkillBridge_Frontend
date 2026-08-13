@@ -1,23 +1,28 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Save } from "lucide-react";
 import AdminHeader from "../components/AdminHeader";
+import { getSettingsSupabase, saveSettingsSupabase, DEFAULT_SETTINGS } from "@/lib/settings-supabase";
 
 export default function SettingsPage() {
   const [saved, setSaved] = useState(false);
-  const [form, setForm] = useState({
-    siteName: "SkillBridge Institute of Technology",
-    email: "skillbridgeinstitituteoftech@gmail.com",
-    phone1: "+251955935455",
-    phone2: "+251974424372",
-    telegram: "@skillbridgesupport2",
-    location: "Addis Ababa, Ethiopia",
-  });
+  const [loading, setLoading] = useState(true);
+  const [form, setForm] = useState(DEFAULT_SETTINGS);
 
-  const handleSave = (e: React.FormEvent) => {
+  useEffect(() => {
+    (async () => {
+      const settings = await getSettingsSupabase();
+      if (settings) setForm({ ...DEFAULT_SETTINGS, ...settings });
+      setLoading(false);
+    })();
+  }, []);
+
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
+    const ok = await saveSettingsSupabase(form);
     setSaved(true);
+    if (!ok) console.warn("Settings could not be saved to Supabase");
     setTimeout(() => setSaved(false), 3000);
   };
 
@@ -49,14 +54,16 @@ export default function SettingsPage() {
                   type={type}
                   value={(form as any)[field]}
                   onChange={e => setForm(p => ({ ...p, [field]: e.target.value }))}
-                  className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1E90FF]/30"
+                  disabled={loading}
+                  className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1E90FF]/30 disabled:opacity-60"
                 />
               </div>
             ))}
             <div className="pt-2">
               <button
                 type="submit"
-                className="flex items-center gap-2 px-5 py-2.5 bg-[#1E90FF] text-white text-sm font-semibold rounded-lg hover:bg-blue-500 transition-colors"
+                disabled={loading}
+                className="flex items-center gap-2 px-5 py-2.5 bg-[#1E90FF] text-white text-sm font-semibold rounded-lg hover:bg-blue-500 transition-colors disabled:opacity-60"
               >
                 <Save size={15} /> Save Settings
               </button>

@@ -178,7 +178,7 @@ export default function JobsPage() {
         {allJobs.length === 0 ? (
           <div className="text-center py-20 text-gray-400">
             <Briefcase className="h-14 w-14 mx-auto mb-3 opacity-20" />
-            <p className="text-base font-medium">We don&apos;t have any job openings right now. Please check back soon.</p>
+            <p className="text-base font-medium">For now we have not job.</p>
           </div>
         ) : filteredOpen.length === 0 && filteredClosed.length === 0 ? (
           <div className="text-center py-20 text-gray-400">

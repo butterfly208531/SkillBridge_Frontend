@@ -9,7 +9,7 @@ import BootcampCard from "@/app/[locale]/components/ui/bootcamp-card";
 import { Button } from "@/app/[locale]/components/ui/button";
 import { Input } from "@/app/[locale]/components/ui/input";
 import { fetchCourses } from "@/lib/api";
-import { getStoredCourses, getEffectiveImage, isCoursesInitialized } from "@/lib/courses-store";
+import { getStoredCourses, getEffectiveImage, getPublicCourses } from "@/lib/courses-store";
 import { syncSharedCoursesToLocal } from "@/lib/courses-shared";
 import { cn } from "@/lib/utils";
 
@@ -53,8 +53,8 @@ export default function CoursesPage() {
       // Pull admin-published courses from the shared cloud store into localStorage
       await syncSharedCoursesToLocal();
 
-      // Always show local store data first (admin-managed courses)
-      const stored = isCoursesInitialized() ? getStoredCourses() : [];
+      // Always show seed + admin-managed courses (never an empty page)
+      const stored = getPublicCourses();
       if (cancelled) return;
       setCourses(stored.map(c => ({
         id:               c.id,
@@ -72,11 +72,11 @@ export default function CoursesPage() {
       })));
       setLoading(false);
 
-      // Refresh from API in background — merge, never drop admin-saved local courses
+      // Refresh from API in background — merge, never drop seed/admin courses
       try {
         const data = await fetchCourses();
         const list = Array.isArray(data) ? data : [];
-        const storedNow = getStoredCourses();
+        const storedNow = getPublicCourses();
         const storedMap = Object.fromEntries(storedNow.map(s => [s.id, s]));
 
         const toDisplay = (c: any) => ({

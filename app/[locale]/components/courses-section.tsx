@@ -16,7 +16,7 @@ import { coursesConfig } from "@/lib/courses-config";
 import { Button } from "./ui/button";
 import { useEffect, useState } from "react";
 import { fetchCourses } from "@/lib/api";
-import { getStoredCourses, getEffectiveImage } from "@/lib/courses-store";
+import { getStoredCourses, getEffectiveImage, getPublicCourses } from "@/lib/courses-store";
 import { syncSharedCoursesToLocal } from "@/lib/courses-shared";
 
 // Remove old per-component lookup — getEffectiveImage handles all matching in courses-store
@@ -33,7 +33,7 @@ export function CoursesSection() {
         await syncSharedCoursesToLocal();
 
         // Build a map of stored courses so adminImageUrl survives the API merge
-        const stored = getStoredCourses();
+        const stored = getPublicCourses();
         const storedMap = Object.fromEntries(stored.map(s => [s.id, s]));
 
         const data = await fetchCourses();
@@ -66,7 +66,7 @@ export function CoursesSection() {
 
         const transformedCourses = list.map(transform);
 
-        // Keep admin-added local courses the backend doesn't have (including when API is empty)
+        // Keep seed/admin courses the backend doesn't have (including when API is empty)
         const matchedKeys = new Set(list.map((a: any) => (a.slug || a.id)));
         stored.forEach(s => {
           const alreadyInApi = matchedKeys.has(s.id)

@@ -9,6 +9,10 @@ import {
   updateLocalContactMessageStatus,
   markLocalContactMessageRead,
 } from "@/lib/contact-api";
+import {
+  getContactMessagesSupabase,
+  updateContactMessageSupabase,
+} from "@/lib/contact-supabase";
 
 const API = process.env.NEXT_PUBLIC_API_BASE_URL || "https://skillbridge-backend2.onrender.com/api";
 
@@ -51,6 +55,10 @@ export default function ContactPage() {
     setError("");
     setSuccess("");
 
+    // Always pull from Supabase so messages submitted while the backend was
+    // down are still visible on any admin device.
+    const supabaseMsgs = await getContactMessagesSupabase();
+
     try {
       const response = await fetch(`${API}/contact`, {
         headers: { Authorization: `Bearer ${token}` },
@@ -58,7 +66,8 @@ export default function ContactPage() {
 
       if (response.status === 401 || response.status === 403) {
         const local = getLocalContactMessages() as unknown as ContactMsg[];
-        setMessages(local);
+        const merged = mergeMessages(supabaseMsgs as unknown as ContactMsg[], local);
+        setMessages(merged);
         setLoading(false);
         return;
       }
@@ -71,16 +80,30 @@ export default function ContactPage() {
       const local = getLocalContactMessages();
       const apiIds = new Set(apiMsgs.map((m) => m.id || m._id));
       const localOnly = local.filter((m) => !apiIds.has(m.id)) as unknown as ContactMsg[];
-      const merged = [...apiMsgs, ...localOnly];
+      const merged = mergeMessages([...apiMsgs, ...localOnly], supabaseMsgs as unknown as ContactMsg[]);
 
       setMessages(merged);
       if (merged.length > 0) setSuccess(`Loaded ${merged.length} messages`);
     } catch {
       const local = getLocalContactMessages() as unknown as ContactMsg[];
-      setMessages(local);
+      const merged = mergeMessages(supabaseMsgs as unknown as ContactMsg[], local);
+      setMessages(merged);
     } finally {
       setLoading(false);
     }
+  };
+
+  /** Dedupe by id: primary list wins, extra entries from the second list are appended. */
+  const mergeMessages = (primary: ContactMsg[], extra: ContactMsg[]): ContactMsg[] => {
+    const seen = new Set<string>();
+    const result: ContactMsg[] = [];
+    for (const m of [...primary, ...extra]) {
+      const id = m.id || m._id || "";
+      if (!id || seen.has(id)) continue;
+      seen.add(id);
+      result.push(m);
+    }
+    return result;
   };
 
   useEffect(() => { fetchMessages(); }, []);
@@ -103,6 +126,8 @@ export default function ContactPage() {
 
       if (!response.ok) updateLocalContactMessageStatus(id, status);
 
+      updateContactMessageSupabase(id, { status, read: status !== "new" });
+
       setMessages(prev =>
         prev.map(m => (m.id || m._id) === id ? { ...m, status } : m)
       );
@@ -111,6 +136,7 @@ export default function ContactPage() {
       }
     } catch {
       updateLocalContactMessageStatus(id, status);
+      updateContactMessageSupabase(id, { status, read: status !== "new" });
       setMessages(prev =>
         prev.map(m => (m.id || m._id) === id ? { ...m, status } : m)
       );

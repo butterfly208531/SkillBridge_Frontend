@@ -72,7 +72,7 @@ export function JobsSection() {
         {openJobs.length === 0 ? (
           <div className="flex flex-col items-center justify-center gap-3 py-12 text-gray-400">
             <Briefcase className="h-12 w-12 opacity-20" />
-            <p className="text-sm font-medium">We don&apos;t have any job openings right now. Please check back soon.</p>
+            <p className="text-sm font-medium">For now we have not job.</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8 items-stretch">

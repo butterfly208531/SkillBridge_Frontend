@@ -4,6 +4,11 @@ import { useEffect, useState } from "react";
 import { Search, Eye, Trash2, CheckCircle, XCircle, Clock, RefreshCw } from "lucide-react";
 import AdminHeader from "../components/AdminHeader";
 import { cn } from "@/lib/utils";
+import {
+  getApplicationsSupabase,
+  updateApplicationSupabase,
+  deleteApplicationSupabase,
+} from "@/lib/applications-supabase";
 
 const API = process.env.NEXT_PUBLIC_API_BASE_URL || "https://skillbridge-backend2.onrender.com/api";
 
@@ -20,6 +25,7 @@ interface Application {
   courseId?: string;
   course?: string;
   category?: string;
+  courseType?: string;
   paymentMethod?: string;
   payment?: string;
   paymentReference?: string;
@@ -94,11 +100,44 @@ export default function ApplicationsPage() {
             courseId:       n.courseSlug || n.courseId,
             course:         n.courseName || n.course,
             category:       n.category,
+            courseType:     n.courseType,
             paymentMethod:  n.paymentMethod,
             status:         n.status || "pending",
             createdAt:      n.submittedAt || n.createdAt,
           }));
       } catch { return []; }
+    };
+
+    // Always pull from Supabase so applications submitted while the backend
+    // was down are still visible on any admin device.
+    const supabaseApps = await getApplicationsSupabase();
+    const supabaseMapped: Application[] = supabaseApps.map(a => ({
+      id:             a.id,
+      fullName:       a.fullName,
+      email:          a.email,
+      phone:          a.phone,
+      telegramHandle: a.telegramHandle,
+      address:        a.address,
+      gender:         a.gender,
+      nationality:    a.nationality,
+      courseId:       a.courseSlug,
+      course:         a.courseName,
+      courseType:     a.courseType,
+      status:         a.status === "new" ? "pending" : a.status,
+      createdAt:      a.submittedAt,
+    }));
+
+    // Dedupe by id: primary list wins, extra Supabase entries are appended.
+    const mergeSupabase = (list: Application[]): Application[] => {
+      const seen = new Set<string>();
+      const merged: Application[] = [];
+      for (const a of [...list, ...supabaseMapped]) {
+        const id = a.id || (a as any)._id || "";
+        if (!id || seen.has(id)) continue;
+        seen.add(id);
+        merged.push(a);
+      }
+      return merged;
     };
 
     const applyAndSetApps = (list: Application[]) => {
@@ -127,22 +166,22 @@ export default function ApplicationsPage() {
           const lid = l.id || (l as any)._id || "";
           return lid.startsWith("local-") && !apiIds.has(lid);
         });
-        const merged = [...apiApps, ...offlineOnly];
+        const merged = mergeSupabase([...apiApps, ...offlineOnly]);
         applyAndSetApps(merged);
         if (merged.length > 0) {
           setSuccess(`Loaded ${merged.length} application${merged.length !== 1 ? "s" : ""}`);
         }
       } else if (response.status === 401 || response.status === 403) {
-        applyAndSetApps(loadLocal());
+        applyAndSetApps(mergeSupabase(loadLocal()));
       } else {
         const local = loadLocal();
-        applyAndSetApps(local);
+        applyAndSetApps(mergeSupabase(local));
         if (local.length > 0) {
           setError(`Showing ${local.length} locally stored submission${local.length !== 1 ? "s" : ""} (live data unavailable)`);
         }
       }
     } catch {
-      applyAndSetApps(loadLocal());
+      applyAndSetApps(mergeSupabase(loadLocal()));
     } finally {
       setLoading(false);
     }
@@ -192,6 +231,7 @@ export default function ApplicationsPage() {
     if (id.startsWith("local-")) {
       setApps(prev => prev.map(a => (a.id || a._id) === id ? { ...a, status: newStatus } : a));
       persistStatusToLocalStorage(id, newStatus);
+      updateApplicationSupabase(id, { status: newStatus });
       setSelected(null);
       setSuccess(`Application ${newStatus} successfully`);
       setTimeout(() => setSuccess(""), 3000);
@@ -209,6 +249,7 @@ export default function ApplicationsPage() {
       if (!response.ok) throw new Error(`Failed to update status: ${response.status}`);
       setApps(prev => prev.map(a => (a.id || a._id) === id ? { ...a, status: newStatus } : a));
       persistStatusToLocalStorage(id, newStatus);
+      updateApplicationSupabase(id, { status: newStatus });
       setSelected(null);
       setSuccess(`Application ${newStatus} successfully`);
       setTimeout(() => setSuccess(""), 3000);
@@ -229,7 +270,18 @@ export default function ApplicationsPage() {
       return next;
     });
     if (selected && (selected.id || selected._id) === id) setSelected(null);
+
+    // Also remove from localStorage, otherwise the row comes back on refresh.
+    try {
+      ["pendingApplications", "adminNotifications"].forEach(key => {
+        const arr = JSON.parse(localStorage.getItem(key) || "[]");
+        const next = arr.filter((a: any) => (a.id || a._id) !== id);
+        localStorage.setItem(key, JSON.stringify(next));
+      });
+    } catch { /* ignore */ }
+
     const token = sessionStorage.getItem("adminToken");
+    deleteApplicationSupabase(id);
     try {
       await fetch(`${API}/applications/${id}`, {
         method: "DELETE",
@@ -455,6 +507,7 @@ export default function ApplicationsPage() {
                 { label: "Phone",       value: selected.phone },
                 { label: "Telegram",    value: selected.telegramHandle },
                 { label: "Course",      value: selected.course || (selected.courseId && !selected.courseId.includes("-") ? selected.courseId : "") || selected.courseId },
+                { label: "Course Type", value: selected.courseType },
                 { label: "Payment",     value: selected.paymentMethod },
                 { label: "Payment Ref", value: selected.paymentReference },
                 { label: "Gender",      value: selected.gender },

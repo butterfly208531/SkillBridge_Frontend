@@ -6,8 +6,10 @@ import AdminHeader from "../components/AdminHeader";
 import StatCard from "../components/StatCard";
 import { fetchCourses, type Course } from "@/lib/api";
 import { getStoredCourses, saveCourses } from "@/lib/courses-store";
-import { getStoredScholarships } from "@/lib/scholarship-store";
-import { getStoredJobs } from "@/lib/jobs-store";
+import { getCoursesSupabase } from "@/lib/courses-supabase";
+import { getApplicationsSupabase } from "@/lib/applications-supabase";
+import { getScholarshipsSupabase } from "@/lib/scholarships-supabase";
+import { getJobsSupabase } from "@/lib/jobs-supabase";
 
 const API = process.env.NEXT_PUBLIC_API_BASE_URL || "https://skillbridge-backend2.onrender.com/api";
 
@@ -110,13 +112,23 @@ export default function DashboardPage() {
         saveCourses(coursesData.map((c, i) => toStoredCourse(c, i)));
         setCourses(coursesData);
       } else {
-        // API returned empty — fall back to localStorage
+        // API returned empty — fall back to localStorage, then Supabase
         const stored = getStoredCourses();
-        setCourses(stored.length > 0 ? stored.map(storedToCourse) : []);
+        if (stored.length > 0) {
+          setCourses(stored.map(storedToCourse));
+        } else {
+          const supabaseCourses = await getCoursesSupabase();
+          setCourses(supabaseCourses.map(storedToCourse));
+        }
       }
     } catch {
       const stored = getStoredCourses();
-      setCourses(stored.length > 0 ? stored.map(storedToCourse) : []);
+      if (stored.length > 0) {
+        setCourses(stored.map(storedToCourse));
+      } else {
+        const supabaseCourses = await getCoursesSupabase();
+        setCourses(supabaseCourses.map(storedToCourse));
+      }
     }
   };
 
@@ -131,10 +143,16 @@ export default function DashboardPage() {
         const data = await res.json();
         setApplications(Array.isArray(data) ? data : data.data ?? []);
       } else {
-        setApplications([]);
+        const supabaseApps = await getApplicationsSupabase();
+        setApplications(supabaseApps.map(a => ({
+          id: a.id, fullName: a.fullName, status: a.status === "new" ? "pending" : a.status,
+        })));
       }
     } catch {
-      setApplications([]);
+      const supabaseApps = await getApplicationsSupabase();
+      setApplications(supabaseApps.map(a => ({
+        id: a.id, fullName: a.fullName, status: a.status === "new" ? "pending" : a.status,
+      })));
     } finally {
       setLoadingApps(false);
     }
@@ -151,10 +169,12 @@ export default function DashboardPage() {
         const list = Array.isArray(data) ? data : data.data ?? [];
         setScholarships(list.length);
       } else {
-        setScholarships(getStoredScholarships().filter(s => s.status === "active").length);
+        const supabaseData = await getScholarshipsSupabase();
+        setScholarships((supabaseData?.scholarships ?? []).filter(s => s.status === "active").length);
       }
     } catch {
-      setScholarships(getStoredScholarships().filter(s => s.status === "active").length);
+      const supabaseData = await getScholarshipsSupabase();
+      setScholarships((supabaseData?.scholarships ?? []).filter(s => s.status === "active").length);
     }
   };
 
@@ -172,10 +192,12 @@ export default function DashboardPage() {
         const { saveJobs } = await import("@/lib/jobs-store");
         saveJobs(list);
       } else {
-        setJobs(getStoredJobs().length);
+        const supabaseJobs = await getJobsSupabase();
+        setJobs((supabaseJobs ?? []).length);
       }
     } catch {
-      setJobs(getStoredJobs().length);
+      const supabaseJobs = await getJobsSupabase();
+      setJobs((supabaseJobs ?? []).length);
     }
   };
 

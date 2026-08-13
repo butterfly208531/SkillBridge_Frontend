@@ -9,13 +9,13 @@ const BLUE   = "#1E90FF";
 const ORANGE = "#F57C00";
 
 const socials = [
-  { Icon: Facebook,   url: "https://www.facebook.com/profile.php?id=61574189453702",               label: "Facebook",  color: BLUE   },
-  { Icon: Instagram,  url: "https://www.instagram.com/skillbridgeinstituteoftech",                 label: "Instagram", color: ORANGE },
+  { Icon: Facebook,   url: "https://www.facebook.com/share/1BdDExr4ZH/",                          label: "Facebook",  color: BLUE   },
+  { Icon: Instagram,  url: "https://www.instagram.com/skill.bridge.institute",                    label: "Instagram", color: ORANGE },
   { Icon: Linkedin,   url: "https://www.linkedin.com/company/skillbridge-institute-of-technology", label: "LinkedIn",  color: BLUE   },
   { Icon: SiTelegram, url: "https://t.me/skillbridgeinstituteoftech",                              label: "Telegram",  color: ORANGE },
   { Icon: SiYoutube,  url: "https://www.youtube.com/@SkillBridgeInstituteOfTech",                  label: "YouTube",   color: BLUE   },
-  { Icon: SiTiktok,   url: "https://www.tiktok.com/@skillbridge417",                               label: "TikTok",    color: ORANGE },
-  { Icon: SiX,        url: "https://x.com",                                                        label: "X",         color: BLUE   },
+  { Icon: SiTiktok,   url: "https://www.tiktok.com/@skillbridge_institute",                       label: "TikTok",    color: ORANGE },
+  { Icon: SiX,        url: "https://x.com/Skillbridgedu",                                         label: "X",         color: BLUE   },
 ];
 
 export function SocialSidebar() {

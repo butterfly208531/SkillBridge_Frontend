@@ -22,7 +22,8 @@ import { courseDetailsConfig } from "@/lib/course-details-config";
 import { Navbar } from "../../components/navbar";
 import { useEffect, useState } from "react";
 import { fetchCourses, fetchCourseById, fetchCourseBySlug } from "@/lib/api";
-import { getStoredCourses } from "@/lib/courses-store";
+import { getStoredCourses, getPublicCourses } from "@/lib/courses-store";
+import { getSeedCourseBySlug } from "@/lib/courses-seed";
 import { syncSharedCoursesToLocal } from "@/lib/courses-shared";
 
 /** Normalise a string to a URL slug for loose matching */
@@ -69,7 +70,7 @@ export default function CourseDetailPage() {
         // 3. Try localStorage store (admin-added courses use slug as id)
         // Also resolve any admin-set prices that may have been lost in the API merge
         await syncSharedCoursesToLocal();
-        const stored = getStoredCourses();
+        const stored = getPublicCourses();
         const idSlug = toSlug(id);
         const storedMatch = stored.find(
           (c) =>
@@ -77,6 +78,32 @@ export default function CourseDetailPage() {
             toSlug(c.id) === idSlug ||
             toSlug(c.title) === idSlug
         );
+
+        // 4. Built-in seed fallback — always available even when store/API are down
+        if (!foundCourse && !storedMatch) {
+          const seedMatch = getSeedCourseBySlug(id);
+          if (seedMatch) {
+            foundCourse = {
+              id: seedMatch.id,
+              title: seedMatch.title,
+              shortDescription: seedMatch.shortDescription,
+              detailedDescription: seedMatch.shortDescription,
+              imageUrl: seedMatch.imageUrl,
+              priceOriginal: seedMatch.priceOriginal,
+              priceDiscounted: seedMatch.priceDiscounted,
+              duration: seedMatch.duration,
+              level: seedMatch.level || "Beginner",
+              rating: seedMatch.rating,
+              studentsEnrolled: 0,
+              startDate: seedMatch.startDate,
+              category: { id: "", name: seedMatch.category, description: "", status: "" },
+              instructor: { id: "", name: "Instructor", email: "", imageUrl: "", role: "", status: "" },
+              modules: [],
+              learningOutcomes: seedMatch.learningOutcomes ?? [],
+              prerequisites: [],
+            };
+          }
+        }
 
         if (!foundCourse) {
           if (storedMatch) {

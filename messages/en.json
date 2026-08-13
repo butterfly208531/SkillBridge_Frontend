@@ -5051,7 +5051,8 @@
          "discussions": { "label": "Discussion Groups",   "stat": "discussions" },
          "instagram":   { "label": "Instagram",           "stat": "followers" },
          "facebook":    { "label": "Facebook Page",       "stat": "followers" },
-         "tiktok":      { "label": "TikTok",              "stat": "followers" }
+         "tiktok":      { "label": "TikTok",              "stat": "followers" },
+         "twitter":     { "label": "Twitter (X)",         "stat": "followers" }
       },
       "features": {
          "events":     { "title": "Events",           "description": "Live workshops, webinars, and networking sessions open to all students." },

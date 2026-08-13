@@ -137,7 +137,7 @@ export function ScholarshipsSection({ showAll = false }: { showAll?: boolean }) 
         {scholarships.length === 0 ? (
           <div className="flex flex-col items-center justify-center gap-3 py-16 text-gray-400">
             <Archive className="h-12 w-12 opacity-20" />
-            <p className="text-sm font-medium">We don&apos;t have any scholarships right now. Please check back soon.</p>
+            <p className="text-sm font-medium">For now we have not scholarship.</p>
           </div>
         ) : (
         <>
@@ -214,6 +214,7 @@ export function ScholarshipsSection({ showAll = false }: { showAll?: boolean }) 
         )}
 
         {/* Previous winners */}
+        {winners.filter(w => w.status === "active").length > 0 && (
         <div className="mt-14">
           <h3 className="text-center text-xl font-semibold text-gray-900 dark:text-gray-50 mb-6">
             {t("previousWinners")}
@@ -249,6 +250,7 @@ export function ScholarshipsSection({ showAll = false }: { showAll?: boolean }) 
             ))}
           </div>
         </div>
+        )}
       </div>
     </section>
   );
