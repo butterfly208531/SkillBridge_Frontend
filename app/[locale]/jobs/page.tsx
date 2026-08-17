@@ -12,11 +12,13 @@ import {
 } from "@/lib/jobs-config";
 import { getStoredJobs, saveJobs, isJobsInitialized } from "@/lib/jobs-store";
 import { syncSharedJobsToLocal } from "@/lib/jobs-shared";
+import { usePageView } from "@/hooks/use-page-view";
 import { cn } from "@/lib/utils";
 
 const API = process.env.NEXT_PUBLIC_API_BASE_URL || "https://skillbridge-backend2.onrender.com/api";
 
 export default function JobsPage() {
+  usePageView("/jobs");
   const [allJobs,     setAllJobs]     = useState<Job[]>(() => {
     // Sync init from localStorage so first render isn't empty
     return isJobsInitialized() ? getStoredJobs() : jobsConfig;
@@ -178,7 +180,7 @@ export default function JobsPage() {
         {allJobs.length === 0 ? (
           <div className="text-center py-20 text-gray-400">
             <Briefcase className="h-14 w-14 mx-auto mb-3 opacity-20" />
-            <p className="text-base font-medium">For now we have not job.</p>
+            <p className="text-base font-medium">We currently do not have any job openings.</p>
           </div>
         ) : filteredOpen.length === 0 && filteredClosed.length === 0 ? (
           <div className="text-center py-20 text-gray-400">

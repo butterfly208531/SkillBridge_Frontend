@@ -6,8 +6,10 @@ import React, { useState } from "react";
 import { useTranslations } from "next-intl";
 import { submitContactForm, addLocalContactMessage } from "@/lib/contact-api";
 import { addContactMessageSupabase } from "@/lib/contact-supabase";
+import { usePageView } from "@/hooks/use-page-view";
 
 const Contact = () => {
+  usePageView("/contact");
   const [form, setForm] = useState({
     name: "",
     email: "",

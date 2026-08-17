@@ -12,6 +12,7 @@ import { CommunitySection } from "@/app/[locale]/components/community-section";
 import { VideosSection } from "@/app/[locale]/components/videos-section";
 import { FinalCTASection } from "@/app/[locale]/components/final-cta-section";
 import Footer from "@/app/[locale]/components/footer";
+import { PageViewTracker } from "@/app/[locale]/components/page-view-tracker";
 
 export const metadata = {
       title: "SkillBridge | Upskill with Expert-Led Courses & Training",
@@ -60,6 +61,7 @@ export const metadata = {
 export default function Home() {
   return (
     <div className="min-h-screen bg-white dark:bg-gray-950 transition-colors duration-300 font-montserrat">
+      <PageViewTracker page="/" />
       <Navbar />
       <HeroSection />
       <BootcampsSection />

@@ -6,6 +6,7 @@ import Image from "next/image";
 import { CalendarDays, Play, Loader2 } from "lucide-react";
 import { Navbar } from "@/app/[locale]/components/navbar";
 import Footer from "@/app/[locale]/components/footer";
+import { usePageView } from "@/hooks/use-page-view";
 
 interface YouTubeVideo {
   id: string;
@@ -52,6 +53,7 @@ async function fetchAllVideos(): Promise<YouTubeVideo[]> {
 }
 
 export default function VideosPage() {
+  usePageView("/videos");
   const [videos, setVideos] = useState<YouTubeVideo[]>([]);
   const [loading, setLoading] = useState(true);
 

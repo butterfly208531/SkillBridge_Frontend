@@ -7,6 +7,7 @@ import Link from "next/link";
 import { Navbar } from "@/app/[locale]/components/navbar";
 import Footer from "@/app/[locale]/components/footer";
 import { announcementsConfig, categoryMeta, type AnnouncementCategory } from "@/lib/announcements-config";
+import { usePageView } from "@/hooks/use-page-view";
 import { cn } from "@/lib/utils";
 
 function formatDate(iso: string) {
@@ -26,6 +27,7 @@ function timeAgo(iso: string) {
 const ALL_CATS: AnnouncementCategory[] = ["scholarship", "course", "deadline", "spotlight", "general"];
 
 export default function AnnouncementsPage() {
+  usePageView("/announcements");
   const [search,   setSearch]  = useState("");
   const [category, setCategory] = useState<AnnouncementCategory | "all">("all");
 

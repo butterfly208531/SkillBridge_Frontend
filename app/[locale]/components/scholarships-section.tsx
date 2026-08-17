@@ -137,7 +137,7 @@ export function ScholarshipsSection({ showAll = false }: { showAll?: boolean }) 
         {scholarships.length === 0 ? (
           <div className="flex flex-col items-center justify-center gap-3 py-16 text-gray-400">
             <Archive className="h-12 w-12 opacity-20" />
-            <p className="text-sm font-medium">For now we have not scholarship.</p>
+            <p className="text-sm font-medium">Scholarships are not currently available.</p>
           </div>
         ) : (
         <>

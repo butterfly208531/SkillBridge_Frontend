@@ -2,6 +2,7 @@ import { Navbar } from "@/app/[locale]/components/navbar";
 import { ScholarshipsSection } from "@/app/[locale]/components/scholarships-section";
 import Footer from "@/app/[locale]/components/footer";
 import { scholarshipsConfig, isClosed } from "@/lib/scholarships-config";
+import { PageViewTracker } from "@/app/[locale]/components/page-view-tracker";
 
 export const metadata = {
   title: "Scholarships | SkillBridge",
@@ -14,6 +15,7 @@ export default function ScholarshipsPage() {
 
   return (
     <div className="min-h-screen bg-white dark:bg-gray-950 transition-colors duration-300 font-montserrat">
+      <PageViewTracker page="/scholarships" />
       <Navbar />
       <main className="pt-8">
         {/* Hero banner */}

@@ -10,6 +10,7 @@ import { SectionHeading } from "@/app/[locale]/components/ui/section-heading";
 import { projectsConfig, CATEGORY_MAP, type ProjectCategory, type ProjectConfig } from "@/lib/projects-config";
 import { getStoredProjects, saveProjects, type StoredProject } from "@/lib/project-store";
 import { syncSharedProjectsToLocal } from "@/lib/projects-shared";
+import { usePageView } from "@/hooks/use-page-view";
 import { cn } from "@/lib/utils";
 
 const PAGE_SIZE = 50;
@@ -38,6 +39,8 @@ export default function ProjectsPage() {
   const [activeSubCategory, setActiveSubCategory] = useState<string>("All");
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const [projects, setProjects] = useState<ProjectConfig[]>(projectsConfig);
+
+  usePageView("/projects");
 
   useEffect(() => {
     (async () => {

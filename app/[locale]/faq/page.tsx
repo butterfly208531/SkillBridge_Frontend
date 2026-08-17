@@ -5,8 +5,10 @@ import React, { useState } from "react";
 import Image from "next/image";
 import Footer from "@/app/[locale]/components/footer";
 import { imagePaths } from "../data/image-paths";
+import { usePageView } from "@/hooks/use-page-view";
 
 const FaqPage = () => {
+  usePageView("/faq");
   const [openIdx, setOpenIdx] = useState<number | null>(null);
 
   const t = useTranslations();

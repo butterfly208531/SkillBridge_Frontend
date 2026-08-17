@@ -1,6 +1,7 @@
 import { Navbar } from "@/app/[locale]/components/navbar";
 import { CareerSection } from "@/app/[locale]/components/career-section";
 import Footer from "@/app/[locale]/components/footer";
+import { PageViewTracker } from "@/app/[locale]/components/page-view-tracker";
 
 export const metadata = {
   title: "Career Services | SkillBridge",
@@ -10,6 +11,7 @@ export const metadata = {
 export default function CareerPage() {
   return (
     <div className="min-h-screen bg-white dark:bg-gray-950 transition-colors duration-300 font-montserrat">
+      <PageViewTracker page="/career" />
       <Navbar />
       <main className="pt-8">
         <CareerSection />

@@ -11,6 +11,7 @@ import { Input } from "@/app/[locale]/components/ui/input";
 import { fetchCourses } from "@/lib/api";
 import { getStoredCourses, getEffectiveImage, getPublicCourses } from "@/lib/courses-store";
 import { syncSharedCoursesToLocal } from "@/lib/courses-shared";
+import { usePageView } from "@/hooks/use-page-view";
 import { cn } from "@/lib/utils";
 
 function courseToCardProps(c: any) {
@@ -45,6 +46,8 @@ export default function CoursesPage() {
   const [activeCategory, setActiveCategory] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState("rating");
+
+  usePageView("/courses");
 
   useEffect(() => {
     let cancelled = false;
