@@ -46,3 +46,10 @@ next-env.d.ts
 
 # nested backup copy
 /SkillBridge_Frontend/
+
+# editor
+.vscode/
+
+# docs
+PRESENTATION.md
+/readme/
