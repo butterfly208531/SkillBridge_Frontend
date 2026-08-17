@@ -121,6 +121,7 @@ export default function AddCoursePage() {
       categoryId:       basic.categoryId,
       status:           basic.status === "PUBLISHED" ? "active" : "draft",
       imageUrl:         basic.imageUrl || "",
+      adminImageUrl:    basic.imageUrl || undefined,
       rating:           0,
       shortDescription: basic.shortDescription || "",
       learningOutcomes: [],
