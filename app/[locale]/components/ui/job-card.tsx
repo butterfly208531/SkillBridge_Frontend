@@ -278,20 +278,22 @@ export default function JobCard({ job, index = 0 }: JobCardProps) {
         {/* Apply buttons */}
         {!closed ? (
           <div className="flex flex-col gap-2">
-            <Button
-              className="w-full font-bold text-white focus-visible:ring-2 focus-visible:ring-[#2196F3]"
-              style={{
-                background: isOrangeCategory
-                  ? "linear-gradient(90deg,#b45309,#F57C00)"
-                  : "linear-gradient(90deg,#1565C0,#2196F3)"
-              }}
-              asChild
-            >
-              <Link href={`/jobs/${job.id}/ApplicationForm`}>
-                <Briefcase className="h-4 w-4 mr-1.5" /> Application Form
-              </Link>
-            </Button>
-            {job.applyUrl && (
+            {(job.applicationMode ?? "both") !== "link" && (
+              <Button
+                className="w-full font-bold text-white focus-visible:ring-2 focus-visible:ring-[#2196F3]"
+                style={{
+                  background: isOrangeCategory
+                    ? "linear-gradient(90deg,#b45309,#F57C00)"
+                    : "linear-gradient(90deg,#1565C0,#2196F3)"
+                }}
+                asChild
+              >
+                <Link href={`/jobs/${job.id}/ApplicationForm`}>
+                  <Briefcase className="h-4 w-4 mr-1.5" /> Application Form
+                </Link>
+              </Button>
+            )}
+            {job.applyUrl && (job.applicationMode ?? "both") !== "form" && (
               <Button
                 className="w-full font-bold text-white focus-visible:ring-2 focus-visible:ring-[#2196F3]"
                 variant="outline"

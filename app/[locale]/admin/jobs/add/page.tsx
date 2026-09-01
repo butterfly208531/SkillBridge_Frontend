@@ -35,6 +35,7 @@ export default function AddJobPage() {
     status:           "open",
     description:      "",
     applyUrl:         "",
+    applicationMode:  "both" as "both" | "form" | "link",
   });
   const [requirements,      setRequirements]      = useState<string[]>([""]);
   const [responsibilities,  setResponsibilities]  = useState<string[]>([""]);
@@ -235,22 +236,58 @@ export default function AddJobPage() {
             </div>
 
             <div className="bg-[#1E90FF]/5 border border-[#1E90FF]/20 rounded-xl p-4">
-              <label className="block text-xs font-semibold text-[#1E90FF] mb-1">
-                🔗 Application Link *
+              <label className="block text-xs font-semibold text-[#1E90FF] mb-2">
+                📋 Application Method
               </label>
-              <p className="text-[11px] text-gray-400 mb-2">Where should applicants apply? (Google Form, company site, email link, etc.)</p>
-              <div className="relative">
-                <Link2 className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-gray-400" />
-                <input type="url" value={form.applyUrl} onChange={e => set("applyUrl", e.target.value)}
-                  placeholder="https://forms.google.com/... or https://company.com/apply"
-                  className="w-full pl-8 pr-3 py-2.5 text-sm border border-[#1E90FF]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1E90FF]/30 bg-white" />
+              <p className="text-[11px] text-gray-400 mb-2">How should applicants apply for this job?</p>
+              <div className="space-y-2">
+                {([
+                  { value: "both", label: "Both — Application Form + Apply Online link", desc: "Show both options so applicants can choose." },
+                  { value: "form", label: "Application Form only", desc: "Use SkillBridge's built-in application form." },
+                  { value: "link", label: "Apply Online link only", desc: "Send applicants to an external link." },
+                ] as const).map(opt => (
+                  <label key={opt.value}
+                    className={cn(
+                      "flex items-start gap-2.5 p-3 rounded-lg border cursor-pointer transition-all",
+                      form.applicationMode === opt.value
+                        ? "border-[#1E90FF] bg-[#1E90FF]/10"
+                        : "border-gray-200 bg-white hover:border-[#1E90FF]/50"
+                    )}>
+                    <input
+                      type="radio"
+                      name="applicationMode"
+                      checked={form.applicationMode === opt.value}
+                      onChange={() => set("applicationMode", opt.value)}
+                      className="mt-0.5 accent-[#1E90FF]"
+                    />
+                    <span>
+                      <span className="block text-sm font-semibold text-gray-700">{opt.label}</span>
+                      <span className="block text-[11px] text-gray-400 mt-0.5">{opt.desc}</span>
+                    </span>
+                  </label>
+                ))}
               </div>
             </div>
+
+            {form.applicationMode !== "form" && (
+              <div className="bg-[#1E90FF]/5 border border-[#1E90FF]/20 rounded-xl p-4">
+                <label className="block text-xs font-semibold text-[#1E90FF] mb-1">
+                  🔗 Application Link {form.applicationMode === "link" && <span className="text-red-500">*</span>}
+                </label>
+                <p className="text-[11px] text-gray-400 mb-2">Where should applicants apply? (Google Form, company site, email link, etc.)</p>
+                <div className="relative">
+                  <Link2 className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-gray-400" />
+                  <input type="url" value={form.applyUrl} onChange={e => set("applyUrl", e.target.value)}
+                    placeholder="https://forms.google.com/... or https://company.com/apply"
+                    className="w-full pl-8 pr-3 py-2.5 text-sm border border-[#1E90FF]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1E90FF]/30 bg-white" />
+                </div>
+              </div>
+            )}
 
             <div className="flex justify-between pt-2">
               <button onClick={() => setTab("Basic Info")} className="px-5 py-2.5 border border-gray-200 text-gray-600 text-sm rounded-lg hover:bg-gray-50">← Back</button>
               <button onClick={() => setTab("Requirements")}
-                disabled={!form.description || !form.applyUrl}
+                disabled={!form.description || (form.applicationMode !== "form" && !form.applyUrl)}
                 className="px-6 py-2.5 bg-[#1E90FF] text-white text-sm font-semibold rounded-lg hover:bg-blue-500 transition-colors disabled:opacity-40 disabled:cursor-not-allowed">
                 Next: Requirements →
               </button>
@@ -358,8 +395,15 @@ export default function AddJobPage() {
             </div>
 
             <div className="p-3 bg-[#1E90FF]/5 rounded-xl border border-[#1E90FF]/20">
-              <p className="text-[10px] text-gray-400 uppercase tracking-wide mb-1">Application Link</p>
-              <p className="text-xs font-mono text-[#1E90FF] break-all">{form.applyUrl}</p>
+              <p className="text-[10px] text-gray-400 uppercase tracking-wide mb-1">Application Method</p>
+              <p className="text-xs font-semibold text-gray-800 capitalize">
+                {form.applicationMode === "both" ? "Both (Form + Link)"
+                  : form.applicationMode === "form" ? "Application Form only"
+                  : "Apply Online link only"}
+              </p>
+              {form.applicationMode !== "form" && (
+                <p className="text-[11px] font-mono text-[#1E90FF] break-all mt-1">{form.applyUrl}</p>
+              )}
             </div>
 
             <div className="p-3 bg-gray-50 rounded-xl">

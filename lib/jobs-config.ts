@@ -1,6 +1,7 @@
 export type JobType   = "Full-Time" | "Part-Time" | "Contract" | "Internship" | "Remote";
 export type JobLevel  = "Entry Level" | "Mid Level" | "Senior" | "Lead" | "Any Level";
 export type JobStatus = "open" | "closed" | "draft";
+export type JobApplicationMode = "both" | "form" | "link";
 
 export interface Job {
   id: string;
@@ -19,6 +20,7 @@ export interface Job {
   postedAt: string;
   category: string;
   logo?: string;
+  applicationMode?: JobApplicationMode;
 }
 
 export const jobsConfig: Job[] = [
