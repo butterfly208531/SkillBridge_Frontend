@@ -9,10 +9,16 @@ import {
   updateApplicationSupabase,
   deleteApplicationSupabase,
 } from "@/lib/applications-supabase";
+import {
+  getJobApplicationsSupabase,
+  updateJobApplicationSupabase,
+  deleteJobApplicationSupabase,
+} from "@/lib/job-applications-supabase";
 
 const API = process.env.NEXT_PUBLIC_API_BASE_URL || "https://skillbridge-backend2.onrender.com/api";
 
 type Status = "all" | "pending" | "approved" | "rejected";
+type AppType = "all" | "course" | "job";
 
 interface Application {
   id?: string;
@@ -36,6 +42,10 @@ interface Application {
   createdAt?: string;
   date?: string;
   receiptUrl?: string;
+  type?: "course" | "job";
+  company?: string;
+  coverLetter?: string;
+  jobTitle?: string;
 }
 
 const statusStyle: Record<string, string> = {
@@ -63,6 +73,7 @@ export default function ApplicationsPage() {
   const [search, setSearch]             = useState("");
   const [statusFilter, setStatusFilter] = useState<Status>("all");
   const [courseFilter, setCourseFilter] = useState("All");
+  const [typeFilter, setTypeFilter]     = useState<AppType>("all");
   const [courses, setCourses]           = useState<string[]>(["All"]);
   const [selected, setSelected]             = useState<Application | null>(null);
   const [loading, setLoading]               = useState(true);
@@ -73,6 +84,8 @@ export default function ApplicationsPage() {
 
   const getAppCourse = (a: Application): string =>
     a.course || (a.courseId && !a.courseId.includes("-") ? a.courseId : "") || "Unknown";
+
+  const getAppType = (a: Application): "course" | "job" => a.type || "course";
 
   const fetchApps = async () => {
     const token = sessionStorage.getItem("adminToken");
@@ -125,13 +138,70 @@ export default function ApplicationsPage() {
       courseType:     a.courseType,
       status:         a.status === "new" ? "pending" : a.status,
       createdAt:      a.submittedAt,
+      type:           "course",
     }));
+
+    // Job applications from Supabase + localStorage
+    const loadLocalJobs = (): Application[] => {
+      try {
+        const arr = JSON.parse(localStorage.getItem("adminJobNotifications") || "[]");
+        return arr.map((n: any) => ({
+          id:             n.id,
+          fullName:       n.fullName,
+          email:          n.email,
+          phone:          n.phone,
+          telegramHandle: n.telegramHandle,
+          address:        n.address,
+          gender:         n.gender,
+          nationality:    n.nationality,
+          courseId:       n.jobId,
+          course:         n.jobTitle || n.job,
+          company:        n.company,
+          coverLetter:    n.coverLetter,
+          status:         n.status || "pending",
+          createdAt:      n.submittedAt || n.createdAt,
+          type:           "job",
+        }));
+      } catch { return []; }
+    };
+
+    const localJobs = loadLocalJobs();
+    const supabaseJobs = await getJobApplicationsSupabase();
+    const supabaseJobMapped: Application[] = supabaseJobs.map(a => ({
+      id:             a.id,
+      fullName:       a.fullName,
+      email:          a.email,
+      phone:          a.phone,
+      telegramHandle: a.telegramHandle,
+      address:        a.address,
+      gender:         a.gender,
+      nationality:    a.nationality,
+      courseId:       a.jobId,
+      course:         a.jobTitle,
+      company:        a.company,
+      coverLetter:    a.coverLetter,
+      status:         a.status === "new" ? "pending" : a.status,
+      createdAt:      a.submittedAt,
+      type:           "job",
+    }));
+
+    const mergeJobs = (base: Application[]): Application[] => {
+      const seen = new Set<string>();
+      const merged: Application[] = [];
+      for (const a of [...base, ...localJobs, ...supabaseJobMapped]) {
+        const id = a.id || (a as any)._id || "";
+        if (!id || seen.has(id)) continue;
+        seen.add(id);
+        merged.push(a);
+      }
+      return merged;
+    };
 
     // Dedupe by id: primary list wins, extra Supabase entries are appended.
     const mergeSupabase = (list: Application[]): Application[] => {
       const seen = new Set<string>();
       const merged: Application[] = [];
-      for (const a of [...list, ...supabaseMapped]) {
+      for (const a of [...list, ...supabaseMapped, ...supabaseJobMapped]) {
         const id = a.id || (a as any)._id || "";
         if (!id || seen.has(id)) continue;
         seen.add(id);
@@ -142,7 +212,7 @@ export default function ApplicationsPage() {
 
     const applyAndSetApps = (list: Application[]) => {
       setApps(list);
-      const courseList = ["All", ...Array.from(new Set(list.map(a => getAppCourse(a)))).sort()];
+      const courseList = ["All", ...Array.from(new Set(list.filter(a => getAppType(a) !== "job").map(a => getAppCourse(a)))).sort()];
       setCourses(courseList);
     };
 
@@ -166,22 +236,22 @@ export default function ApplicationsPage() {
           const lid = l.id || (l as any)._id || "";
           return lid.startsWith("local-") && !apiIds.has(lid);
         });
-        const merged = mergeSupabase([...apiApps, ...offlineOnly]);
+        const merged = mergeJobs([...apiApps, ...offlineOnly]);
         applyAndSetApps(merged);
         if (merged.length > 0) {
           setSuccess(`Loaded ${merged.length} application${merged.length !== 1 ? "s" : ""}`);
         }
       } else if (response.status === 401 || response.status === 403) {
-        applyAndSetApps(mergeSupabase(loadLocal()));
+        applyAndSetApps(mergeJobs(loadLocal()));
       } else {
         const local = loadLocal();
-        applyAndSetApps(mergeSupabase(local));
+        applyAndSetApps(mergeJobs(local));
         if (local.length > 0) {
           setError(`Showing ${local.length} locally stored submission${local.length !== 1 ? "s" : ""} (live data unavailable)`);
         }
       }
     } catch {
-      applyAndSetApps(mergeSupabase(loadLocal()));
+      applyAndSetApps(mergeJobs(loadLocal()));
     } finally {
       setLoading(false);
     }
@@ -197,11 +267,13 @@ export default function ApplicationsPage() {
     const appCourse = getAppCourse(a);
     const matchStatus = statusFilter === "all" || status === statusFilter;
     const matchCourse = courseFilter === "All" || appCourse === courseFilter;
+    const matchType   = typeFilter === "all" || (a.type || "course") === typeFilter;
     const matchSearch = !search ||
       name.toLowerCase().includes(search.toLowerCase()) ||
       course.toLowerCase().includes(search.toLowerCase()) ||
-      email.toLowerCase().includes(search.toLowerCase());
-    return matchStatus && matchCourse && matchSearch;
+      email.toLowerCase().includes(search.toLowerCase()) ||
+      (a.company || "").toLowerCase().includes(search.toLowerCase());
+    return matchStatus && matchCourse && matchType && matchSearch;
   });
 
   const counts = {
@@ -229,9 +301,14 @@ export default function ApplicationsPage() {
     };
 
     if (id.startsWith("local-")) {
+      const isJob = (selected && selected.type === "job");
       setApps(prev => prev.map(a => (a.id || a._id) === id ? { ...a, status: newStatus } : a));
       persistStatusToLocalStorage(id, newStatus);
-      updateApplicationSupabase(id, { status: newStatus });
+      if (isJob) {
+        updateJobApplicationSupabase(id, { status: newStatus });
+      } else {
+        updateApplicationSupabase(id, { status: newStatus });
+      }
       setSelected(null);
       setSuccess(`Application ${newStatus} successfully`);
       setTimeout(() => setSuccess(""), 3000);
@@ -265,7 +342,7 @@ export default function ApplicationsPage() {
     setDeleteId(null);
     setApps(prev => {
       const next = prev.filter(a => (a.id || a._id) !== id);
-      const courseList = ["All", ...Array.from(new Set(next.map(a => getAppCourse(a)))).sort()];
+      const courseList = ["All", ...Array.from(new Set(next.filter(a => getAppType(a) !== "job").map(a => getAppCourse(a)))).sort()];
       setCourses(courseList);
       return next;
     });
@@ -278,16 +355,30 @@ export default function ApplicationsPage() {
         const next = arr.filter((a: any) => (a.id || a._id) !== id);
         localStorage.setItem(key, JSON.stringify(next));
       });
+      const jobArr = JSON.parse(localStorage.getItem("adminJobNotifications") || "[]");
+      const nextJobs = jobArr.filter((a: any) => (a.id || a._id) !== id);
+      localStorage.setItem("adminJobNotifications", JSON.stringify(nextJobs));
     } catch { /* ignore */ }
 
     const token = sessionStorage.getItem("adminToken");
-    deleteApplicationSupabase(id);
-    try {
-      await fetch(`${API}/applications/${id}`, {
-        method: "DELETE",
-        headers: { Authorization: `Bearer ${token}` },
-      });
-    } catch { /* silent */ }
+    const isJob = (selected && selected.type === "job");
+    if (isJob) {
+      deleteJobApplicationSupabase(id);
+      try {
+        await fetch(`${API}/job-applications/${id}`, {
+          method: "DELETE",
+          headers: { Authorization: `Bearer ${token}` },
+        });
+      } catch { /* silent */ }
+    } else {
+      deleteApplicationSupabase(id);
+      try {
+        await fetch(`${API}/applications/${id}`, {
+          method: "DELETE",
+          headers: { Authorization: `Bearer ${token}` },
+        });
+      } catch { /* silent */ }
+    }
   };
 
   return (
@@ -295,8 +386,39 @@ export default function ApplicationsPage() {
       <AdminHeader title="Applications" />
       <div className="flex-1 p-6 space-y-5 overflow-y-auto">
 
+        {/* Type filter */}
+        <div className="flex gap-2 flex-wrap items-center">
+          <span className="text-xs font-semibold text-gray-400 uppercase tracking-wide mr-1">Type</span>
+          {(["all","course","job"] as AppType[]).map(t => {
+            const count = t === "all" ? apps.length : apps.filter(a => (a.type || "course") === t).length;
+            return (
+              <button
+                key={t}
+                onClick={() => setTypeFilter(t)}
+                className={cn(
+                  "px-3 py-1.5 rounded-full text-xs font-semibold border transition-all flex items-center gap-1.5 capitalize",
+                  typeFilter === t
+                    ? t === "job" ? "bg-[#F57C00] text-white border-[#F57C00] shadow-sm"
+                    : "bg-[#1E90FF] text-white border-[#1E90FF] shadow-sm"
+                    : "bg-white text-gray-500 border-gray-200 hover:border-[#1E90FF] hover:text-[#1E90FF]"
+                )}
+              >
+                {t}
+                <span className={cn(
+                  "px-1.5 py-0.5 rounded-full text-[10px] font-bold",
+                  typeFilter === t
+                    ? "bg-white/20 text-white"
+                    : "bg-gray-100 text-gray-400"
+                )}>
+                  {count}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+
         {/* Course filter pills */}
-        {courses.length > 1 && (
+        {typeFilter !== "job" && courses.length > 1 && (
           <div className="flex gap-2 flex-wrap items-center">
             <span className="text-xs font-semibold text-gray-400 uppercase tracking-wide mr-1">Course</span>
             {courses.map(c => {
@@ -402,8 +524,8 @@ export default function ApplicationsPage() {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="bg-gray-50 text-xs text-gray-500 uppercase tracking-wide border-b border-gray-100">
-                    <th className="px-5 py-3 text-left font-semibold">Student</th>
-                    <th className="px-5 py-3 text-left font-semibold">Course</th>
+                    <th className="px-5 py-3 text-left font-semibold">Applicant</th>
+                    <th className="px-5 py-3 text-left font-semibold">{typeFilter === "job" ? "Position" : "Course"}</th>
                     <th className="px-5 py-3 text-left font-semibold">Category</th>
                     <th className="px-5 py-3 text-left font-semibold">Date</th>
                     <th className="px-5 py-3 text-left font-semibold">Status</th>
@@ -423,13 +545,28 @@ export default function ApplicationsPage() {
                     return (
                       <tr key={id} className="hover:bg-gray-50/60 transition-colors">
                         <td className="px-5 py-3.5">
-                          <p className="font-semibold text-gray-800">{name}</p>
+                          <p className="font-semibold text-gray-800 flex items-center gap-2">
+                            {name}
+                            <span className={cn(
+                              "px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wide",
+                              (app.type || "course") === "job"
+                                ? "bg-[#F57C00]/10 text-[#F57C00]"
+                                : "bg-blue-100 text-blue-600"
+                            )}>
+                              {app.type === "job" ? "Job" : "Course"}
+                            </span>
+                          </p>
                           <p className="text-[11px] text-gray-400">{email}</p>
                         </td>
-                        <td className="px-5 py-3.5 text-xs text-gray-600 max-w-[160px] truncate">{course}</td>
+                        <td className="px-5 py-3.5 text-xs text-gray-600 max-w-[160px] truncate">
+                          {course}
+                          {app.company && (
+                            <span className="block text-[10px] text-gray-400 truncate">{app.company}</span>
+                          )}
+                        </td>
                         <td className="px-5 py-3.5">
                           <span className="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-[#1E90FF]/10 text-[#1E90FF]">
-                            {cat}
+                            {app.type === "job" ? (app.company || cat) : cat}
                           </span>
                         </td>
                         <td className="px-5 py-3.5 text-xs text-gray-400">{date}</td>
@@ -506,7 +643,8 @@ export default function ApplicationsPage() {
                 { label: "Email",       value: selected.email },
                 { label: "Phone",       value: selected.phone },
                 { label: "Telegram",    value: selected.telegramHandle },
-                { label: "Course",      value: selected.course || (selected.courseId && !selected.courseId.includes("-") ? selected.courseId : "") || selected.courseId },
+                { label: selected.type === "job" ? "Position" : "Course", value: selected.course || (selected.courseId && !selected.courseId.includes("-") ? selected.courseId : "") || selected.courseId },
+                { label: "Company",     value: selected.company },
                 { label: "Course Type", value: selected.courseType },
                 { label: "Payment",     value: selected.paymentMethod },
                 { label: "Payment Ref", value: selected.paymentReference },
@@ -521,6 +659,13 @@ export default function ApplicationsPage() {
                 </div>
               ))}
             </div>
+
+            {selected.coverLetter && (
+              <div>
+                <p className="text-[10px] text-gray-400 uppercase tracking-wide mb-1">Cover Letter</p>
+                <p className="text-sm text-gray-700 whitespace-pre-wrap bg-gray-50 rounded-lg p-3 border border-gray-100">{selected.coverLetter}</p>
+              </div>
+            )}
 
             {selected.receiptUrl && (
               <div>
