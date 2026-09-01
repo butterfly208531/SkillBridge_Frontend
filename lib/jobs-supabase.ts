@@ -4,7 +4,7 @@
  */
 
 import { supabase } from "./supabase";
-import type { Job, JobStatus } from "./jobs-config";
+import type { Job, JobStatus, JobApplicationMode } from "./jobs-config";
 
 function mapRow(row: any): Job {
   return {
@@ -24,6 +24,7 @@ function mapRow(row: any): Job {
     postedAt: row.posted_at ?? "",
     category: row.category ?? "",
     logo: row.logo ?? "",
+    applicationMode: (row.application_mode as JobApplicationMode) || "both",
   };
 }
 
@@ -45,6 +46,7 @@ function mapJob(j: Job): any {
     posted_at: j.postedAt,
     category: j.category,
     logo: j.logo,
+    application_mode: j.applicationMode ?? "both",
   };
 }
 
