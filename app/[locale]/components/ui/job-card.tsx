@@ -5,7 +5,7 @@ import { useState } from "react";
 import Link from "next/link";
 import {
   CheckCircle2, CalendarDays, MapPin, Mail, Clock,
-  DollarSign, ChevronDown, ChevronUp, Briefcase,
+  DollarSign, ChevronDown, ChevronUp, Briefcase, ExternalLink,
 } from "lucide-react";
 import Image from "next/image";
 import { Button } from "@/app/[locale]/components/ui/button";
@@ -275,21 +275,34 @@ export default function JobCard({ job, index = 0 }: JobCardProps) {
 
         <div className="flex-1" />
 
-        {/* Apply button */}
+        {/* Apply buttons */}
         {!closed ? (
-          <Button
-            className="w-full font-bold text-white focus-visible:ring-2 focus-visible:ring-[#2196F3]"
-            style={{
-              background: isOrangeCategory
-                ? "linear-gradient(90deg,#b45309,#F57C00)"
-                : "linear-gradient(90deg,#1565C0,#2196F3)"
-            }}
-            asChild
-          >
-            <Link href={`/jobs/${job.id}/ApplicationForm`}>
-              <Briefcase className="h-4 w-4 mr-1.5" /> Apply Now
-            </Link>
-          </Button>
+          <div className="flex flex-col gap-2">
+            <Button
+              className="w-full font-bold text-white focus-visible:ring-2 focus-visible:ring-[#2196F3]"
+              style={{
+                background: isOrangeCategory
+                  ? "linear-gradient(90deg,#b45309,#F57C00)"
+                  : "linear-gradient(90deg,#1565C0,#2196F3)"
+              }}
+              asChild
+            >
+              <Link href={`/jobs/${job.id}/ApplicationForm`}>
+                <Briefcase className="h-4 w-4 mr-1.5" /> Application Form
+              </Link>
+            </Button>
+            {job.applyUrl && (
+              <Button
+                className="w-full font-bold text-white focus-visible:ring-2 focus-visible:ring-[#2196F3]"
+                variant="outline"
+                asChild
+              >
+                <a href={job.applyUrl} target="_blank" rel="noopener noreferrer">
+                  <ExternalLink className="h-4 w-4 mr-1.5" /> Apply Online
+                </a>
+              </Button>
+            )}
+          </div>
         ) : (
           <Button disabled className="w-full font-bold bg-gray-200 text-gray-500 cursor-not-allowed">
             Applications Closed
