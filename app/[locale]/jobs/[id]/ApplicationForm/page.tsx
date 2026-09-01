@@ -13,6 +13,7 @@ import { Navbar } from "@/app/[locale]/components/navbar";
 import Footer from "@/app/[locale]/components/footer";
 import { jobsConfig, type Job } from "@/lib/jobs-config";
 import { getStoredJobs } from "@/lib/jobs-store";
+import { syncSharedJobsToLocal } from "@/lib/jobs-shared";
 import { addJobApplicationSupabase } from "@/lib/job-applications-supabase";
 import LeftPanel from "./LeftPanel";
 
@@ -100,15 +101,43 @@ const JobApplicationForm = () => {
       return;
     }
 
-    // Try to find job from stored jobs, then from static config
-    const storedJobs = getStoredJobs();
-    const allJobs = storedJobs.length > 0 ? storedJobs : jobsConfig;
-    const found = allJobs.find(j => j.id === jobId);
+    const findJob = (): Job | undefined => {
+      const storedJobs = getStoredJobs();
+      const allJobs = storedJobs.length > 0 ? storedJobs : jobsConfig;
+      return allJobs.find(j => j.id === jobId);
+    };
 
-    if (found) {
-      setJobData(found);
+    // First try whatever is already available locally
+    const local = findJob();
+    if (local) {
+      setJobData(local);
     }
-    setIsJobLoading(false);
+
+    // Then sync the shared Supabase store so newly-added admin jobs are found
+    (async () => {
+      await syncSharedJobsToLocal();
+      const synced = findJob();
+      if (synced) {
+        setJobData(synced);
+        setIsJobLoading(false);
+        return;
+      }
+
+      // Fall back to the backend API
+      try {
+        const API = process.env.NEXT_PUBLIC_API_BASE_URL || "https://skillbridge-backend2.onrender.com/api";
+        const res = await fetch(`${API}/jobs`);
+        if (res.ok) {
+          const data = await res.json();
+          const list: Job[] = Array.isArray(data) ? data : data.data ?? [];
+          const found = list.find(j => j.id === jobId) || findJob();
+          if (found) setJobData(found);
+        }
+      } catch {
+        // ignore — keep whatever we already have
+      }
+      setIsJobLoading(false);
+    })();
   }, [jobId]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
