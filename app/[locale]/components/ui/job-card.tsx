@@ -5,7 +5,7 @@ import { useState } from "react";
 import Link from "next/link";
 import {
   CheckCircle2, CalendarDays, MapPin, Mail, Clock,
-  DollarSign, ChevronDown, ChevronUp, Briefcase, ExternalLink,
+  DollarSign, ChevronDown, ChevronUp, Briefcase,
 } from "lucide-react";
 import Image from "next/image";
 import { Button } from "@/app/[locale]/components/ui/button";
@@ -286,9 +286,9 @@ export default function JobCard({ job, index = 0 }: JobCardProps) {
             }}
             asChild
           >
-            <a href={job.applyUrl} target="_blank" rel="noopener noreferrer">
-              <ExternalLink className="h-4 w-4 mr-1.5" /> Apply Now
-            </a>
+            <Link href={`/jobs/${job.id}/ApplicationForm`}>
+              <Briefcase className="h-4 w-4 mr-1.5" /> Apply Now
+            </Link>
           </Button>
         ) : (
           <Button disabled className="w-full font-bold bg-gray-200 text-gray-500 cursor-not-allowed">
