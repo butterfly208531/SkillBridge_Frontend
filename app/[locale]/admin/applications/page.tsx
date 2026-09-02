@@ -261,6 +261,15 @@ export default function ApplicationsPage() {
       setCourses(courseList);
     };
 
+    // Load from Supabase + offline localStorage immediately so the page renders
+    // without waiting on the (sometimes slow/asleep) Render backend, avoiding
+    // the perpetual loading spinner.
+    const immediate = mergeJobs([...loadLocal(), ...loadLocalJobs()]);
+    applyAndSetApps(immediate);
+    setLoading(false);
+
+    // Then fetch the backend asynchronously and merge in the authoritative API
+    // records when they arrive — the table updates in place, never hangs.
     try {
       const response = await fetch(`${API}/applications`, {
         headers: { Authorization: `Bearer ${token}` },
@@ -297,8 +306,6 @@ export default function ApplicationsPage() {
       }
     } catch {
       applyAndSetApps(mergeJobs(loadLocal()));
-    } finally {
-      setLoading(false);
     }
   };
 
