@@ -20,6 +20,7 @@ export interface StoredApplication {
   courseSlug: string;
   courseName: string;
   courseType: string;
+  paymentMethod: string;
   marketingSource: string;
   submittedAt: string;
   status: string;
@@ -41,6 +42,7 @@ function mapRow(row: any): StoredApplication {
     courseSlug: row.course_slug ?? "",
     courseName: row.course_name ?? "",
     courseType: row.course_type ?? "",
+    paymentMethod: row.payment_method ?? "",
     marketingSource: row.marketing_source ?? "",
     submittedAt: row.submitted_at ?? "",
     status: row.status ?? "new",
@@ -63,6 +65,7 @@ function mapApplication(a: StoredApplication): any {
     course_slug: a.courseSlug,
     course_name: a.courseName,
     course_type: a.courseType,
+    payment_method: a.paymentMethod,
     marketing_source: a.marketingSource,
     submitted_at: a.submittedAt,
     status: a.status,
@@ -87,11 +90,12 @@ export async function addApplicationSupabase(app: StoredApplication): Promise<bo
   if (!supabase) return false;
   let { error } = await supabase.from("applications").upsert(mapApplication(app));
   if (error) {
-    // If the course_type column doesn't exist yet, retry without it so
-    // submissions are never blocked.
-    if (error.message?.toLowerCase().includes("course_type")) {
+    // Cleaner first write fails a column, strip it and retry so submissions
+    // are never blocked (e.g. course_type / payment_method not yet added).
+    if (error.message?.toLowerCase().includes("course_type") || error.message?.toLowerCase().includes("payment_method")) {
       const row = mapApplication(app);
       delete row.course_type;
+      delete row.payment_method;
       const { error: retryErr } = await supabase.from("applications").upsert(row);
       if (retryErr) {
         console.warn("Supabase application write failed:", retryErr.message);

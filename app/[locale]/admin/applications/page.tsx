@@ -139,6 +139,7 @@ export default function ApplicationsPage() {
       courseId:       a.courseSlug,
       course:         a.courseName,
       courseType:     a.courseType,
+      paymentMethod:  a.paymentMethod,
       status:         a.status === "new" ? "pending" : a.status,
       createdAt:      a.submittedAt,
       type:           "course",

@@ -37,6 +37,7 @@ const ApplicationForm = () => {
     address: "",
     courseId: "",          // always starts empty — filled by UUID lookup below
     courseType: "",        // VIP | One to One | Other
+    paymentMethod: "",     // Telebirr | CBE Birr | Bank Transfer
     marketingSource: "",
     agreeTerms: false,
     confirmAccuracy: false,
@@ -256,6 +257,7 @@ const ApplicationForm = () => {
     if (!form.agreeTerms) errors.push("You must agree to the Terms and Conditions.");
     if (!form.confirmAccuracy) errors.push("You must confirm the accuracy of the information.");
     if (!form.courseType) errors.push("Please select a course type.");
+    if (!form.paymentMethod) errors.push("Please select a payment method.");
     if (errors.length > 0) { setValidationErrors(errors); return false; }
     return true;
   };
@@ -280,6 +282,7 @@ const ApplicationForm = () => {
       ...prev,
       fullName: "", dateOfBirth: "", gender: "", nationality: "", email: "",
       phone: "", telegramHandle: "", university: "", address: "",
+      courseType: "", paymentMethod: "",
       marketingSource: "", agreeTerms: false, confirmAccuracy: false,
     }));
     setCurrentStep(1);
@@ -328,6 +331,7 @@ const ApplicationForm = () => {
           courseSlug: form.courseId,
           courseName: courseName,
           courseType: form.courseType,
+          paymentMethod: form.paymentMethod,
           marketingSource: form.marketingSource || "Direct",
           submittedAt: new Date().toISOString(),
           status: "pending_sync",
@@ -353,6 +357,7 @@ const ApplicationForm = () => {
           courseSlug: localApp.courseSlug,
           courseName: localApp.courseName,
           courseType: form.courseType,
+          paymentMethod: form.paymentMethod,
           marketingSource: localApp.marketingSource,
           submittedAt: localApp.submittedAt,
           status: "new",
@@ -379,6 +384,7 @@ const ApplicationForm = () => {
       const formData = new FormData();
       formData.append("courseId", form.courseId);
       formData.append("courseType", form.courseType);
+      formData.append("paymentMethod", form.paymentMethod);
       formData.append("marketingSource", form.marketingSource || "Direct");
       formData.append("fullName", form.fullName);
       if (form.dateOfBirth) formData.append("dateOfBirth", new Date(form.dateOfBirth).toISOString());
@@ -439,6 +445,7 @@ const ApplicationForm = () => {
         courseSlug: form.courseId,
         courseName: courseName,
         courseType: form.courseType,
+        paymentMethod: form.paymentMethod,
         marketingSource: form.marketingSource || "Direct",
         submittedAt: new Date().toISOString(),
         status: "new",
@@ -667,6 +674,20 @@ const ApplicationForm = () => {
                           <option value="VIP">VIP</option>
                           <option value="One to One">One to One</option>
                           <option value="Other">Other</option>
+                        </select>
+                        <ArrowDown className="absolute right-3 top-[42px] text-gray-400 dark:text-gray-500 pointer-events-none w-4 h-4" />
+                      </div>
+
+                      {/* Payment method — Telebirr / CBE Birr / Bank Transfer */}
+                      <div className="relative mt-5">
+                        <label htmlFor="paymentMethod" className="block text-sm font-medium mb-1.5 text-gray-700 dark:text-gray-300">
+                          Payment Method <span className="text-red-500">*</span>
+                        </label>
+                        <select id="paymentMethod" name="paymentMethod" value={form.paymentMethod} onChange={handleChange} className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-900 dark:text-gray-100 appearance-none pr-12 focus:ring-2 focus:ring-[#2196F3] focus:border-transparent transition-all duration-200 text-sm">
+                          <option value="">Select payment method</option>
+                          <option value="Telebirr">Telebirr</option>
+                          <option value="CBE Birr">CBE Birr</option>
+                          <option value="Bank Transfer">Bank Transfer</option>
                         </select>
                         <ArrowDown className="absolute right-3 top-[42px] text-gray-400 dark:text-gray-500 pointer-events-none w-4 h-4" />
                       </div>
