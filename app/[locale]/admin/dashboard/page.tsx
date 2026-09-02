@@ -151,14 +151,30 @@ export default function DashboardPage() {
       const res = await fetch(`${API}/applications/with-receipt`, {
         headers: { Authorization: `Bearer ${token}` },
       });
+      const supabaseApps = await getApplicationsSupabase();
+      const supabaseMapped = supabaseApps.map(a => ({
+        id: a.id, fullName: a.fullName, status: a.status === "new" ? "pending" : a.status,
+      }));
+      const seen = new Set<string>();
+      const merge = (list: any[]) => {
+        const merged: any[] = [];
+        for (const a of [...list, ...supabaseMapped]) {
+          const id = a.id || a._id || "";
+          if (!id || seen.has(id)) continue;
+          seen.add(id);
+          merged.push(a);
+        }
+        return merged;
+      };
       if (res.ok) {
         const data = await res.json();
-        setApplications(Array.isArray(data) ? data : data.data ?? []);
+        const list = Array.isArray(data) ? data : data.data ?? [];
+        // Merge backend + Supabase course applications (dedupe by id) so
+        // the dashboard never shows course apps as empty when they exist
+        // in Supabase.
+        setApplications(merge(list));
       } else {
-        const supabaseApps = await getApplicationsSupabase();
-        setApplications(supabaseApps.map(a => ({
-          id: a.id, fullName: a.fullName, status: a.status === "new" ? "pending" : a.status,
-        })));
+        setApplications(supabaseMapped);
       }
     } catch {
       const supabaseApps = await getApplicationsSupabase();

@@ -191,7 +191,11 @@ export default function ApplicationsPage() {
     const mergeJobs = (base: Application[]): Application[] => {
       const seen = new Set<string>();
       const merged: Application[] = [];
-      for (const a of [...base, ...localJobs, ...supabaseJobMapped]) {
+      // Merge course + job applications from backend, localStorage, AND
+      // Supabase (course apps live in `applications`, job apps in
+      // `job_applications`). Both must always appear so the admin sees a
+      // complete list even when the backend returns nothing.
+      for (const a of [...base, ...localJobs, ...supabaseMapped, ...supabaseJobMapped]) {
         const id = a.id || (a as any)._id || "";
         if (!id || seen.has(id)) continue;
         seen.add(id);
