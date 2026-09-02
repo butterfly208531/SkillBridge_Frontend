@@ -3,8 +3,7 @@
 import { useEffect, useState } from "react";
 import { Search, Eye, Trash2, CheckCircle, XCircle, Clock, RefreshCw } from "lucide-react";
 import AdminHeader from "../components/AdminHeader";
-import { cn } from "@/lib/utils";
-import {
+import { cn } from "@/lib/utils";import {
   getApplicationsSupabase,
   updateApplicationSupabase,
   deleteApplicationSupabase,
@@ -69,11 +68,15 @@ const normalizeStatus = (raw: string | undefined): string => {
 
 
 export default function ApplicationsPage() {
+  const initialType = (typeof window !== "undefined"
+    ? new URLSearchParams(window.location.search).get("type")
+    : null) as "all" | "course" | "job" | null;
+
   const [apps, setApps]                 = useState<Application[]>([]);
   const [search, setSearch]             = useState("");
   const [statusFilter, setStatusFilter] = useState<Status>("all");
   const [courseFilter, setCourseFilter] = useState("All");
-  const [typeFilter, setTypeFilter]     = useState<AppType>("all");
+  const [typeFilter, setTypeFilter]     = useState<AppType>(initialType === "course" || initialType === "job" ? initialType : "all");
   const [courses, setCourses]           = useState<string[]>(["All"]);
   const [selected, setSelected]             = useState<Application | null>(null);
   const [loading, setLoading]               = useState(true);

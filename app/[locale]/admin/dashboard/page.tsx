@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { BookOpen, FileText, Award, Briefcase, CheckCircle } from "lucide-react";
+import { BookOpen, FileText, Award, Briefcase, CheckCircle, UserCheck } from "lucide-react";
 import AdminHeader from "../components/AdminHeader";
 import StatCard from "../components/StatCard";
 import { fetchCourses, type Course } from "@/lib/api";
@@ -10,6 +10,7 @@ import { getCoursesSupabase } from "@/lib/courses-supabase";
 import { getApplicationsSupabase } from "@/lib/applications-supabase";
 import { getScholarshipsSupabase } from "@/lib/scholarships-supabase";
 import { getJobsSupabase } from "@/lib/jobs-supabase";
+import { getJobApplicationsSupabase } from "@/lib/job-applications-supabase";
 
 const API = process.env.NEXT_PUBLIC_API_BASE_URL || "https://skillbridge-backend2.onrender.com/api";
 
@@ -18,6 +19,15 @@ const statusStyle: Record<string, string> = {
   approved: "bg-emerald-100 text-emerald-700",
   rejected: "bg-red-100 text-red-600",
 };
+
+interface JobApp {
+  id?: string;
+  fullName?: string;
+  jobTitle?: string;
+  company?: string;
+  status?: string;
+  submittedAt?: string;
+}
 
 // Deterministic color from any category name — no hardcoding needed
 const PALETTE = [
@@ -78,6 +88,7 @@ function storedToCourse(s: ReturnType<typeof getStoredCourses>[number]): Course 
 
 export default function DashboardPage() {
   const [applications, setApplications] = useState<any[]>([]);
+  const [jobApps,      setJobApps]      = useState<JobApp[]>([]);
   const [courses,      setCourses]      = useState<Course[]>([]);
   const [scholarships, setScholarships] = useState(0);
   const [jobs,         setJobs]         = useState(0);
@@ -99,6 +110,7 @@ export default function DashboardPage() {
       fetchApplicationsData(token),
       fetchScholarshipsData(token),
       fetchJobsData(token),
+      fetchJobApplicationsData(),
     ]);
 
     setLoading(false);
@@ -155,6 +167,48 @@ export default function DashboardPage() {
       })));
     } finally {
       setLoadingApps(false);
+    }
+  };
+
+  // ── Job Applications ─────────────────────────────────────────────────
+  const fetchJobApplicationsData = async () => {
+    try {
+      // localStorage admin notifications (offline-submitted job apps)
+      let local: JobApp[] = [];
+      try {
+        local = JSON.parse(localStorage.getItem("adminJobNotifications") || "[]").map((n: any) => ({
+          id:         n.id,
+          fullName:   n.fullName,
+          jobTitle:   n.jobTitle || n.job,
+          company:    n.company,
+          status:     n.status || "pending",
+          submittedAt: n.submittedAt || n.createdAt,
+        }));
+      } catch { /* ignore */ }
+
+      // Supabase (source of truth across devices)
+      const supabaseApps = await getJobApplicationsSupabase();
+      const supabaseMapped: JobApp[] = supabaseApps.map(a => ({
+        id:          a.id,
+        fullName:    a.fullName,
+        jobTitle:    a.jobTitle,
+        company:     a.company,
+        status:      a.status,
+        submittedAt: a.submittedAt,
+      }));
+
+      // Merge, dedupe by id (local first wins, then Supabase)
+      const seen = new Set<string>();
+      const merged: JobApp[] = [];
+      for (const a of [...local, ...supabaseMapped]) {
+        const id = a.id || "";
+        if (!id || seen.has(id)) continue;
+        seen.add(id);
+        merged.push(a);
+      }
+      setJobApps(merged);
+    } catch {
+      setJobApps([]);
     }
   };
 
@@ -242,6 +296,9 @@ export default function DashboardPage() {
   const rejected    = applications.filter(a => (a.status || "").toLowerCase() === "rejected").length;
   const approvalRate = totalApps > 0 ? Math.round((approved / totalApps) * 100) : 0;
 
+  const totalJobApps = jobApps.length;
+  const pendingJobs  = jobApps.filter(a => (a.status || "").toLowerCase() === "pending").length;
+
   const activeCourses = courses.filter(c => c.status?.toLowerCase() === "active").length;
   const draftCourses  = courses.length - activeCourses;
 
@@ -269,6 +326,11 @@ export default function DashboardPage() {
     .sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime())
     .slice(0, 6);
 
+  // Recent job applications sorted by date
+  const recentJobApps = [...jobApps]
+    .sort((a, b) => new Date(b.submittedAt || 0).getTime() - new Date(a.submittedAt || 0).getTime())
+    .slice(0, 6);
+
   // Top courses sorted by enrollment
   const topCourses = [...courses]
     .sort((a, b) => (b.studentsEnrolled || 0) - (a.studentsEnrolled || 0))
@@ -284,7 +346,7 @@ export default function DashboardPage() {
       <div className="flex-1 p-6 space-y-6 overflow-y-auto">
 
         {/* ── Stat Cards ── */}
-        <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-6 gap-4">
           <StatCard
             title="Total Courses"
             value={courses.length}
@@ -303,6 +365,16 @@ export default function DashboardPage() {
             color="orange"
             trend={totalApps > 0
               ? { value: `${pending} pending`, up: pending === 0 }
+              : undefined}
+          />
+          <StatCard
+            title="Job Applications"
+            value={totalJobApps}
+            subtitle="All time"
+            icon={UserCheck}
+            color="blue"
+            trend={totalJobApps > 0
+              ? { value: `${pendingJobs} pending`, up: pendingJobs === 0 }
               : undefined}
           />
           <StatCard
@@ -500,6 +572,60 @@ export default function DashboardPage() {
                         </td>
                         <td className="px-5 py-3 font-medium text-gray-800">{name}</td>
                         <td className="px-5 py-3 text-gray-500 text-xs truncate max-w-[140px]">{course}</td>
+                        <td className="px-5 py-3 text-gray-400 text-xs">{date}</td>
+                        <td className="px-5 py-3">
+                          <span className={`px-2.5 py-1 rounded-full text-[11px] font-semibold capitalize ${statusStyle[status] ?? "bg-gray-100 text-gray-500"}`}>
+                            {status}
+                          </span>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+
+        {/* ── Recent Job Applications table ── */}
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+          <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+            <h2 className="text-sm font-bold text-gray-800">Recent Job Applications</h2>
+            <a
+              href={`/${locale}/admin/applications?type=job`}
+              className="text-xs font-medium text-[#F57C00] hover:underline"
+            >
+              View all →
+            </a>
+          </div>
+
+          {recentJobApps.length === 0 ? (
+            <div className="text-center py-8 text-gray-400 text-sm">No recent job applications</div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="bg-gray-50 text-xs text-gray-500 uppercase tracking-wide">
+                    <th className="px-5 py-3 text-left font-semibold">Applicant</th>
+                    <th className="px-5 py-3 text-left font-semibold">Position</th>
+                    <th className="px-5 py-3 text-left font-semibold">Company</th>
+                    <th className="px-5 py-3 text-left font-semibold">Date</th>
+                    <th className="px-5 py-3 text-left font-semibold">Status</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-50">
+                  {recentJobApps.map((app, i) => {
+                    const id     = app.id || `JOB-${String(i + 1).padStart(3, "0")}`;
+                    const name   = app.fullName || "—";
+                    const title  = app.jobTitle || "—";
+                    const company = app.company || "—";
+                    const date   = app.submittedAt ? new Date(app.submittedAt).toLocaleDateString() : "—";
+                    const status = (app.status || "pending").toLowerCase();
+                    return (
+                      <tr key={id} className="hover:bg-gray-50/50 transition-colors">
+                        <td className="px-5 py-3 font-medium text-gray-800">{name}</td>
+                        <td className="px-5 py-3 text-gray-600 text-xs truncate max-w-[160px]">{title}</td>
+                        <td className="px-5 py-3 text-gray-500 text-xs">{company}</td>
                         <td className="px-5 py-3 text-gray-400 text-xs">{date}</td>
                         <td className="px-5 py-3">
                           <span className={`px-2.5 py-1 rounded-full text-[11px] font-semibold capitalize ${statusStyle[status] ?? "bg-gray-100 text-gray-500"}`}>
