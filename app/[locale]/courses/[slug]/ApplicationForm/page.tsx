@@ -37,7 +37,7 @@ const ApplicationForm = () => {
     address: "",
     courseId: "",          // always starts empty — filled by UUID lookup below
     courseType: "",        // VIP | One to One | Other
-    paymentMethod: "",     // Telebirr | CBE Birr | Bank Transfer
+    paymentMethod: "",     // Commercial Bank of Ethiopia (CBE) | Telebirr
     marketingSource: "",
     agreeTerms: false,
     confirmAccuracy: false,
@@ -711,7 +711,6 @@ const ApplicationForm = () => {
                         <select id="paymentMethod" name="paymentMethod" value={form.paymentMethod} onChange={handleChange} className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-900 dark:text-gray-100 appearance-none pr-12 focus:ring-2 focus:ring-[#2196F3] focus:border-transparent transition-all duration-200 text-sm">
                           <option value="">Select payment method</option>
                           <option value="Commercial Bank of Ethiopia (CBE)">Commercial Bank of Ethiopia (CBE)</option>
-                          <option value="Awash Bank">Awash Bank</option>
                           <option value="Telebirr">Telebirr</option>
                         </select>
                         <ArrowDown className="absolute right-3 top-[42px] text-gray-400 dark:text-gray-500 pointer-events-none w-4 h-4" />
@@ -726,22 +725,15 @@ const ApplicationForm = () => {
                           {form.paymentMethod === "Commercial Bank of Ethiopia (CBE)" && (
                             <div>
                               <p className="font-semibold text-[#2196F3]">Commercial Bank of Ethiopia (CBE)</p>
-                              <p>Account Name: Your Company Name</p>
-                              <p>Account Number: 1000123456789</p>
-                            </div>
-                          )}
-                          {form.paymentMethod === "Awash Bank" && (
-                            <div>
-                              <p className="font-semibold text-[#2196F3]">Awash Bank</p>
-                              <p>Account Name: Your Company Name</p>
-                              <p>Account Number: 01234567891234</p>
+                              <p>Account Name: Yonas Negese</p>
+                              <p>Account Number: 1000783760448</p>
                             </div>
                           )}
                           {form.paymentMethod === "Telebirr" && (
                             <div>
                               <p className="font-semibold text-[#2196F3]">Telebirr (Merchant / CBE-Linked)</p>
-                              <p>Name: Your Company Name</p>
-                              <p>Number: 0911223344</p>
+                              <p>Name: Yonas Negese</p>
+                              <p>Number: 0955935455</p>
                             </div>
                           )}
                         </div>
