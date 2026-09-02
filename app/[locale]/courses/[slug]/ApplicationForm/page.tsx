@@ -43,6 +43,9 @@ const ApplicationForm = () => {
     confirmAccuracy: false,
   });
 
+  const [receiptFile, setReceiptFile] = useState<File | null>(null);
+  const [receiptUrl, setReceiptUrl] = useState<string>("");
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isCourseLoading, setIsCourseLoading] = useState(true);
   const [coursePrice, setCoursePrice] = useState<number | null>(null);
@@ -234,6 +237,12 @@ const ApplicationForm = () => {
     }
   };
 
+  const handleReceiptChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0] || null;
+    setReceiptFile(file);
+    setReceiptUrl(file ? URL.createObjectURL(file) : "");
+  };
+
   const validateStep1 = () => {
     const errors: string[] = [];
     if (!form.fullName) errors.push("Full Name is required.");
@@ -258,6 +267,7 @@ const ApplicationForm = () => {
     if (!form.confirmAccuracy) errors.push("You must confirm the accuracy of the information.");
     if (!form.courseType) errors.push("Please select a course type.");
     if (!form.paymentMethod) errors.push("Please select a payment method.");
+    if (!receiptFile) errors.push("Please upload a screenshot of your payment receipt.");
     if (errors.length > 0) { setValidationErrors(errors); return false; }
     return true;
   };
@@ -285,6 +295,8 @@ const ApplicationForm = () => {
       courseType: "", paymentMethod: "",
       marketingSource: "", agreeTerms: false, confirmAccuracy: false,
     }));
+    setReceiptFile(null);
+    setReceiptUrl("");
     setCurrentStep(1);
   };
 
@@ -315,6 +327,14 @@ const ApplicationForm = () => {
     }
     setIsSubmitting(true);
 
+    // Upload payment receipt to Supabase Storage (best-effort). Provides a
+    // durable public URL persisted on the application row and shown to admin.
+    let submittedReceiptUrl = "";
+    if (receiptFile) {
+      const { uploadReceiptSupabase } = await import("@/lib/applications-supabase");
+      submittedReceiptUrl = (await uploadReceiptSupabase(receiptFile, form.courseId || "course")) || "";
+    }
+
     // If no real UUID (API was down during load), save locally and treat as success
     if (!hasRealUUID) {
       try {
@@ -332,6 +352,7 @@ const ApplicationForm = () => {
           courseName: courseName,
           courseType: form.courseType,
           paymentMethod: form.paymentMethod,
+          receiptUrl: submittedReceiptUrl,
           marketingSource: form.marketingSource || "Direct",
           submittedAt: new Date().toISOString(),
           status: "pending_sync",
@@ -358,6 +379,7 @@ const ApplicationForm = () => {
           courseName: localApp.courseName,
           courseType: form.courseType,
           paymentMethod: form.paymentMethod,
+          receiptUrl: submittedReceiptUrl,
           marketingSource: localApp.marketingSource,
           submittedAt: localApp.submittedAt,
           status: "new",
@@ -385,6 +407,8 @@ const ApplicationForm = () => {
       formData.append("courseId", form.courseId);
       formData.append("courseType", form.courseType);
       formData.append("paymentMethod", form.paymentMethod);
+      if (submittedReceiptUrl) formData.append("receiptUrl", submittedReceiptUrl);
+      if (receiptFile) formData.append("receipt", receiptFile);
       formData.append("marketingSource", form.marketingSource || "Direct");
       formData.append("fullName", form.fullName);
       if (form.dateOfBirth) formData.append("dateOfBirth", new Date(form.dateOfBirth).toISOString());
@@ -446,6 +470,7 @@ const ApplicationForm = () => {
         courseName: courseName,
         courseType: form.courseType,
         paymentMethod: form.paymentMethod,
+        receiptUrl: submittedReceiptUrl,
         marketingSource: form.marketingSource || "Direct",
         submittedAt: new Date().toISOString(),
         status: "new",
@@ -690,6 +715,55 @@ const ApplicationForm = () => {
                           <option value="Bank Transfer">Bank Transfer</option>
                         </select>
                         <ArrowDown className="absolute right-3 top-[42px] text-gray-400 dark:text-gray-500 pointer-events-none w-4 h-4" />
+                      </div>
+
+                      {/* Bank account details for transferring the course fee */}
+                      <div className="mt-6 rounded-xl border border-[#2196F3]/30 bg-[#2196F3]/5 p-4 space-y-3">
+                        <p className="text-sm font-semibold text-gray-800 dark:text-gray-100">
+                          Please transfer the exact course fee to one of our official bank accounts below:
+                        </p>
+                        <div className="text-sm text-gray-600 dark:text-gray-300 space-y-2">
+                          <div>
+                            <p className="font-semibold text-[#2196F3]">Commercial Bank of Ethiopia (CBE)</p>
+                            <p>Account Name: Your Company Name</p>
+                            <p>Account Number: 1000123456789</p>
+                          </div>
+                          <div>
+                            <p className="font-semibold text-[#2196F3]">Awash Bank</p>
+                            <p>Account Name: Your Company Name</p>
+                            <p>Account Number: 01234567891234</p>
+                          </div>
+                          <div>
+                            <p className="font-semibold text-[#2196F3]">Telebirr (Merchant / CBE-Linked)</p>
+                            <p>Name: Your Company Name</p>
+                            <p>Number: 0911223344</p>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Upload payment receipt */}
+                      <div className="mt-4">
+                        <label htmlFor="receipt" className="block text-sm font-medium mb-1.5 text-gray-700 dark:text-gray-300">
+                          Upload a screenshot or photo of your bank receipt <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          id="receipt"
+                          name="receipt"
+                          type="file"
+                          accept="image/*,.pdf"
+                          onChange={handleReceiptChange}
+                          className="w-full text-sm text-gray-600 dark:text-gray-300 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:bg-[#2196F3] file:text-white file:font-semibold file:cursor-pointer hover:file:bg-blue-600 border border-gray-300 dark:border-gray-600 rounded-xl px-2 py-2 file:bg-[#2196F3]"
+                        />
+                        {receiptUrl && (
+                          <div className="mt-3">
+                            <img
+                              src={receiptUrl}
+                              alt="Payment receipt preview"
+                              className="max-h-48 rounded-xl border border-gray-200 dark:border-gray-700 object-contain"
+                            />
+                            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">{receiptFile?.name}</p>
+                          </div>
+                        )}
                       </div>
 
                       <div className="relative mt-5">

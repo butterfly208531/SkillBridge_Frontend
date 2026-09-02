@@ -21,6 +21,7 @@ export interface StoredApplication {
   courseName: string;
   courseType: string;
   paymentMethod: string;
+  receiptUrl: string;
   marketingSource: string;
   submittedAt: string;
   status: string;
@@ -43,6 +44,7 @@ function mapRow(row: any): StoredApplication {
     courseName: row.course_name ?? "",
     courseType: row.course_type ?? "",
     paymentMethod: row.payment_method ?? "",
+    receiptUrl: row.receipt_url ?? "",
     marketingSource: row.marketing_source ?? "",
     submittedAt: row.submitted_at ?? "",
     status: row.status ?? "new",
@@ -66,6 +68,7 @@ function mapApplication(a: StoredApplication): any {
     course_name: a.courseName,
     course_type: a.courseType,
     payment_method: a.paymentMethod,
+    receipt_url: a.receiptUrl,
     marketing_source: a.marketingSource,
     submitted_at: a.submittedAt,
     status: a.status,
@@ -91,11 +94,18 @@ export async function addApplicationSupabase(app: StoredApplication): Promise<bo
   let { error } = await supabase.from("applications").upsert(mapApplication(app));
   if (error) {
     // Cleaner first write fails a column, strip it and retry so submissions
-    // are never blocked (e.g. course_type / payment_method not yet added).
-    if (error.message?.toLowerCase().includes("course_type") || error.message?.toLowerCase().includes("payment_method")) {
+    // are never blocked (e.g. course_type / payment_method / receipt_url not
+    // yet added to the table).
+    const missing = error.message?.toLowerCase();
+    if (
+      missing?.includes("course_type") ||
+      missing?.includes("payment_method") ||
+      missing?.includes("receipt_url")
+    ) {
       const row = mapApplication(app);
       delete row.course_type;
       delete row.payment_method;
+      delete row.receipt_url;
       const { error: retryErr } = await supabase.from("applications").upsert(row);
       if (retryErr) {
         console.warn("Supabase application write failed:", retryErr.message);
@@ -107,6 +117,34 @@ export async function addApplicationSupabase(app: StoredApplication): Promise<bo
     return false;
   }
   return true;
+}
+
+/**
+ * Upload a payment receipt file to Supabase Storage (`receipts` bucket) and
+ * return its public URL. Returns null on any failure so the caller can decide
+ * how to degrade (e.g. keep the image locally).
+ */
+export async function uploadReceiptSupabase(file: File, prefix: string): Promise<string | null> {
+  if (!supabase) return null;
+  const bucket = "receipts";
+  const ext = (file.name.split(".").pop() || "jpg").toLowerCase().replace(/[^a-z0-9]/g, "");
+  const path = `${prefix}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+  try {
+    const { error: uploadErr } = await supabase.storage.from(bucket).upload(path, file, {
+      cacheControl: "3600",
+      upsert: false,
+      contentType: file.type || "image/jpeg",
+    });
+    if (uploadErr) {
+      console.warn("Supabase receipt upload failed:", uploadErr.message);
+      return null;
+    }
+    const { data } = supabase.storage.from(bucket).getPublicUrl(path);
+    return data?.publicUrl ?? null;
+  } catch (err) {
+    console.warn("Supabase receipt upload threw:", err);
+    return null;
+  }
 }
 
 export async function updateApplicationSupabase(
