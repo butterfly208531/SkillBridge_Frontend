@@ -731,7 +731,7 @@ const ApplicationForm = () => {
                           )}
                           {form.paymentMethod === "Telebirr" && (
                             <div>
-                              <p className="font-semibold text-[#2196F3]">Telebirr (Merchant / CBE-Linked)</p>
+                              <p className="font-semibold text-[#2196F3]">Telebirr</p>
                               <p>Name: Yonas Negese</p>
                               <p>Number: 0955935455</p>
                             </div>
