@@ -15,6 +15,8 @@ import Footer from "@/app/[locale]/components/footer";
 import { fetchCourses, fetchCourseById, fetchCourseBySlug } from "@/lib/api";
 import { coursesConfig, getCourseBySlug } from "@/lib/courses-config";
 import { getSeedCourseBySlug } from "@/lib/courses-seed";
+import { getPublicCourses } from "@/lib/courses-store";
+import { syncSharedCoursesToLocal } from "@/lib/courses-shared";
 import { addApplicationSupabase } from "@/lib/applications-supabase";
 
 const ApplicationForm = () => {
@@ -177,6 +179,36 @@ const ApplicationForm = () => {
               resolvedName     = resolvedName     || found.title;
               resolvedPrice    = resolvedPrice    ?? (found.priceDiscounted > 0 ? found.priceDiscounted : found.priceOriginal);
               resolvedCategory = resolvedCategory || found.category?.name || "";
+            }
+          } catch (_) {}
+        }
+
+        // Step 2.5: Local store + Supabase fallback — admin-added / edited courses
+        // live in the Supabase-backed `courses` store that the course page reads,
+        // but were previously invisible here because this form only queried the
+        // backend API. Pull the shared store (Supabase) into localStorage and match
+        // by id, slugified id, or slugified title — same as the course detail page.
+        if (!resolvedName) {
+          try {
+            await syncSharedCoursesToLocal();
+            const stored = getPublicCourses();
+            const toSlug2 = (s: string) =>
+              (s || "").toLowerCase().trim().replace(/\s+/g, "-").replace(/[^\w-]+/g, "").replace(/--+/g, "-");
+            const idSlug = toSlug2(slug);
+            const storedMatch = stored.find(
+              (c) =>
+                c.id === slug ||
+                toSlug2(c.id) === idSlug ||
+                toSlug2(c.title) === idSlug
+            );
+            if (storedMatch) {
+              resolvedId       = storedMatch.id || slug;
+              resolvedName     = storedMatch.title || "";
+              resolvedCategory = storedMatch.category || "";
+              resolvedPrice    =
+                (storedMatch.priceDiscounted ?? 0) > 0
+                  ? storedMatch.priceDiscounted
+                  : storedMatch.priceOriginal ?? null;
             }
           } catch (_) {}
         }

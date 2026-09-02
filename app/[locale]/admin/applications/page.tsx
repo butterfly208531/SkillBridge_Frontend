@@ -90,6 +90,15 @@ export default function ApplicationsPage() {
 
   const getAppType = (a: Application): "course" | "job" => a.type || "course";
 
+  const getPaymentMethod = (a: Application): string =>
+    a.paymentMethod || a.payment || "";
+
+  const getPaymentRef = (a: Application): string =>
+    a.paymentReference || (a as any).payment_ref || (a as any).paymentRef || "";
+
+  const getReceiptUrl = (a: Application): string =>
+    a.receiptUrl || (a as any).receipt || (a as any).receipt_url || "";
+
   const fetchApps = async () => {
     const token = sessionStorage.getItem("adminToken");
     setLoading(true);
@@ -191,32 +200,59 @@ export default function ApplicationsPage() {
     }));
 
     const mergeJobs = (base: Application[]): Application[] => {
-      const seen = new Set<string>();
       const merged: Application[] = [];
+      const byId = new Map<string, Application>();
       // Merge course + job applications from backend, localStorage, AND
       // Supabase (course apps live in `applications`, job apps in
       // `job_applications`). Both must always appear so the admin sees a
       // complete list even when the backend returns nothing.
+      //
+      // Backend rows come first and win for the canonical identity, but they may
+      // lack the payment fields (paymentMethod / receiptUrl) that were saved to
+      // Supabase. So when the same id later appears from Supabase, overlay any
+      // payment/receipt data onto the existing row instead of dropping it.
       for (const a of [...base, ...localJobs, ...supabaseMapped, ...supabaseJobMapped]) {
         const id = a.id || (a as any)._id || "";
-        if (!id || seen.has(id)) continue;
-        seen.add(id);
-        merged.push(a);
+        if (!id) continue;
+        const existing = byId.get(id);
+        if (!existing) {
+          byId.set(id, a);
+        } else if (a.type === "course") {
+          byId.set(id, {
+            ...existing,
+            paymentMethod: existing.paymentMethod || a.paymentMethod || existing.payment,
+            payment:       existing.payment       || a.payment,
+            paymentReference: existing.paymentReference || a.paymentReference,
+            receiptUrl:    existing.receiptUrl    || (a as any).receipt || a.receiptUrl,
+            status:        existing.status        || a.status,
+          });
+        }
       }
-      return merged;
+      return Array.from(byId.values());
     };
 
-    // Dedupe by id: primary list wins, extra Supabase entries are appended.
+    // Dedupe by id: primary list wins, extra Supabase entries are appended
+    // (with payment/receipt data overlaid so they are never lost).
     const mergeSupabase = (list: Application[]): Application[] => {
-      const seen = new Set<string>();
       const merged: Application[] = [];
+      const byId = new Map<string, Application>();
       for (const a of [...list, ...supabaseMapped, ...supabaseJobMapped]) {
         const id = a.id || (a as any)._id || "";
-        if (!id || seen.has(id)) continue;
-        seen.add(id);
-        merged.push(a);
+        if (!id) continue;
+        const existing = byId.get(id);
+        if (!existing) {
+          byId.set(id, a);
+        } else if (a.type === "course") {
+          byId.set(id, {
+            ...existing,
+            paymentMethod: existing.paymentMethod || a.paymentMethod || existing.payment,
+            payment:       existing.payment       || a.payment,
+            paymentReference: existing.paymentReference || a.paymentReference,
+            receiptUrl:    existing.receiptUrl    || (a as any).receipt || a.receiptUrl,
+          });
+        }
       }
-      return merged;
+      return Array.from(byId.values());
     };
 
     const applyAndSetApps = (list: Application[]) => {
@@ -624,7 +660,7 @@ export default function ApplicationsPage() {
       {/* Detail modal */}
       {selected && (
         <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl shadow-xl p-6 max-w-md w-full space-y-4 max-h-[90vh] overflow-y-auto">
+          <div className="bg-white rounded-2xl shadow-xl p-6 max-w-lg w-full space-y-4 max-h-[90vh] overflow-y-auto">
             <div className="flex items-start justify-between">
               <div>
                 <h3 className="font-bold text-gray-800 text-lg">
@@ -655,8 +691,8 @@ export default function ApplicationsPage() {
                 { label: selected.type === "job" ? "Position" : "Course", value: selected.course || (selected.courseId && !selected.courseId.includes("-") ? selected.courseId : "") || selected.courseId },
                 { label: "Company",     value: selected.company },
                 { label: "Course Type", value: selected.courseType },
-                { label: "Payment",     value: selected.paymentMethod },
-                { label: "Payment Ref", value: selected.paymentReference },
+                { label: "Payment",     value: getPaymentMethod(selected) },
+                { label: "Payment Ref", value: getPaymentRef(selected) },
                 { label: "Gender",      value: selected.gender },
                 { label: "Nationality", value: selected.nationality },
                 { label: "Address",     value: selected.address },
@@ -676,14 +712,49 @@ export default function ApplicationsPage() {
               </div>
             )}
 
-            {selected.receiptUrl && (
-              <div>
-                <p className="text-[10px] text-gray-400 uppercase tracking-wide mb-1">Payment Receipt</p>
-                <img
-                  src={selected.receiptUrl}
-                  alt="Receipt"
-                  className="w-full rounded-lg border border-gray-100 max-h-48 object-contain"
-                />
+            {/* Payment details — always visible so the admin can confirm
+                whether a payment method and proof picture were provided. */}
+            {selected.type !== "job" && (
+              <div className="rounded-xl border border-gray-100 p-3 space-y-2">
+                <div className="flex items-center justify-between">
+                  <p className="text-[10px] text-gray-400 uppercase tracking-wide">Payment Details</p>
+                  {getReceiptUrl(selected) ? (
+                    <span className="text-[10px] font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">Receipt uploaded</span>
+                  ) : (
+                    <span className="text-[10px] font-semibold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full">No receipt</span>
+                  )}
+                </div>
+
+                <div className="grid grid-cols-2 gap-2 text-sm">
+                  <div>
+                    <p className="text-[10px] text-gray-400 uppercase tracking-wide">Payment Method</p>
+                    <p className="text-gray-700 font-medium text-xs mt-0.5">{getPaymentMethod(selected) || "Not provided"}</p>
+                  </div>
+                  <div>
+                    <p className="text-[10px] text-gray-400 uppercase tracking-wide">Payment Ref</p>
+                    <p className="text-gray-700 font-medium text-xs mt-0.5 break-all">{getPaymentRef(selected) || "Not provided"}</p>
+                  </div>
+                </div>
+
+                {getReceiptUrl(selected) ? (
+                  <a
+                    href={getReceiptUrl(selected)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block"
+                    title="Open full-size receipt"
+                  >
+                    <img
+                      src={getReceiptUrl(selected)}
+                      alt="Payment receipt"
+                      className="w-full rounded-lg border border-gray-100 cursor-zoom-in"
+                    />
+                  </a>
+                ) : (
+                  <div className="rounded-lg border border-dashed border-gray-200 bg-gray-50 text-center py-4 text-[11px] text-gray-400">
+                    No payment receipt uploaded for this application.
+                  </div>
+                )}
               </div>
             )}
 
