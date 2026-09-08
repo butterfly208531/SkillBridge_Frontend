@@ -6,8 +6,24 @@ import AdminHeader from "../components/AdminHeader";
 import StatCard from "../components/StatCard";
 import { cn } from "@/lib/utils";
 import { getApplicationsSupabase } from "@/lib/applications-supabase";
+import { getPublicCourses } from "@/lib/courses-store";
 
 const API = process.env.NEXT_PUBLIC_API_BASE_URL || "https://skillbridge-backend2.onrender.com/api";
+
+const toSlug = (s: string): string =>
+  (s || "").toLowerCase().trim().replace(/\s+/g, "-").replace(/[^\w-]+/g, "").replace(/--+/g, "-");
+
+/** Build a lookup from a list of stored courses: match by id, slugified id, or slugified title (same as the course pages). */
+function buildPriceMap(): Map<string, number> {
+  const map = new Map<string, number>();
+  for (const c of getPublicCourses()) {
+    const price = (c.priceDiscounted ?? 0) > 0 ? c.priceDiscounted : c.priceOriginal ?? 0;
+    map.set(c.id, price);
+    map.set(toSlug(c.id), price);
+    map.set(toSlug(c.title), price);
+  }
+  return map;
+}
 
 const statusStyle: Record<string, string> = {
   pending:  "bg-yellow-100 text-yellow-700",
@@ -31,6 +47,7 @@ interface Payment {
   course?: string;
   courseId?: string;
   courseTitle?: string;
+  price?: number;
   paymentMethod?: string;
   payment?: string;
   paymentReference?: string;
@@ -95,7 +112,15 @@ export default function FinancePage() {
       } catch { return []; }
     };
 
-    const applyAndSet = (list: Payment[]) => setPayments(list);
+    const applyAndSet = (list: Payment[]) => {
+      const priceMap = buildPriceMap();
+      for (const p of list) {
+        if (p.price === undefined || p.price === 0) {
+          p.price = priceMap.get(p.courseId || "") ?? priceMap.get(toSlug(p.courseId || "")) ?? priceMap.get(toSlug(p.course || ""));
+        }
+      }
+      setPayments(list);
+    };
 
     // Render immediately from Supabase + localStorage so the page never hangs
     const supabaseApps = await getApplicationsSupabase();
@@ -202,7 +227,7 @@ export default function FinancePage() {
         {/* Stat cards */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           <StatCard
-            title="Total Payments"
+            title="Total Applicants"
             value={payments.length}
             subtitle="Course applications"
             icon={Wallet}
@@ -299,6 +324,7 @@ export default function FinancePage() {
                     <th className="px-5 py-3 text-left font-semibold">Applicant</th>
                     <th className="px-5 py-3 text-left font-semibold">Course</th>
                     <th className="px-5 py-3 text-left font-semibold">Payment Method</th>
+                    <th className="px-5 py-3 text-left font-semibold">Price</th>
                     <th className="px-5 py-3 text-left font-semibold">Receipt</th>
                     <th className="px-5 py-3 text-left font-semibold">Date</th>
                     <th className="px-5 py-3 text-left font-semibold">Status</th>
@@ -327,6 +353,13 @@ export default function FinancePage() {
                             <span className="text-[11px] text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full font-medium">Not provided</span>
                           ) : (
                             <span className="text-xs font-medium text-gray-700">{method}</span>
+                          )}
+                        </td>
+                        <td className="px-5 py-3.5">
+                          {p.price && p.price > 0 ? (
+                            <span className="text-xs font-semibold text-gray-800">{p.price.toLocaleString()} ETB</span>
+                          ) : (
+                            <span className="text-[11px] text-gray-400">—</span>
                           )}
                         </td>
                         <td className="px-5 py-3.5">
