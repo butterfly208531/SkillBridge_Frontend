@@ -413,7 +413,8 @@ export default function ApplicationsPage() {
     } catch { /* ignore */ }
 
     const token = sessionStorage.getItem("adminToken");
-    const isJob = (selected && selected.type === "job");
+    const target = apps.find(a => (a.id || a._id) === id);
+    const isJob = !!(target && target.type === "job");
     if (isJob) {
       deleteJobApplicationSupabase(id);
       try {
