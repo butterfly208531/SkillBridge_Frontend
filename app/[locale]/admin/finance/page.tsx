@@ -1,12 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Search, Eye, CheckCircle, XCircle, Clock, RefreshCw, Wallet, Banknote, Receipt as ReceiptIcon } from "lucide-react";
+import { Search, Eye, CheckCircle, XCircle, Clock, RefreshCw, Wallet, Banknote, Receipt as ReceiptIcon, TrendingUp, TrendingDown, PiggyBank, Plus, Trash2, ArrowUpRight } from "lucide-react";
 import AdminHeader from "../components/AdminHeader";
 import StatCard from "../components/StatCard";
 import { cn } from "@/lib/utils";
 import { getApplicationsSupabase } from "@/lib/applications-supabase";
 import { getPublicCourses } from "@/lib/courses-store";
+import { getExpenses, addExpense, deleteExpense, getBootcampRevenue, getTotalPaid, type Expense, type BootcampRevenue } from "@/lib/finance-supabase";
 
 const API = process.env.NEXT_PUBLIC_API_BASE_URL || "https://skillbridge-backend2.onrender.com/api";
 
@@ -84,6 +85,29 @@ export default function FinancePage() {
   const [selected, setSelected]   = useState<Payment | null>(null);
   const [loading, setLoading]     = useState(true);
   const [error, setError]         = useState("");
+
+  const [expenses, setExpenses]   = useState<Expense[]>([]);
+  const [totalPaid, setTotalPaid] = useState(0);
+  const [bootcamps, setBootcamps] = useState<BootcampRevenue[]>([]);
+  const [savingExpense, setSavingExpense] = useState(false);
+  const [showExpenseForm, setShowExpenseForm] = useState(false);
+  const [expenseForm, setExpenseForm] = useState({
+    expenseFor: "",
+    amount: "",
+    paymentMethod: "Cash",
+    expenseDate: "",
+    description: "",
+  });
+
+  useEffect(() => {
+    Promise.all([getExpenses(), getBootcampRevenue(), getTotalPaid()])
+      .then(([exps, revs, paid]) => {
+        setExpenses(exps);
+        setBootcamps(revs);
+        setTotalPaid(paid);
+      })
+      .catch(() => {});
+  }, []);
 
   const fetchPayments = async () => {
     setLoading(true);
@@ -219,10 +243,71 @@ export default function FinancePage() {
   const withReceipt = payments.filter(p => getReceiptUrl(p));
   const approved = payments.filter(p => normalizeStatus(p.status) === "approved");
 
+  const approvedTotal = approved.reduce((sum, p) => sum + (p.price || 0), 0);
+  const totalExpenses = expenses.reduce((sum, e) => sum + Number(e.amount || 0), 0);
+  const totalReceived = totalPaid > 0 ? totalPaid : approvedTotal;
+  const profit = totalReceived - totalExpenses;
+  const fx = (n: number) => `${n.toLocaleString()} ETB`;
+
+  const submitExpense = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const amount = Number(expenseForm.amount);
+    if (!expenseForm.expenseFor || !amount || amount <= 0) return;
+    setSavingExpense(true);
+    const ok = await addExpense({
+      expenseTrackerCode: `EXP-${Date.now()}`,
+      expenseDate: expenseForm.expenseDate,
+      expenseMonth: expenseForm.expenseDate ? expenseForm.expenseDate.slice(0, 7) : "",
+      courseId: "",
+      expenseFor: expenseForm.expenseFor,
+      expenseDescription: expenseForm.description,
+      amount,
+      paymentMethod: expenseForm.paymentMethod,
+      referenceImage: "",
+      approvedBy: "",
+    });
+    setSavingExpense(false);
+    if (ok) {
+      setExpenses(await getExpenses());
+      setExpenseForm({ expenseFor: "", amount: "", paymentMethod: "Cash", expenseDate: "", description: "" });
+      setShowExpenseForm(false);
+    }
+  };
+
+  const removeExpense = async (id?: string) => {
+    if (!id) return;
+    if (await deleteExpense(id)) setExpenses(await getExpenses());
+  };
+
   return (
     <div className="flex flex-col h-full">
       <AdminHeader title="Finance" />
       <div className="flex-1 p-6 space-y-5 overflow-y-auto">
+
+        {/* Finance summary */}
+        <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+          <StatCard
+            title="Total Received"
+            value={fx(totalReceived)}
+            subtitle={totalPaid > 0 ? "From payment ledger" : "From approved payments"}
+            icon={TrendingUp}
+            color="green"
+          />
+          <StatCard
+            title="Expenses"
+            value={fx(totalExpenses)}
+            subtitle={`${expenses.length} entries`}
+            icon={TrendingDown}
+            color="red"
+          />
+          <StatCard
+            title="Revenue (Profit)"
+            value={fx(profit)}
+            subtitle={profit >= 0 ? "Positive balance" : "Negative balance"}
+            icon={PiggyBank}
+            color={profit >= 0 ? "blue" : "orange"}
+          />
+        </div>
 
         {/* Stat cards */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -407,6 +492,189 @@ export default function FinancePage() {
               )}
             </div>
           )}
+        </div>
+
+        {/* Expenses */}
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+          <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+            <div>
+              <h3 className="font-bold text-gray-800">Expense Tracker</h3>
+              <p className="text-xs text-gray-400">Total expenses: {fx(totalExpenses)}</p>
+            </div>
+            <button
+              onClick={() => setShowExpenseForm(v => !v)}
+              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-[#1E90FF] text-white text-xs font-semibold hover:bg-[#1E90FF]/90 transition-colors"
+            >
+              {showExpenseForm ? <XCircle size={14} /> : <Plus size={14} />}
+              {showExpenseForm ? "Close" : "Add Expense"}
+            </button>
+          </div>
+
+          {showExpenseForm && (
+            <form onSubmit={submitExpense} className="px-5 py-4 border-b border-gray-100 bg-gray-50/60 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3">
+              <div className="lg:col-span-2">
+                <label className="text-[11px] text-gray-400 uppercase tracking-wide font-semibold">Expense for</label>
+                <input
+                  value={expenseForm.expenseFor}
+                  onChange={e => setExpenseForm(f => ({ ...f, expenseFor: e.target.value }))}
+                  placeholder="e.g. Rent, Office supplies, Teacher salary"
+                  className="mt-1 w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1E90FF]/30"
+                  required
+                />
+              </div>
+              <div>
+                <label className="text-[11px] text-gray-400 uppercase tracking-wide font-semibold">Amount (ETB)</label>
+                <input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={expenseForm.amount}
+                  onChange={e => setExpenseForm(f => ({ ...f, amount: e.target.value }))}
+                  placeholder="0.00"
+                  className="mt-1 w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1E90FF]/30"
+                  required
+                />
+              </div>
+              <div>
+                <label className="text-[11px] text-gray-400 uppercase tracking-wide font-semibold">Payment method</label>
+                <select
+                  value={expenseForm.paymentMethod}
+                  onChange={e => setExpenseForm(f => ({ ...f, paymentMethod: e.target.value }))}
+                  className="mt-1 w-full px-3 py-2 text-sm border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#1E90FF]/30"
+                >
+                  <option>Cash</option>
+                  <option>Telebirr</option>
+                  <option>CBE</option>
+                  <option>Bank transfer</option>
+                  <option>Other</option>
+                </select>
+              </div>
+              <div>
+                <label className="text-[11px] text-gray-400 uppercase tracking-wide font-semibold">Date</label>
+                <input
+                  type="date"
+                  value={expenseForm.expenseDate}
+                  onChange={e => setExpenseForm(f => ({ ...f, expenseDate: e.target.value }))}
+                  className="mt-1 w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1E90FF]/30"
+                />
+              </div>
+              <div className="lg:col-span-4">
+                <label className="text-[11px] text-gray-400 uppercase tracking-wide font-semibold">Description (optional)</label>
+                <input
+                  value={expenseForm.description}
+                  onChange={e => setExpenseForm(f => ({ ...f, description: e.target.value }))}
+                  placeholder="Add a short description..."
+                  className="mt-1 w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1E90FF]/30"
+                />
+              </div>
+              <div className="flex items-end">
+                <button
+                  type="submit"
+                  disabled={savingExpense}
+                  className="w-full inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-lg bg-emerald-500 text-white text-xs font-semibold hover:bg-emerald-600 disabled:opacity-60 transition-colors"
+                >
+                  {savingExpense ? "Saving..." : <><Plus size={14} /> Save</>}
+                </button>
+              </div>
+            </form>
+          )}
+
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="bg-gray-50 text-xs text-gray-500 uppercase tracking-wide border-b border-gray-100">
+                  <th className="px-5 py-3 text-left font-semibold">Expense</th>
+                  <th className="px-5 py-3 text-left font-semibold">Method</th>
+                  <th className="px-5 py-3 text-left font-semibold">Date</th>
+                  <th className="px-5 py-3 text-left font-semibold">Amount</th>
+                  <th className="px-5 py-3 text-right font-semibold">Action</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-50">
+                {expenses.map(e => (
+                  <tr key={e.id} className="hover:bg-gray-50/60 transition-colors">
+                    <td className="px-5 py-3">
+                      <p className="font-semibold text-gray-800 text-xs">{e.expenseFor}</p>
+                      {e.expenseDescription && <p className="text-[11px] text-gray-400">{e.expenseDescription}</p>}
+                    </td>
+                    <td className="px-5 py-3 text-xs text-gray-600">{e.paymentMethod || "—"}</td>
+                    <td className="px-5 py-3 text-xs text-gray-400">
+                      {e.expenseDate ? new Date(e.expenseDate).toLocaleDateString() : "—"}
+                    </td>
+                    <td className="px-5 py-3 text-xs font-semibold text-red-500">{fx(Number(e.amount || 0))}</td>
+                    <td className="px-5 py-3 text-right">
+                      <button
+                        onClick={() => removeExpense(e.id)}
+                        className="p-1.5 rounded-lg text-red-400 hover:bg-red-50 transition-colors"
+                        title="Delete expense"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+                {expenses.length === 0 && (
+                  <tr>
+                    <td colSpan={5} className="text-center py-10 text-gray-400 text-sm">
+                      No expenses recorded yet. Click "Add Expense" to track spending.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* Bootcamp revenue */}
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+          <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+            <div>
+              <h3 className="font-bold text-gray-800">Bootcamp Revenue</h3>
+              <p className="text-xs text-gray-400">
+                Total collected: {fx(bootcamps.reduce((s, b) => s + Number(b.collectedRevenue || 0), 0))}
+              </p>
+            </div>
+            <ArrowUpRight size={16} className="text-[#1E90FF]" />
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="bg-gray-50 text-xs text-gray-500 uppercase tracking-wide border-b border-gray-100">
+                  <th className="px-5 py-3 text-left font-semibold">Course</th>
+                  <th className="px-5 py-3 text-left font-semibold">Enrolled</th>
+                  <th className="px-5 py-3 text-left font-semibold">Collected</th>
+                  <th className="px-5 py-3 text-left font-semibold">Balance</th>
+                  <th className="px-5 py-3 text-left font-semibold">Status</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-50">
+                {bootcamps.map(b => (
+                  <tr key={b.id} className="hover:bg-gray-50/60 transition-colors">
+                    <td className="px-5 py-3 font-semibold text-gray-800 text-xs">{b.courseName}</td>
+                    <td className="px-5 py-3 text-xs text-gray-600">{b.totalStudentEnrolled}</td>
+                    <td className="px-5 py-3 text-xs font-semibold text-emerald-500">{fx(Number(b.collectedRevenue || 0))}</td>
+                    <td className="px-5 py-3 text-xs text-gray-600">{fx(Number(b.currentBalance || 0))}</td>
+                    <td className="px-5 py-3">
+                      <span className={cn(
+                        "px-2.5 py-1 rounded-full text-[11px] font-semibold capitalize",
+                        b.bootcampStatus === "active" ? "bg-emerald-50 text-emerald-600"
+                        : b.bootcampStatus === "completed" ? "bg-blue-50 text-blue-600" : "bg-gray-100 text-gray-500"
+                      )}>
+                        {b.bootcampStatus}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+                {bootcamps.length === 0 && (
+                  <tr>
+                    <td colSpan={5} className="text-center py-10 text-gray-400 text-sm">
+                      No bootcamp revenue recorded yet.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
 

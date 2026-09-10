@@ -6,7 +6,7 @@ interface StatCardProps {
   value: string | number;
   subtitle?: string;
   icon: LucideIcon;
-  color: "blue" | "orange" | "green" | "purple";
+  color: "blue" | "orange" | "green" | "purple" | "red";
   trend?: { value: string; up: boolean };
 }
 
@@ -15,6 +15,7 @@ const colorMap = {
   orange: { bg: "bg-[#F57C00]/10", icon: "text-[#F57C00]",  border: "border-[#F57C00]/20" },
   green:  { bg: "bg-emerald-50",   icon: "text-emerald-500", border: "border-emerald-100"  },
   purple: { bg: "bg-purple-50",    icon: "text-purple-500",  border: "border-purple-100"   },
+  red:    { bg: "bg-red-50",       icon: "text-red-500",     border: "border-red-100"      },
 };
 
 export default function StatCard({ title, value, subtitle, icon: Icon, color, trend }: StatCardProps) {
