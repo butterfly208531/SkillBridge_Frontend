@@ -1,13 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import { Eye, EyeOff, Lock, Mail, Loader2 } from "lucide-react";
-
-// ─── Admin credentials (change these to update login) ───────────────────────
-const ADMIN_EMAIL    = "admin@skillbridge.com";
-const ADMIN_PASSWORD = "Admin123!";
-// ────────────────────────────────────────────────────────────────────────────
+import { getAdminCredentials, DEFAULT_ADMIN_EMAIL, DEFAULT_ADMIN_PASSWORD } from "@/lib/admin-auth-supabase";
 
 function grantAccess(email: string) {
   const token = btoa(`admin:${email}:${Date.now()}`);
@@ -23,6 +19,17 @@ export default function AdminLoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading,      setLoading]      = useState(false);
   const [error,        setError]        = useState("");
+  const [creds,        setCreds]        = useState({
+    email: DEFAULT_ADMIN_EMAIL,
+    password: DEFAULT_ADMIN_PASSWORD,
+  });
+
+  useEffect(() => {
+    (async () => {
+      const stored = await getAdminCredentials();
+      if (stored) setCreds(stored);
+    })();
+  }, []);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -35,8 +42,8 @@ export default function AdminLoginPage() {
     // Small delay so the spinner shows
     setTimeout(() => {
       if (
-        trimEmail === ADMIN_EMAIL.toLowerCase() &&
-        trimPass  === ADMIN_PASSWORD
+        trimEmail === creds.email.toLowerCase() &&
+        trimPass  === creds.password
       ) {
         grantAccess(trimEmail);
       } else {
