@@ -34,7 +34,7 @@ const nextConfig: NextConfig = {
   },
   async rewrites() {
     return {
-      // beforeFiles: run before filesystem — leave empty
+      // beforeFiles: run before filesystem — leave it empty
       beforeFiles: [],
       // afterFiles: run after filesystem check, so Route Handlers (app/api/*) win
       afterFiles: [
