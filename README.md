@@ -1,4 +1,4 @@
-# Skillbridge Learning — Landing Page
+# Skillbridge Learning Website— Landing Page
 
 <div align="center">
   <img src="readme/homePage.jpg" alt="Skillbridge Banner" width="100%" />
