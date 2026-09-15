@@ -39,14 +39,10 @@ const ApplicationForm = () => {
     address: "",
     courseId: "",          // always starts empty — filled by UUID lookup below
     courseType: "",        // VIP | One to One | Other
-    paymentMethod: "",     // Commercial Bank of Ethiopia (CBE) | Telebirr
     marketingSource: "",
     agreeTerms: false,
     confirmAccuracy: false,
   });
-
-  const [receiptFile, setReceiptFile] = useState<File | null>(null);
-  const [receiptUrl, setReceiptUrl] = useState<string>("");
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isCourseLoading, setIsCourseLoading] = useState(true);
@@ -269,12 +265,6 @@ const ApplicationForm = () => {
     }
   };
 
-  const handleReceiptChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0] || null;
-    setReceiptFile(file);
-    setReceiptUrl(file ? URL.createObjectURL(file) : "");
-  };
-
   const validateStep1 = () => {
     const errors: string[] = [];
     if (!form.fullName) errors.push("Full Name is required.");
@@ -298,8 +288,6 @@ const ApplicationForm = () => {
     if (!form.agreeTerms) errors.push("You must agree to the Terms and Conditions.");
     if (!form.confirmAccuracy) errors.push("You must confirm the accuracy of the information.");
     if (!form.courseType) errors.push("Please select a course type.");
-    if (!form.paymentMethod) errors.push("Please select a payment method.");
-    if (!receiptFile) errors.push("Please upload a screenshot of your payment receipt.");
     if (errors.length > 0) { setValidationErrors(errors); return false; }
     return true;
   };
@@ -324,11 +312,9 @@ const ApplicationForm = () => {
       ...prev,
       fullName: "", dateOfBirth: "", gender: "", nationality: "", email: "",
       phone: "", telegramHandle: "", university: "", address: "",
-      courseType: "", paymentMethod: "",
+      courseType: "",
       marketingSource: "", agreeTerms: false, confirmAccuracy: false,
     }));
-    setReceiptFile(null);
-    setReceiptUrl("");
     setCurrentStep(1);
   };
 
@@ -359,14 +345,6 @@ const ApplicationForm = () => {
     }
     setIsSubmitting(true);
 
-    // Upload payment receipt to Supabase Storage (best-effort). Provides a
-    // durable public URL persisted on the application row and shown to admin.
-    let submittedReceiptUrl = "";
-    if (receiptFile) {
-      const { uploadReceiptSupabase } = await import("@/lib/applications-supabase");
-      submittedReceiptUrl = (await uploadReceiptSupabase(receiptFile, form.courseId || "course")) || "";
-    }
-
     // If no real UUID (API was down during load), save locally and treat as success
     if (!hasRealUUID) {
       try {
@@ -383,8 +361,6 @@ const ApplicationForm = () => {
           courseSlug: form.courseId,
           courseName: courseName,
           courseType: form.courseType,
-          paymentMethod: form.paymentMethod,
-          receiptUrl: submittedReceiptUrl,
           marketingSource: form.marketingSource || "Direct",
           submittedAt: new Date().toISOString(),
           status: "pending_sync",
@@ -410,8 +386,6 @@ const ApplicationForm = () => {
           courseSlug: localApp.courseSlug,
           courseName: localApp.courseName,
           courseType: form.courseType,
-          paymentMethod: form.paymentMethod,
-          receiptUrl: submittedReceiptUrl,
           marketingSource: localApp.marketingSource,
           submittedAt: localApp.submittedAt,
           status: "new",
@@ -438,9 +412,6 @@ const ApplicationForm = () => {
       const formData = new FormData();
       formData.append("courseId", form.courseId);
       formData.append("courseType", form.courseType);
-      formData.append("paymentMethod", form.paymentMethod);
-      if (submittedReceiptUrl) formData.append("receiptUrl", submittedReceiptUrl);
-      if (receiptFile) formData.append("receipt", receiptFile);
       formData.append("marketingSource", form.marketingSource || "Direct");
       formData.append("fullName", form.fullName);
       if (form.dateOfBirth) formData.append("dateOfBirth", new Date(form.dateOfBirth).toISOString());
@@ -501,8 +472,6 @@ const ApplicationForm = () => {
         courseSlug: form.courseId,
         courseName: courseName,
         courseType: form.courseType,
-        paymentMethod: form.paymentMethod,
-        receiptUrl: submittedReceiptUrl,
         marketingSource: form.marketingSource || "Direct",
         submittedAt: new Date().toISOString(),
         status: "new",
@@ -733,67 +702,6 @@ const ApplicationForm = () => {
                           <option value="Other">Other</option>
                         </select>
                         <ArrowDown className="absolute right-3 top-[42px] text-gray-400 dark:text-gray-500 pointer-events-none w-4 h-4" />
-                      </div>
-
-                      {/* Payment method — Telebirr / CBE Birr / Bank Transfer */}
-                      <div className="relative mt-5">
-                        <label htmlFor="paymentMethod" className="block text-sm font-medium mb-1.5 text-gray-700 dark:text-gray-300">
-                          Payment Method <span className="text-red-500">*</span>
-                        </label>
-                        <select id="paymentMethod" name="paymentMethod" value={form.paymentMethod} onChange={handleChange} className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-900 dark:text-gray-100 appearance-none pr-12 focus:ring-2 focus:ring-[#2196F3] focus:border-transparent transition-all duration-200 text-sm">
-                          <option value="">Select payment method</option>
-                          <option value="Commercial Bank of Ethiopia (CBE)">Commercial Bank of Ethiopia (CBE)</option>
-                          <option value="Telebirr">Telebirr</option>
-                        </select>
-                        <ArrowDown className="absolute right-3 top-[42px] text-gray-400 dark:text-gray-500 pointer-events-none w-4 h-4" />
-                      </div>
-
-                      {/* Bank account details — shows only the account for the selected payment method */}
-                      <div className="mt-6 rounded-xl border border-[#2196F3]/30 bg-[#2196F3]/5 p-4 space-y-3">
-                        <p className="text-sm font-semibold text-gray-800 dark:text-gray-100">
-                          Please transfer the exact course fee to our official account below:
-                        </p>
-                        <div className="text-sm text-gray-600 dark:text-gray-300 space-y-2">
-                          {form.paymentMethod === "Commercial Bank of Ethiopia (CBE)" && (
-                            <div>
-                              <p className="font-semibold text-[#2196F3]">Commercial Bank of Ethiopia (CBE)</p>
-                              <p>Account Name: Yonas Negese</p>
-                              <p>Account Number: 1000783760448</p>
-                            </div>
-                          )}
-                          {form.paymentMethod === "Telebirr" && (
-                            <div>
-                              <p className="font-semibold text-[#2196F3]">Telebirr</p>
-                              <p>Name: Yonas Negese</p>
-                              <p>Number: 0955935455</p>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-
-                      {/* Upload payment receipt */}
-                      <div className="mt-4">
-                        <label htmlFor="receipt" className="block text-sm font-medium mb-1.5 text-gray-700 dark:text-gray-300">
-                          Upload a screenshot or photo of your bank receipt <span className="text-red-500">*</span>
-                        </label>
-                        <input
-                          id="receipt"
-                          name="receipt"
-                          type="file"
-                          accept="image/*,.pdf"
-                          onChange={handleReceiptChange}
-                          className="w-full text-sm text-gray-600 dark:text-gray-300 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:bg-[#2196F3] file:text-white file:font-semibold file:cursor-pointer hover:file:bg-blue-600 border border-gray-300 dark:border-gray-600 rounded-xl px-2 py-2 file:bg-[#2196F3]"
-                        />
-                        {receiptUrl && (
-                          <div className="mt-3">
-                            <img
-                              src={receiptUrl}
-                              alt="Payment receipt preview"
-                              className="max-h-48 rounded-xl border border-gray-200 dark:border-gray-700 object-contain"
-                            />
-                            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">{receiptFile?.name}</p>
-                          </div>
-                        )}
                       </div>
 
                       <div className="relative mt-5">

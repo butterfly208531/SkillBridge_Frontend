@@ -20,8 +20,8 @@ export interface StoredApplication {
   courseSlug: string;
   courseName: string;
   courseType: string;
-  paymentMethod: string;
-  receiptUrl: string;
+  paymentMethod?: string;
+  receiptUrl?: string;
   marketingSource: string;
   submittedAt: string;
   status: string;
