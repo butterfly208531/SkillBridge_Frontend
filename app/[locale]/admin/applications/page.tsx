@@ -13,8 +13,23 @@ import {
   updateJobApplicationSupabase,
   deleteJobApplicationSupabase,
 } from "@/lib/job-applications-supabase";
+import { getPublicCourses } from "@/lib/courses-store";
 
 const API = process.env.NEXT_PUBLIC_API_BASE_URL || "https://skillbridge-backend2.onrender.com/api";
+
+const toSlug = (s: string): string =>
+  (s || "").toLowerCase().trim().replace(/\s+/g, "-").replace(/[^\w-]+/g, "").replace(/--+/g, "-");
+
+/** Resolve the course price for an application (same lookup as the Finance tab). */
+function getCoursePrice(courseId?: string, course?: string): number {
+  for (const c of getPublicCourses()) {
+    const price = (c.priceDiscounted ?? 0) > 0 ? c.priceDiscounted : c.priceOriginal ?? 0;
+    const ids = [c.id, toSlug(c.id), toSlug(c.title)];
+    if (courseId && ids.includes(courseId)) return price;
+    if (course && (course === c.title || toSlug(course) === toSlug(c.title))) return price;
+  }
+  return 0;
+}
 
 type Status = "all" | "pending" | "approved" | "rejected";
 type AppType = "all" | "course" | "job";
@@ -352,8 +367,31 @@ export default function ApplicationsPage() {
       });
     };
 
+    // Approval automation: email the student CBE/Telebirr payment details.
+    const sendApprovalEmail = (appId: string, target: any) => {
+      if (!target?.email) return;
+      fetch("/api/send-approval", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: target.email,
+          fullName: target.fullName || target.name || "",
+          courseName: target.course || target.courseId || "",
+          courseSlug: target.courseId || "",
+          price: getCoursePrice(target.courseId, target.course),
+          applicationId: appId,
+        }),
+      })
+        .then(r => r.json())
+        .then((data: any) => {
+          if (!data?.sent) console.warn("Approval email not sent:", data?.error);
+        })
+        .catch(err => console.warn("Approval email failed:", err));
+    };
+
     if (id.startsWith("local-")) {
       const isJob = (selected && selected.type === "job");
+      const target = selected || apps.find(a => (a.id || a._id) === id);
       setApps(prev => prev.map(a => (a.id || a._id) === id ? { ...a, status: newStatus } : a));
       persistStatusToLocalStorage(id, newStatus);
       if (isJob) {
@@ -361,6 +399,7 @@ export default function ApplicationsPage() {
       } else {
         updateApplicationSupabase(id, { status: newStatus });
       }
+      if (newStatus === "approved" && !isJob) sendApprovalEmail(id, target);
       setSelected(null);
       setSuccess(`Application ${newStatus} successfully`);
       setTimeout(() => setSuccess(""), 3000);
@@ -369,6 +408,8 @@ export default function ApplicationsPage() {
     }
 
     const token = sessionStorage.getItem("adminToken");
+    const isJob = (selected && selected.type === "job");
+    const appForEmail = selected || apps.find(a => (a.id || a._id) === id);
     try {
       const response = await fetch(`${API}/applications/${id}/status`, {
         method: "PATCH",
@@ -382,6 +423,8 @@ export default function ApplicationsPage() {
       setSelected(null);
       setSuccess(`Application ${newStatus} successfully`);
       setTimeout(() => setSuccess(""), 3000);
+
+      if (newStatus === "approved" && !isJob && appForEmail?.email) sendApprovalEmail(id, appForEmail);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to update status");
       setTimeout(() => setError(""), 4000);
@@ -736,11 +779,11 @@ export default function ApplicationsPage() {
                 <div className="grid grid-cols-2 gap-2 text-sm">
                   <div>
                     <p className="text-[10px] text-gray-400 uppercase tracking-wide">Payment Method</p>
-                    <p className="text-gray-700 font-medium text-xs mt-0.5">{getPaymentMethod(selected) || "Not provided"}</p>
+                    <p className="text-gray-700 font-medium text-xs mt-0.5">{getPaymentMethod(selected)}</p>
                   </div>
                   <div>
                     <p className="text-[10px] text-gray-400 uppercase tracking-wide">Payment Ref</p>
-                    <p className="text-gray-700 font-medium text-xs mt-0.5 break-all">{getPaymentRef(selected) || "Not provided"}</p>
+                    <p className="text-gray-700 font-medium text-xs mt-0.5 break-all">{getPaymentRef(selected)}</p>
                   </div>
                 </div>
 

@@ -89,6 +89,20 @@ export async function getApplicationsSupabase(): Promise<StoredApplication[]> {
   return (data ?? []).map(mapRow);
 }
 
+export async function getApplicationByIdSupabase(id: string): Promise<StoredApplication | null> {
+  if (!supabase) return null;
+  const { data, error } = await supabase
+    .from("applications")
+    .select("*")
+    .eq("id", id)
+    .maybeSingle();
+  if (error) {
+    console.warn("Supabase application read failed:", error.message);
+    return null;
+  }
+  return data ? mapRow(data) : null;
+}
+
 export async function addApplicationSupabase(app: StoredApplication): Promise<boolean> {
   if (!supabase) return false;
   let { error } = await supabase.from("applications").upsert(mapApplication(app));
@@ -149,12 +163,13 @@ export async function uploadReceiptSupabase(file: File, prefix: string): Promise
 
 export async function updateApplicationSupabase(
   id: string,
-  updates: Partial<Pick<StoredApplication, "status" | "read">>,
+  updates: Partial<Pick<StoredApplication, "status" | "read" | "receiptUrl">>,
 ): Promise<boolean> {
   if (!supabase) return false;
   const row: any = {};
   if (updates.status !== undefined) row.status = updates.status;
   if (updates.read !== undefined) row.read = updates.read;
+  if (updates.receiptUrl !== undefined) row.receipt_url = updates.receiptUrl;
   const { error } = await supabase.from("applications").update(row).eq("id", id);
   if (error) {
     console.warn("Supabase application update failed:", error.message);

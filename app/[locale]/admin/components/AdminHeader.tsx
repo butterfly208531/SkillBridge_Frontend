@@ -1,6 +1,6 @@
 "use client";
 
-import { Bell, Search, X, CheckCheck, FileText, Mail } from "lucide-react";
+import { Bell, Search, X, CheckCheck, FileText, Mail, Receipt } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useParams } from "next/navigation";
@@ -48,7 +48,7 @@ function saveAppNotifications(list: AppNotification[]) {
 // ── Unified notification shape for the dropdown ──────────────────────────────
 
 type UnifiedNotification =
-  | ({ kind: "application" } & AppNotification)
+  | ({ kind: "application" } & AppNotification & { receiptUrl?: string })
   | ({ kind: "contact" } & LocalContactMessage);
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -120,6 +120,7 @@ export default function AdminHeader({ title }: { title: string }) {
           courseName: a.courseName,
           submittedAt: a.submittedAt,
           read: a.read,
+          receiptUrl: a.receiptUrl,
         }));
         const supabaseContacts: UnifiedNotification[] = sbContacts.map((m) => ({
           kind: "contact" as const,
@@ -287,6 +288,7 @@ export default function AdminHeader({ title }: { title: string }) {
                 ) : (
                   notifications.map((n) => {
                     const isContact = n.kind === "contact";
+                    const hasReceipt = !isContact && !!n.receiptUrl;
                     const time = isContact
                       ? timeAgo(n.createdAt)
                       : timeAgo(n.submittedAt);
@@ -309,17 +311,19 @@ export default function AdminHeader({ title }: { title: string }) {
                         className={`w-full text-left px-4 py-3 hover:bg-gray-50 transition-colors flex gap-3 ${!n.read ? "bg-blue-50/40" : ""}`}
                       >
                         {/* Icon */}
-                        <div className={`shrink-0 w-8 h-8 rounded-full flex items-center justify-center mt-0.5 ${isContact ? "bg-orange-100" : "bg-[#1E90FF]/10"}`}>
+                        <div className={`shrink-0 w-8 h-8 rounded-full flex items-center justify-center mt-0.5 ${isContact ? "bg-orange-100" : hasReceipt ? "bg-emerald-100" : "bg-[#1E90FF]/10"}`}>
                           {isContact
                             ? <Mail size={14} className="text-orange-500" />
-                            : <FileText size={14} className="text-[#1E90FF]" />
+                            : hasReceipt
+                              ? <Receipt size={14} className="text-emerald-600" />
+                              : <FileText size={14} className="text-[#1E90FF]" />
                           }
                         </div>
                         {/* Content */}
                         <div className="flex-1 min-w-0">
                           <div className="flex items-start justify-between gap-1">
                             <p className="text-xs font-semibold text-gray-800 truncate">
-                              {isContact ? "New contact message" : "New application"}
+                              {isContact ? "New contact message" : hasReceipt ? "Payment receipt uploaded" : "New application"}
                               {!n.read && (
                                 <span className="ml-1.5 inline-block w-1.5 h-1.5 rounded-full bg-blue-500 align-middle" />
                               )}
